@@ -6,5 +6,6 @@ cd "$DIR" || {
   echo "Redirection failed!"
   exit 1
 }
+
 ./gradlew clean assemble
-echo BENCHMARK_PATH="$DIR"/build/libs/array-sorting-1.0-all.jar
+echo BENCHMARK_PATH="$DIR"/build/libs/argo-java-array-sorting-1.0.jar

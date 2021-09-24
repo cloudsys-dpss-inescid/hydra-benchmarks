@@ -1,6 +1,6 @@
-## Description
+### Description
 
-Simple *Hello World* Python server.
+Simple *Hello World* function.
 
 ### Language
 
