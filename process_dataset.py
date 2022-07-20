@@ -1,5 +1,5 @@
 # The script must be placed in the same directory with dataset's csv files
-# # Example of use:
+# Example of use:
 # python3 process_dataset.py d01
 
 import sys
@@ -7,7 +7,7 @@ import pandas as pd
 import numpy as np
 
 
-def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r\n"):
+def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, length = 100, fill = '█', printEnd = "\r"):
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
     filledLength = int(length * iteration // total)
     bar = fill * filledLength + '-' * (length - filledLength)
@@ -17,7 +17,7 @@ def printProgressBar(iteration, total, prefix = '', suffix = '', decimals = 1, l
 
 
 def get_timestamps(invocations):
-    df_columns = ["HashFunction", "AverageAllocatedMb", "AverageDuration", "Timestamp"]
+    df_columns = ["HashOwner", "HashFunction", "AverageAllocatedMb", "AverageDuration", "Timestamp"]
     result = pd.DataFrame(columns = df_columns)
     minutes = pd.DataFrame({'minute' : map(str, np.arange(1, 1441, 1)), 'minute_timestamp_ms' : np.arange(0, 86340001, 60000)})
 
@@ -28,7 +28,7 @@ def get_timestamps(invocations):
         # minute_row[0] - minute, minute_row[1] - timestamp of the beginning of this minute
         records = [np.random.randint(minute_row[1], (minute_row[1] + 60000), size=row[minute_row[0]]) for minute_row in zip(minutes['minute'], minutes['minute_timestamp_ms'])]
         records = np.concatenate(records).ravel()    # flatten list of ndarrays to list of numbers (timestamps)
-        records = [[row.HashFunction, row.AverageAllocatedMb, row.AverageDuration, r] for r in records]
+        records = [[row.HashOwner, row.HashFunction, row.AverageAllocatedMb, row.AverageDuration, r] for r in records]
         temp = pd.DataFrame(records, columns = df_columns)
         result = pd.concat([result, temp], ignore_index=True, axis=0)
         printProgressBar(index, progress_total, prefix = 'Progress:', suffix = f'Complete ({index})', length = 50)
