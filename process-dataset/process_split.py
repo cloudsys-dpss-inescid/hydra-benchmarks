@@ -1,6 +1,6 @@
 # The script must be placed in the same directory with dataset's csv files
 # Example of use:
-# python3 process_dataset.py d01
+# python3 process_dataset.py d01_split_00
 
 import sys
 import pandas as pd
@@ -32,7 +32,7 @@ def get_timestamps(invocations):
         temp = pd.DataFrame(records, columns = df_columns)
         result = pd.concat([result, temp], ignore_index=True, axis=0)
         printProgressBar(index, progress_total, prefix = 'Progress:', suffix = f'Complete ({index})', length = 50)
-    return result.sort_values(by=["Timestamp"], ascending=True)
+    return result
 
 
 def add_average_memory(invocations, dataset_id):
@@ -65,8 +65,9 @@ def add_average_duration(invocations, dataset_id):
     return invocations
 
 
-def process(dataset_id):
-    invocations = pd.read_csv("invocations_per_function_md.anon." + dataset_id + ".csv")
+def process(dataset_filename):
+    dataset_id = dataset_filename[0:3]    # retrieve dXX part
+    invocations = pd.read_csv(dataset_filename)
     print("Shape of dataset before changes:         ", invocations.shape)
     invocations = add_average_memory(invocations, dataset_id)
     print("Shape of dataset after adding memory:    ", invocations.shape)
@@ -74,7 +75,7 @@ def process(dataset_id):
     print("Shape of dataset after adding durations: ", invocations.shape)
     result = get_timestamps(invocations)
     print("\nCompleted calculating timestamps!")
-    result.to_csv("result." + dataset_id + ".csv", encoding='utf-8', index=False)
+    result.to_csv("result_" + dataset_filename, encoding='utf-8', index=False)
 
 
 if __name__ == "__main__":
