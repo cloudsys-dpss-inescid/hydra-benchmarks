@@ -11,8 +11,10 @@ fi
 
 function build_graalvisor_app {
 	source $ARGO_HOME/lambda-manager/src/scripts/environment.sh
-	cd build
+	(cd build; \
 	$JAVA_HOME/bin/native-image \
+        --diagnostics-mode \
+        --verbose \
 		--no-fallback \
 		-cp libs/hello-world-1.0-all.jar\
 		-DGraalVisorGuest=true \
@@ -21,7 +23,7 @@ function build_graalvisor_app {
 		-H:ConfigurationFileDirectories=../ni-agent-config \
 		-H:+ReportExceptionStackTraces \
 		--shared \
-		-H:Name=libhelloworld
+		-H:Name=libhelloworld)
 }
 
 ./gradlew clean shadowJar assemble
