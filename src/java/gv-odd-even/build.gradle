@@ -17,7 +17,8 @@ shadowJar() {
 
 dependencies {
     implementation files(System.getenv('ARGO_HOME') + '/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar')
-    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.1' 
+    implementation group: 'javax.xml.bind', name: 'jaxb-api', version: '2.1'
+    implementation 'org.graalvm.sdk:graal-sdk:22.3.0'
 }
 
 processResources{
