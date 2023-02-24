@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Example usage of this script:
-# bash benchmark-lm-load.sh gv|cr /path/to/dataset/file
+# bash benchmark-lm-load.sh gv|cr|ph /path/to/dataset/file
 # The structure of the .csv file should be as follows:
 # HashOwner HashFunction AverageAllocatedMb AverageDuration Timestamp
 
@@ -16,6 +16,7 @@ function process_dataset {
     function_name=$3
     function_entry_point=$4
     function_runtime=$5
+    invocation_collocation=$6
 
     # This will be used as a set to know which functions have already been uploaded
     declare -A setUploadedOwners
@@ -27,9 +28,11 @@ function process_dataset {
         if [ -z "${setUploadedOwners[$HashOwner]}" ]
         then
             # Upload function for current owner and set as uploaded to prevent uploading it more than once
-            # Note: use function_collocation=true if you want to use Photons as cruntime
-            curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?username=$HashOwner\&function_name=$function_name\&function_language=java\&function_entry_point=$function_entry_point\&function_memory=64\&function_runtime=$function_runtime\&function_isolation=false \
-                -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
+            query_parameters="username=$HashOwner&function_name=$function_name"
+            query_parameters="$query_parameters&function_language=java&function_entry_point=$function_entry_point"
+            query_parameters="$query_parameters&function_memory=64&function_runtime=$function_runtime"
+            query_parameters="$query_parameters&function_isolation=false&invocation_collocation=$invocation_collocation"
+            curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?"$query_parameters" -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
             setUploadedOwners["$HashOwner"]=1
         fi
 
@@ -88,16 +91,24 @@ ACTIVE_LAMBDAS_METRICS_FILENAME=active_lambdas.txt
 
 if [[ "$MODE" = "gv" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-sleep/build/libsleep.so
-    FUNCTION_NAME=sleepbench
+    FUNCTION_NAME=gvsleepbench
     FUNCTION_ENTRY_POINT=com.sleep.Sleep
     FUNCTION_RUNTIME=graalvisor
+    INVOCATION_COLLOCATION=true
 elif [[ "$MODE" = "cr" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/cr-sleep/init.json
     FUNCTION_NAME=crsleepbench
     FUNCTION_ENTRY_POINT=Main
     FUNCTION_RUNTIME=docker.io%2Fopenwhisk%2Fjava8action:latest
+    INVOCATION_COLLOCATION=false
+elif [[ "$MODE" = "ph" ]]; then
+    FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/cr-sleep/init.json
+    FUNCTION_NAME=phsleepbench
+    FUNCTION_ENTRY_POINT=Main
+    FUNCTION_RUNTIME=docker.io%2Fsergiyivan%2Flarge-scale-experiment:photons
+    INVOCATION_COLLOCATION=true
 else
-    echo "Syntax: <gv|cr> /path/to/dataset/directory"
+    echo "Syntax: <gv|cr|ph> /path/to/dataset/directory"
 	exit 1
 fi
 
@@ -115,7 +126,7 @@ echo -n "" > $AVG_LATENCY_METRICS_FILENAME
 echo -n "" > $OPEN_REQUESTS_METRICS_FILENAME
 echo -n "" > $ACTIVE_LAMBDAS_METRICS_FILENAME
 
-process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME &
+process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME $INVOCATION_COLLOCATION &
 FUNCTION_PID=$!
 start_metrics_scraper &
 
