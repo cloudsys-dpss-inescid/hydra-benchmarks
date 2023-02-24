@@ -27,8 +27,9 @@ function process_dataset {
         if [ -z "${setUploadedOwners[$HashOwner]}" ]
         then
             # Upload function for current owner and set as uploaded to prevent uploading it more than once
-            curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?username=$HashOwner\&function_name=$function_name\&function_language=java\&function_entry_point=$function_entry_point\&function_memory=64\&function_runtime=$function_runtime \
-                -H 'Content-Type: application/octet-stream' --data-binary @"$function_code"
+            # Note: use function_collocation=true if you want to use Photons as cruntime
+            curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?username=$HashOwner\&function_name=$function_name\&function_language=java\&function_entry_point=$function_entry_point\&function_memory=64\&function_runtime=$function_runtime\&function_isolation=false \
+                -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
             setUploadedOwners["$HashOwner"]=1
         fi
 
@@ -36,21 +37,23 @@ function process_dataset {
         time_to_sleep=$(python3 -c "print((($Timestamp - $current_timestamp) % 3600000) / 1000)")
         current_timestamp=$Timestamp
         sleep $time_to_sleep
-        curl -s -X POST $LAMBDA_MANAGER_ADDRESS/$HashOwner/$function_name -H 'Content-Type: application/json' --data '{"memory":"32000000","sleep":"'$AverageDuration'"}' &
+        curl -s -X POST $LAMBDA_MANAGER_ADDRESS/$HashOwner/$function_name -H 'Content-Type: application/json' --data '{"memory":"128000","sleep":"'$AverageDuration'"}' &
     done
     wait
 
-    sleep 10
+    sleep 30
     echo "Finished benchmark execution. Stopping the lambda manager..."
     sudo kill $(sudo lsof -i -P -n | grep LISTEN | grep 30009 | awk '{print $2}')
 }
 
 
 function log_metrics {
-    response=$(curl --no-progress-meter --max-time 60 $LAMBDA_MANAGER_ADDRESS/metrics)
+    response=$(curl -s --max-time 60 $LAMBDA_MANAGER_ADDRESS/metrics)
     echo "$response" | grep system_footprint | awk '{print $2}' >> $FOOTPRINT_METRICS_FILENAME
     echo "$response" | grep request_latency_max | awk '{print $2}' >> $MAX_LATENCY_METRICS_FILENAME
     echo "$response" | grep request_latency_avg | awk '{print $2}' >> $AVG_LATENCY_METRICS_FILENAME
+    echo "$response" | grep open_requests | awk '{print $2}' >> $OPEN_REQUESTS_METRICS_FILENAME
+    echo "$response" | grep active_lambdas | awk '{print $2}' >> $ACTIVE_LAMBDAS_METRICS_FILENAME
 }
 
 
@@ -73,13 +76,15 @@ function start_metrics_scraper {
 
 MODE=$1
 DATASET_FILE=$2
-ARGO_HOME=$(DIR)/../../../
+ARGO_HOME=$(DIR)/../../argo/
 RUN_HOME=$ARGO_HOME/run/bin
 LAMBDA_MANAGER_CONFIG=$ARGO_HOME/run/configs/manager/default-lambda-manager.json
 LAMBDA_MANAGER_ADDRESS=localhost:30009
 FOOTPRINT_METRICS_FILENAME=footprint.txt
 MAX_LATENCY_METRICS_FILENAME=max_latency.txt
 AVG_LATENCY_METRICS_FILENAME=avg_latency.txt
+OPEN_REQUESTS_METRICS_FILENAME=open_requests.txt
+ACTIVE_LAMBDAS_METRICS_FILENAME=active_lambdas.txt
 
 if [[ "$MODE" = "gv" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-sleep/build/libsleep.so
@@ -99,7 +104,7 @@ fi
 
 # Deploy lambda manager and wait for it to launch
 $RUN_HOME/run deploy lm &
-sleep 3
+sleep 5
 
 # Configure lambda manager
 curl -s -X POST $LAMBDA_MANAGER_ADDRESS/configure_manager -H 'Content-Type: application/json' --data-binary @"$LAMBDA_MANAGER_CONFIG"
@@ -107,6 +112,8 @@ curl -s -X POST $LAMBDA_MANAGER_ADDRESS/configure_manager -H 'Content-Type: appl
 echo -n "" > $FOOTPRINT_METRICS_FILENAME
 echo -n "" > $MAX_LATENCY_METRICS_FILENAME
 echo -n "" > $AVG_LATENCY_METRICS_FILENAME
+echo -n "" > $OPEN_REQUESTS_METRICS_FILENAME
+echo -n "" > $ACTIVE_LAMBDAS_METRICS_FILENAME
 
 process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME &
 FUNCTION_PID=$!
