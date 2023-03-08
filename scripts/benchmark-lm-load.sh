@@ -30,7 +30,7 @@ function process_dataset {
             # Upload function for current owner and set as uploaded to prevent uploading it more than once
             query_parameters="username=$HashOwner&function_name=$function_name"
             query_parameters="$query_parameters&function_language=java&function_entry_point=$function_entry_point"
-            query_parameters="$query_parameters&function_memory=64&function_runtime=$function_runtime"
+            query_parameters="$query_parameters&function_memory=128&function_runtime=$function_runtime"
             query_parameters="$query_parameters&function_isolation=false&invocation_collocation=$invocation_collocation"
             curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?"$query_parameters" -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
             setUploadedOwners["$HashOwner"]=1
@@ -57,6 +57,7 @@ function log_metrics {
     echo "$response" | grep request_latency_avg | awk '{print $2}' >> $AVG_LATENCY_METRICS_FILENAME
     echo "$response" | grep open_requests | awk '{print $2}' >> $OPEN_REQUESTS_METRICS_FILENAME
     echo "$response" | grep active_lambdas | awk '{print $2}' >> $ACTIVE_LAMBDAS_METRICS_FILENAME
+    echo "$response" | grep throughput | awk '{print $2}' >> $THROUGHPUT_METRICS_FILENAME
 }
 
 
@@ -88,6 +89,7 @@ MAX_LATENCY_METRICS_FILENAME=max_latency.txt
 AVG_LATENCY_METRICS_FILENAME=avg_latency.txt
 OPEN_REQUESTS_METRICS_FILENAME=open_requests.txt
 ACTIVE_LAMBDAS_METRICS_FILENAME=active_lambdas.txt
+THROUGHPUT_METRICS_FILENAME=throughput.txt
 
 if [[ "$MODE" = "gv" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-sleep/build/libsleep.so
@@ -125,6 +127,7 @@ echo -n "" > $MAX_LATENCY_METRICS_FILENAME
 echo -n "" > $AVG_LATENCY_METRICS_FILENAME
 echo -n "" > $OPEN_REQUESTS_METRICS_FILENAME
 echo -n "" > $ACTIVE_LAMBDAS_METRICS_FILENAME
+echo -n "" > $THROUGHPUT_METRICS_FILENAME
 
 process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME $INVOCATION_COLLOCATION &
 FUNCTION_PID=$!
