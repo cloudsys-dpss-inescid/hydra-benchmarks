@@ -44,9 +44,10 @@ function process_dataset {
     done
     wait
 
-    sleep 30
+    sleep 60
     echo "Finished benchmark execution. Stopping the lambda manager..."
-    sudo kill $(sudo lsof -i -P -n | grep LISTEN | grep 30009 | awk '{print $2}')
+    echo "--- Execute this command to kill LM: ---"
+    echo "sudo kill $(sudo lsof -i -P -n | grep LISTEN | grep 30009 | awk '{print $2}')"
 }
 
 
@@ -95,7 +96,7 @@ if [[ "$MODE" = "gv" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-sleep/build/libsleep.so
     FUNCTION_NAME=gvsleepbench
     FUNCTION_ENTRY_POINT=com.sleep.Sleep
-    FUNCTION_RUNTIME=graalvisor
+    FUNCTION_RUNTIME=docker.io%2Fsergiyivan%2Flarge-scale-experiment:graalvisor
     INVOCATION_COLLOCATION=true
 elif [[ "$MODE" = "cr" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/cr-sleep/init.json
