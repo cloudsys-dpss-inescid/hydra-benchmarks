@@ -25,22 +25,23 @@ function process_dataset {
     tail -n +2 $csv_file |
     while IFS=, read -r HashOwner HashFunction AverageAllocatedMb AverageDuration Timestamp
     do
-        if [ -z "${setUploadedOwners[$HashOwner]}" ]
+        if [ -z "${setUploadedOwners[$HashFunction]}" ]
         then
             # Upload function for current owner and set as uploaded to prevent uploading it more than once
-            query_parameters="username=$HashOwner&function_name=$function_name"
+            query_parameters="username=$HashOwner&function_name=$HashFunction"
             query_parameters="$query_parameters&function_language=java&function_entry_point=$function_entry_point"
             query_parameters="$query_parameters&function_memory=128&function_runtime=$function_runtime"
             query_parameters="$query_parameters&function_isolation=false&invocation_collocation=$invocation_collocation"
             curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?"$query_parameters" -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
-            setUploadedOwners["$HashOwner"]=1
+            setUploadedOwners["$HashFunction"]=1
         fi
 
         # This is just to adjust the start of the requests with the beginning of the hour
         time_to_sleep=$(python3 -c "print((($Timestamp - $current_timestamp) % 3600000) / 1000)")
         current_timestamp=$Timestamp
         sleep $time_to_sleep
-        curl -s -X POST $LAMBDA_MANAGER_ADDRESS/$HashOwner/$function_name -H 'Content-Type: application/json' --data '{"memory":"128000","sleep":"'$AverageDuration'"}' &
+        # TODO: try with real trace values
+        curl -s -X POST $LAMBDA_MANAGER_ADDRESS/$HashOwner/$HashFunction -H 'Content-Type: application/json' --data '{"memory":"128000","sleep":"'$AverageDuration'"}' &
     done
     wait
 
