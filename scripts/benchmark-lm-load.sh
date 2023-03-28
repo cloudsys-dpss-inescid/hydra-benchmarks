@@ -55,10 +55,11 @@ function process_dataset {
 function log_metrics {
     response=$(curl -s --max-time 60 $LAMBDA_MANAGER_ADDRESS/metrics)
     echo "$response" | grep system_footprint | awk '{print $2}' >> $FOOTPRINT_METRICS_FILENAME
-    echo "$response" | grep request_latency_max | awk '{print $2}' >> $MAX_LATENCY_METRICS_FILENAME
-    echo "$response" | grep request_latency_avg | awk '{print $2}' >> $AVG_LATENCY_METRICS_FILENAME
+    echo "$response" | grep cold_start_latency_max | awk '{print $2}' >> $MAX_LATENCY_METRICS_FILENAME
+    echo "$response" | grep cold_start_latency_avg | awk '{print $2}' >> $AVG_LATENCY_METRICS_FILENAME
     echo "$response" | grep open_requests | awk '{print $2}' >> $OPEN_REQUESTS_METRICS_FILENAME
     echo "$response" | grep active_lambdas | awk '{print $2}' >> $ACTIVE_LAMBDAS_METRICS_FILENAME
+    echo "$response" | grep active_users | awk '{print $2}' >> $ACTIVE_USERS_METRICS_FILENAME
     echo "$response" | grep throughput | awk '{print $2}' >> $THROUGHPUT_METRICS_FILENAME
 }
 
@@ -91,6 +92,7 @@ MAX_LATENCY_METRICS_FILENAME=max_latency.txt
 AVG_LATENCY_METRICS_FILENAME=avg_latency.txt
 OPEN_REQUESTS_METRICS_FILENAME=open_requests.txt
 ACTIVE_LAMBDAS_METRICS_FILENAME=active_lambdas.txt
+ACTIVE_USERS_METRICS_FILENAME=active_users.txt
 THROUGHPUT_METRICS_FILENAME=throughput.txt
 
 if [[ "$MODE" = "gv" ]]; then
@@ -129,6 +131,7 @@ echo -n "" > $MAX_LATENCY_METRICS_FILENAME
 echo -n "" > $AVG_LATENCY_METRICS_FILENAME
 echo -n "" > $OPEN_REQUESTS_METRICS_FILENAME
 echo -n "" > $ACTIVE_LAMBDAS_METRICS_FILENAME
+echo -n "" > $ACTIVE_USERS_METRICS_FILENAME
 echo -n "" > $THROUGHPUT_METRICS_FILENAME
 
 process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME $INVOCATION_COLLOCATION &
