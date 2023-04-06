@@ -17,6 +17,8 @@ function process_dataset {
     function_entry_point=$4
     function_runtime=$5
     invocation_collocation=$6
+    function_isolation=$7
+    gv_sandbox=$8  # should be the last parameter since it can be empty
 
     # This will be used as a set to know which functions have already been uploaded
     declare -A setUploadedOwners
@@ -31,7 +33,12 @@ function process_dataset {
             query_parameters="username=$HashOwner&function_name=$HashFunction"
             query_parameters="$query_parameters&function_language=java&function_entry_point=$function_entry_point"
             query_parameters="$query_parameters&function_memory=128&function_runtime=$function_runtime"
-            query_parameters="$query_parameters&function_isolation=false&invocation_collocation=$invocation_collocation"
+            query_parameters="$query_parameters&function_isolation=$function_isolation&invocation_collocation=$invocation_collocation"
+            if [ -n "$gv_sandbox" ]
+            then
+                query_parameters="$query_parameters&gv_sandbox=$gv_sandbox"
+            else
+
             curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?"$query_parameters" -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
             setUploadedOwners["$HashFunction"]=1
         fi
@@ -100,18 +107,29 @@ if [[ "$MODE" = "gv" ]]; then
     FUNCTION_NAME=gvsleepbench
     FUNCTION_ENTRY_POINT=com.sleep.Sleep
     FUNCTION_RUNTIME=docker.io%2Fsergiyivan%2Flarge-scale-experiment:graalvisor
+    FUNCTION_ISOLATION=false
     INVOCATION_COLLOCATION=true
+elif [[ "$MODE" = "gv-fork" ]]; then
+    FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-sleep/build/libsleep.so
+    FUNCTION_NAME=gvsleepbench
+    FUNCTION_ENTRY_POINT=com.sleep.Sleep
+    FUNCTION_RUNTIME=docker.io%2Fsergiyivan%2Flarge-scale-experiment:graalvisor
+    FUNCTION_ISOLATION=true
+    INVOCATION_COLLOCATION=true
+    GV_SANDBOX=process
 elif [[ "$MODE" = "cr" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/cr-sleep/init.json
     FUNCTION_NAME=crsleepbench
     FUNCTION_ENTRY_POINT=Main
     FUNCTION_RUNTIME=docker.io%2Fopenwhisk%2Fjava8action:latest
+    FUNCTION_ISOLATION=false  # We don't care about this value for OpenWhisk as functions are isolated there by default
     INVOCATION_COLLOCATION=false
 elif [[ "$MODE" = "ph" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/cr-sleep/init.json
     FUNCTION_NAME=phsleepbench
     FUNCTION_ENTRY_POINT=Main
     FUNCTION_RUNTIME=docker.io%2Fsergiyivan%2Flarge-scale-experiment:photons
+    FUNCTION_ISOLATION=false  # We don't care about this value for Photons as functions are isolated there by default
     INVOCATION_COLLOCATION=true
 else
     echo "Syntax: <gv|cr|ph> /path/to/dataset/directory"
@@ -134,7 +152,7 @@ echo -n "" > $ACTIVE_LAMBDAS_METRICS_FILENAME
 echo -n "" > $ACTIVE_USERS_METRICS_FILENAME
 echo -n "" > $THROUGHPUT_METRICS_FILENAME
 
-process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME $INVOCATION_COLLOCATION &
+process_dataset $DATASET_FILE $FUNCTION_CODE $FUNCTION_NAME $FUNCTION_ENTRY_POINT $FUNCTION_RUNTIME $INVOCATION_COLLOCATION $FUNCTION_ISOLATION $GV_SANDBOX &
 FUNCTION_PID=$!
 start_metrics_scraper &
 
