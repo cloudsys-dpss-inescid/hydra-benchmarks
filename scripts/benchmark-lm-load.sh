@@ -37,7 +37,7 @@ function process_dataset {
             if [ -n "$gv_sandbox" ]
             then
                 query_parameters="$query_parameters&gv_sandbox=$gv_sandbox"
-            else
+            fi
 
             curl -s -X POST $LAMBDA_MANAGER_ADDRESS/upload_function?"$query_parameters" -H 'Content-Type: application/octet-stream' --data-binary @"$function_code" > /dev/null
             setUploadedOwners["$HashFunction"]=1
