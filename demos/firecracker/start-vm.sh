@@ -12,4 +12,4 @@ VM_SOCKET=$VM_DIR/firecracker.socket
 
 mkdir -p $VM_DIR
 
-firecracker --api-sock $VM_SOCKET
+"$DIR"/release-v1.1.0-x86_64/firecracker-v1.1.0-x86_64 --api-sock $VM_SOCKET

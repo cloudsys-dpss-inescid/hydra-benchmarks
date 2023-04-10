@@ -101,8 +101,7 @@ curl --unix-socket $VM_SOCKET \
     --data "{
         \"vcpu_count\": ${VM_CPU},
         \"mem_size_mib\": ${VM_MEM},
-        \"track_dirty_pages\": false,
-        \"ht_enabled\": false
+        \"track_dirty_pages\": false
     }"
 
 # Confiures network.
