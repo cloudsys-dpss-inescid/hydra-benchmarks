@@ -6,7 +6,7 @@
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 if [ -z "$1" ]; then
-    echo "Please use a free IP 172.17.[0,255].[2,255]. The IP will be used to create a firecracker directory and tap."
+    echo "Please use a free IP 172.18.[0,255].[2,255]. The IP will be used to create a firecracker directory and tap."
     exit 0
 fi
 
@@ -28,7 +28,7 @@ VM_DEV=eth0
 # MAC address generated for the VM.
 VM_MAC=$(printf 'DE:AD:BE:EF:%02X:%02X\n' $((RANDOM%256)) $((RANDOM%256)))
 
-# IP address of the host brige (172.17.0.0/16). Used as gateway for VM taps.
+# IP address of the host brige (172.18.0.0/16). Used as gateway for VM taps.
 VM_GW=172.18.0.1
 
 # Host default device.

@@ -9,6 +9,7 @@ if [ ! -f release-v1.1.0-x86_64/firecracker-v1.1.0-x86_64 ];
 then
     wget https://github.com/firecracker-microvm/firecracker/releases/download/v1.1.0/firecracker-v1.1.0-x86_64.tgz
     tar -vzxf firecracker-v1.1.0-x86_64.tgz
+    rm firecracker-v1.1.0-x86_64.tgz
 fi
 echo "Checking if you have firecracker... done!"
 
