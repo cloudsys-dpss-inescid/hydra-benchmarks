@@ -38,7 +38,7 @@ public class DatasetProcessor {
 
     public static final String DELIMITER = ",";
     private static final int MINUTES_COLUMN_OFFSET = 3;
-    private static final int MOST_ACTIVE_USERS = 100;
+    private static final int MOST_ACTIVE_USERS = 1000;
 
     public static void main(String[] args) {
         String datasetId = args[0];
