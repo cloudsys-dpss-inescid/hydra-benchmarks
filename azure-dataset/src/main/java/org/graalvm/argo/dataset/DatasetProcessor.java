@@ -36,7 +36,7 @@ import java.util.stream.Collectors;
  */
 public class DatasetProcessor {
 
-    private static final String DELIMITER = ",";
+    public static final String DELIMITER = ",";
     private static final int MINUTES_COLUMN_OFFSET = 3;
     private static final int MOST_ACTIVE_USERS = 100;
 
@@ -111,8 +111,7 @@ public class DatasetProcessor {
         Collections.sort(invocations, Comparator.comparingInt(Invocation::getTimestamp));
         System.out.println("Finished sorting.");
 
-        // TODO: optimize this call
-        // PlottingUtils.printTraceSimulation(invocations, "paper_data.txt", false);
+        /* If needed, call printTraceSimulation on invocations here to get plot data for unfiltered trace */
 
         /* get top X users based on number of functions */
         Set<String> selectedOwners = owners.values().stream().sorted(Comparator.comparingInt(Owner::getFunctions).reversed())
@@ -123,7 +122,6 @@ public class DatasetProcessor {
 
         downscaleByMemory(invocations, maxMemory);
 
-        PlottingUtils.printTraceSimulation(invocations, "internal_data.txt", true);
         /* Now we have ordered and downscaled list of all invocations that we can write as a result */
         List<String> acceptedInvocations = new LinkedList<>();
         acceptedInvocations.add("HashOwner,HashFunction,AverageAllocatedMb,AverageDuration,Timestamp");

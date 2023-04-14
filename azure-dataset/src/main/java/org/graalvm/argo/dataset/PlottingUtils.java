@@ -8,31 +8,33 @@ import java.util.Set;
 
 public class PlottingUtils {
 
-    private static final String AGGREGATED_INVOCATION_DATA = "%d %d %d %d";
-    private static final int KEEP_ALIVE_MS = 60000;
+    private static final String AGGREGATED_INVOCATION_DATA = "%d %d %d %d %d %d";
 
-    public static void printTraceSimulation(List<Invocation> invocations, String filename, boolean includeKeepAlive) {
-        simulateTrace(invocations, filename, includeKeepAlive ? KEEP_ALIVE_MS : 0);
+    public static void printTraceSimulation(List<Invocation> invocations, String filename, int keepAlive) {
+        simulateTrace(invocations, filename, keepAlive);
     }
 
     private static void simulateTrace(List<Invocation> invocations, String filename, int keepAlive) {
         Set<Invocation> activeInvocations = new HashSet<>();
         List<String> aggregatedInvocationData = new LinkedList<>();
         System.out.println("Simulating trace with " + invocations.size() + " invocations");
-        int n = 0;
+        int invocationsProcessed = 0;
 
         for (Invocation currentInvocation : invocations) {
             int currentInvocationTimestamp = currentInvocation.getTimestamp();
             activeInvocations.removeIf(f -> currentInvocationTimestamp >= f.getEndTimestamp() + keepAlive);
             activeInvocations.add(currentInvocation);
             /* gather aggregated invocation data for plot */
-            long activeUsers = activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
-            long activeFunctions = activeInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
-            aggregatedInvocationData.add(String.format(AGGREGATED_INVOCATION_DATA, currentInvocationTimestamp, activeUsers, activeFunctions, activeInvocations.size()));
-            if (n % 10000 == 0) {
-                System.out.println(n);
+            long activeUsers = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).map(Invocation::getOwner).distinct().count();
+            long activeFunctions  = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).map(Invocation::getFunction).distinct().count();
+            long cachedActiveUsers = activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
+            long cachedActiveFunctions = activeInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
+            long runningInvocations = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).count();
+            aggregatedInvocationData.add(String.format(AGGREGATED_INVOCATION_DATA, currentInvocationTimestamp, activeUsers, activeFunctions, cachedActiveUsers, cachedActiveFunctions, runningInvocations));
+            if (invocationsProcessed % 10000 == 0) {
+                System.out.println(invocationsProcessed);
             }
-            ++n;
+            ++invocationsProcessed;
         }
         DatasetProcessor.writeToFile(aggregatedInvocationData, Paths.get("output", filename));
     }
