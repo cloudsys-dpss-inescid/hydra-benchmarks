@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.LinkedList;
 import java.util.List;
 
+// TODO - we need a better name :-)
 public class PlotDataGenerator {
     public static void main(String[] args) {
         String invocationsFile = args[0];
@@ -30,6 +31,7 @@ public class PlotDataGenerator {
         } catch (IOException e) {
             e.printStackTrace();
         }
+        // TODO - Why do we need a different class? Isn't that class where we simulate the users and functions? Why is an util then?
         PlottingUtils.printTraceSimulation(invocations, outputFile, keepAlive);
     }
 }

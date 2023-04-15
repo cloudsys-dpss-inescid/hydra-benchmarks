@@ -34,6 +34,8 @@ import java.util.stream.Collectors;
  * the day 1 from the initial dataset, so that the forecasted memory
  * consumption will not exceed 1 GB (1000 MB)
  */
+// TODO - this explanation is good but is missing an explanation of what it produces.
+// Is this the class that produces invocations of each function with timestamps?
 public class DatasetProcessor {
 
     public static final String DELIMITER = ",";

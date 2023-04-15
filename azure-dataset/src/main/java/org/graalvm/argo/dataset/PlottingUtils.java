@@ -30,6 +30,7 @@ public class PlottingUtils {
             long cachedActiveUsers = activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
             long cachedActiveFunctions = activeInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
             long runningInvocations = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).count();
+            // TODO - why not writing to disk directly? This will accumulate more and more memory.
             aggregatedInvocationData.add(String.format(AGGREGATED_INVOCATION_DATA, currentInvocationTimestamp, activeUsers, activeFunctions, cachedActiveUsers, cachedActiveFunctions, runningInvocations));
             if (invocationsProcessed % 10000 == 0) {
                 System.out.println(invocationsProcessed);
