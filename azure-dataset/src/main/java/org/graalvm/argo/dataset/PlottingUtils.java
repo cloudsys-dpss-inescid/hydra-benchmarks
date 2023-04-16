@@ -25,15 +25,22 @@ public class PlottingUtils {
             activeInvocations.removeIf(f -> currentInvocationTimestamp >= f.getEndTimestamp() + keepAlive);
             activeInvocations.add(currentInvocation);
             /* gather aggregated invocation data for plot */
-            long activeUsers = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).map(Invocation::getOwner).distinct().count();
-            long activeFunctions  = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).map(Invocation::getFunction).distinct().count();
-            long cachedActiveUsers = activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
-            long cachedActiveFunctions = activeInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
-            long runningInvocations = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).count();
-            long runningInvocationsFootprint = activeInvocations.stream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).mapToInt(Invocation::getMemory).sum();
-            long cachedFunctionsFootprint = activeInvocations.stream().mapToInt(Invocation::getMemory).sum();
+            long runningUsers = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).map(Invocation::getOwner).distinct().count();
+            long runningFunctions  = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).map(Invocation::getFunction).distinct().count();
+            long runningInvocations = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).count();
+            long runningInvocationsFootprint = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentInvocationTimestamp).mapToInt(Invocation::getMemory).sum();
+
+            long totalUsers = activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
+            long totalFunctions = activeInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
+
+            long cachedUsers = totalUsers - runningUsers;
+            long cachedFunctions = totalFunctions - runningFunctions;
+            // To calculate the size of our cache we are assuming that we can assume that we only keep one lambda live for each function.
+            // Then, we multiply the avg footprint of each function and we sum. The result is an estimate of our cache footprint.
+            long cachedInvocationsFootprint = cachedFunctions * 125; // TODO - we need to fix this. 125 is the avg of all functions...
+
             // TODO - why not writing to disk directly? This will accumulate more and more memory.
-            aggregatedInvocationData.add(String.format(AGGREGATED_INVOCATION_DATA, currentInvocationTimestamp, activeUsers, activeFunctions, cachedActiveUsers, cachedActiveFunctions, runningInvocations, runningInvocationsFootprint, cachedFunctionsFootprint));
+            aggregatedInvocationData.add(String.format(AGGREGATED_INVOCATION_DATA, currentInvocationTimestamp, runningUsers, runningFunctions, cachedUsers, cachedFunctions, runningInvocations, runningInvocationsFootprint, cachedInvocationsFootprint));
             if (invocationsProcessed % 10000 == 0) {
                 System.out.println(invocationsProcessed);
             }
