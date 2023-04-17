@@ -13,10 +13,11 @@ VM_SOCKET=$VM_DIR/firecracker.socket
 VM_SNAP_FILE=$VM_DIR/snapshot_file
 VM_SNAP_MEM=$VM_DIR/mem_file
 VM_TAP=tap$VM_IP
+HOST_BRIDGE=testbridge
 
 # We need to recreate the network setup (see config-vm.sh).
 sudo ip tuntap add dev "$VM_TAP" mode tap
-sudo brctl addif docker0 $VM_TAP
+sudo brctl addif $HOST_BRIDGE $VM_TAP
 sudo ip link set dev "$VM_TAP" up
 
 curl --unix-socket $VM_SOCKET -i \
