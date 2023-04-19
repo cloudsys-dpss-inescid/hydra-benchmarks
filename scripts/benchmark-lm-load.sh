@@ -34,6 +34,7 @@ function process_dataset {
             query_parameters="$query_parameters&function_language=java&function_entry_point=$function_entry_point"
             query_parameters="$query_parameters&function_memory=128&function_runtime=$function_runtime"
             query_parameters="$query_parameters&function_isolation=$function_isolation&invocation_collocation=$invocation_collocation"
+            query_parameters="$query_parameters&snapshot=true"
             if [ -n "$gv_sandbox" ]
             then
                 query_parameters="$query_parameters&gv_sandbox=$gv_sandbox"
@@ -107,9 +108,9 @@ if [[ "$MODE" = "gv" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-genericapp/build/libgenericapp.so
     FUNCTION_NAME=gvgenericappbench
     FUNCTION_ENTRY_POINT=com.genericapp.GenericApp
-    FUNCTION_RUNTIME=docker.io%2Fsergiyivan%2Flarge-scale-experiment:graalvisor
-    FUNCTION_ISOLATION=false
-    INVOCATION_COLLOCATION=true
+    FUNCTION_RUNTIME=graalvisor # docker.io%2Fsergiyivan%2Flarge-scale-experiment:graalvisor
+    FUNCTION_ISOLATION=true # false
+    INVOCATION_COLLOCATION=false # true
 elif [[ "$MODE" = "gv-fork" ]]; then
     FUNCTION_CODE=$ARGO_HOME/../benchmarks/src/java/gv-genericapp/build/libgenericapp.so
     FUNCTION_NAME=gvgenericappbench
