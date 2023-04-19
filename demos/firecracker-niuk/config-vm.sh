@@ -53,7 +53,8 @@ args="LD_LIBRARY_PATH=/lib:/lib64:/apps:/usr/local/lib"
 KERNEL_BOOT_ARGS="init=$IMAGE_PATH_ON_DISK quiet rw tsc=reliable ipv6.disable=1 ip=$VM_IP::$VM_GW:$VM_MK_LONG::$VM_DEV:none::: nomodule $KERNEL_CONSOLE_ARGS reboot=k panic=1 pci=off $args"
 
 # Root filesystem to be used in the VM.
-ROOTFS=$DIR/hello-rootfs.ext4
+ROOTFS=$VM_DIR/rootfs.ext4
+cp $DIR/hello-rootfs.ext4 $ROOTFS
 
 # VM memory and core config (memory in MB and number of vcores).
 VM_MEM=128
