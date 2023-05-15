@@ -29,7 +29,13 @@ public class Sleep {
 
     public static Map<String, Object> main(Map<String, Object> input) {
         memory(Integer.parseInt((String)input.get("memory")));
+
+	output.put("os.name_old", System.getProperty("os.name"));
+
         sleep(Long.parseLong((String)input.get("sleep")));
+
+	output.put("os.name_new", System.getProperty("os.name"));
+
         return output;
     }
 
