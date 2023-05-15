@@ -14,4 +14,9 @@ public class HelloWorld {
         return output;
     }
 
+    public static void main(String[] args) {
+        Map<String, Object> output = main(new HashMap<String, Object>());
+	System.out.println(output);
+    }
+
 }
