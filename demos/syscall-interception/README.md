@@ -4,6 +4,9 @@ These demos aim to benchmark the execution times of intercepting system calls:
 - seccomp
 - strace
 
+This demo aims to benchmark the execution times without intercepting system calls:
+- native
+
 ## Running the demos
 
 Each demo is placed in a separate directory with a `run.sh` script that invokes the demo.

@@ -6,10 +6,10 @@ if [ $# -eq 0 ]; then
 fi
 
 for d in */ ; do
-	pushd $d
+	pushd $d > /dev/null
 	if [ ! -f .testignore ]; then
 		find -type f -name '*.log' -delete
 		./run.sh $@
 	fi
-	popd
+	popd > /dev/null
 done
