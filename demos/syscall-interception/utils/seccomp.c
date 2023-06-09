@@ -22,12 +22,14 @@
 
 #define FILE_SIZE 256
 
+int target_pid;
 sem_t *fd_sem, *exec_sem;
 char pathname[FILE_SIZE];
 
 // Prototypes
 
 void sigchld_handler(int signum);
+void sigterm_handler(int signum);
 int install_notify_filter();
 void sendfd();
 int recvfd(pid_t pid);
@@ -65,6 +67,8 @@ void seccomp_init() {
     sigact.sa_flags = 0;
     sigact.sa_handler = sigchld_handler;
     sigaction(SIGCHLD, &sigact, NULL);
+    sigact.sa_handler = sigterm_handler;
+    sigaction(SIGTERM, &sigact, NULL);
 
     sem_unlink(FD_SEM);
     sem_unlink(EXEC_SEM);
@@ -80,6 +84,7 @@ int exec(char pahtname[], char *argv[]) {
 }
 
 int intercept_syscalls(pid_t pid) {
+    target_pid = pid;
     int nfd = recvfd(pid);
     handle_notifications(nfd);
     return 0;
@@ -121,6 +126,11 @@ int install_notify_filter() {
 }
 
 void sigchld_handler(int signum) {
+    exit(0);
+}
+
+void sigterm_handler(int signum) {
+    kill(target_pid, SIGKILL);
     exit(0);
 }
 
