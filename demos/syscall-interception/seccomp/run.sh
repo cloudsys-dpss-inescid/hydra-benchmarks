@@ -1,6 +1,15 @@
 #!/bin/bash
 
 DIR=$(cd $(dirname $0) && pwd)
-BIN=$DIR/../build/bin/test_seccomp
 source $DIR/../utils/shared.sh
-run $BIN $1
+BIN=$DIR/../build/bin/test_seccomp
+
+# run mode strict
+LOG=test_seccomp_mode_strict.log
+MODE="$BIN --mode-strict"
+run $@
+
+# run mode fs
+LOG=test_seccomp_mode_fs.log
+MODE="$BIN --mode-fs"
+run $@

@@ -5,27 +5,30 @@ HOST=localhost
 PORT=8080
 
 function start_micronaut {
-        $@ java -jar $APP &> /dev/null &
+        $MODE java -jar $APP &> /dev/null &
         PID=$!
         while ! nc -z $HOST $PORT; do
                 sleep 1
         done
-        echo "Micronaut is running"
+        echo "Running ${LOG%.*}"
 }
 
 function stop_micronaut {
         kill -15 $PID
+	while lsof -i :8080; do
+		sleep .1
+	done
 }
 
 function benchmark {
-        ab -n $1 $HOST:$PORT/ > $DIR/ab.log
+        ab -n $1 $HOST:$PORT/ > $DIR/$LOG
 }
 
 function run {
-	start_micronaut $1
-	benchmark $2
+	start_micronaut
+	benchmark $1
 	stop_micronaut
-	echo "Check results: $DIR/ab.log"
+	echo "Check results: $DIR/$LOG"
 }
 
 if [ $# -eq 0 ]; then
