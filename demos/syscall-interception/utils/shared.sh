@@ -35,3 +35,13 @@ if [ $# -eq 0 ]; then
         echo "usage $0 iter_count"
         exit 1
 fi
+
+if [ -z $BENCHMARKS_HOME ]; then
+	echo "Please set BENCHMARKS_HOME first"
+        exit 1
+fi
+
+if [ ! -f $APP ]; then
+	echo "Please build shopcart first"
+	exit 1
+fi
