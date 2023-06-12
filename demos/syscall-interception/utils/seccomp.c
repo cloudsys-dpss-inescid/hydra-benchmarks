@@ -20,17 +20,51 @@
 #define FD_SEM "/fd_semaphore"
 #define EXEC_SEM "/exec_semaphore"
 
+#define MODE_STRICT_STRING "--mode-strict"
+#define MODE_FS_STRING "--mode-fs" 
+
 #define FILE_SIZE 256
+
+typedef enum seccomp_mode_enum { MODE_STRICT, MODE_FS } seccomp_mode;
 
 int target_pid;
 sem_t *fd_sem, *exec_sem;
 char pathname[FILE_SIZE];
 
+struct sock_filter strict_filter[] = {
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_KILL),
+
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, nr))),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_futex, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
+};
+
+struct sock_filter fs_filter[] = {
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_KILL),
+
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, nr))),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_openat, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_close, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
+
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+};
+
 // Prototypes
 
 void sigchld_handler(int signum);
 void sigterm_handler(int signum);
-int install_notify_filter();
+int install_notify_filter(int mode);
 void sendfd();
 int recvfd(pid_t pid);
 void handle_notifications(int nfd);
@@ -61,6 +95,15 @@ char *get_pathname(char name[]) {
         return _get_pathname(name, strtok(path, ":"));
 }
 
+int get_seccomp_mode(char *mode) {
+    if (strncmp(mode, MODE_STRICT_STRING, sizeof(MODE_STRICT_STRING)) == 0)
+        return MODE_STRICT;
+    else if (strncmp(mode, MODE_FS_STRING, sizeof(MODE_FS_STRING)) == 0)
+        return MODE_FS;
+    else
+        return -1;
+}
+
 void seccomp_init() {
     struct sigaction sigact;
     sigemptyset(&sigact.sa_mask);
@@ -76,8 +119,8 @@ void seccomp_init() {
     exec_sem = sem_open(EXEC_SEM, O_CREAT | O_RDWR, S_IRUSR | S_IWUSR, 0);
 }
 
-int exec(char pahtname[], char *argv[]) {
-    install_notify_filter();
+int exec(char pahtname[], char *argv[], int mode) {
+    install_notify_filter(mode);
     sendfd();
     execv(pathname, argv);
     return 0;
@@ -90,26 +133,20 @@ int intercept_syscalls(pid_t pid) {
     return 0;
 }
 
-int install_notify_filter() {
-    struct sock_filter filter[] = {
-        BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
-        BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, AUDIT_ARCH_X86_64, 1, 0),
-        BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_KILL),
-
-        BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, nr))),
-
-        BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_futex, 0, 1),
-        BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
-
-        BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_openat, 0, 1),
-        BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
-
-        BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
-    };
-    struct sock_fprog prog = {
-        .len = (unsigned short)(sizeof(filter) / sizeof(filter[0])),
-        .filter = filter,
-    };
+int install_notify_filter(int mode) {
+    struct sock_fprog prog;
+    switch (mode) {
+        case MODE_FS:
+            prog.len = (unsigned short)(sizeof(fs_filter) / sizeof(fs_filter[0]));
+            prog.filter = fs_filter;
+            break;
+        case MODE_STRICT:
+            prog.len = (unsigned short)(sizeof(strict_filter) / sizeof(strict_filter[0]));
+            prog.filter = strict_filter;
+            break;
+        default:
+            break;
+    }
 
     if (prctl(PR_SET_NO_NEW_PRIVS, 1, 0, 0, 0)) {
         perror("prctl(NO_NEW_PRIVS)");
