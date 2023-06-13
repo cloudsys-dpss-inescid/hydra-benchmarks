@@ -2,4 +2,5 @@
 *.log
 *.o
 *.jpg
+shopcart-userids.txt
 test_seccomp
