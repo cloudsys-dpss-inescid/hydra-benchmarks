@@ -4,6 +4,28 @@ import numpy as np
 from datetime import datetime
 import matplotlib.pyplot as plt
 
+class wrk_demo:
+    workloads = ["create-shop-carts", "populate-shop-carts", "read-shop-carts"]
+    def __init__(self, suite):
+        self.bench_avg = []
+        self.label = suite
+        self.load_log_files(suite)
+
+    def load_log_files(self, suite):
+        log_files = list(filter(lambda x: ".log" in x, os.listdir(suite)))
+        self.bench_avg = [self.read_log_file(os.path.join(suite, log_file)) for log_file in log_files]
+               
+    def read_log_file(self, log_file):
+        try:
+            f = open(log_file, 'r')
+            data = f.read().split('\n')
+            time_per_request = float(data[5].split()[1][:-2])
+            f.close()
+            return time_per_request
+        except IOError as e:
+            print(e)
+
+# deprecated
 def plot_ab(log_files):
     data = {os.path.basename(log_file):read_ab_log_file(log_file) for suite in log_files for log_file in suite}
     labels = [label[5:-4] for label in list(data.keys())]
@@ -25,6 +47,7 @@ def plot_ab(log_files):
     output = datetime.now().strftime("PLOT_%Y%m%d_%H_%M_%S.jpg")
     plt.savefig(os.path.join("plots", output))
 
+# deprecated
 def read_ab_log_file(log_file):
     try:
         f = open(log_file, 'r')
@@ -35,49 +58,33 @@ def read_ab_log_file(log_file):
     except IOError as e:
         print(e)
 
-def plot_wrk(log_files):
-    workload = "small"
-    log_files = [list(filter(lambda x: os.path.basename(x).find(workload) == 2, suite)) for suite in log_files]
-    data = [{os.path.basename(log_file):read_wrk_log_file(log_file) for log_file in suite} for suite in log_files]
-    labels = [list(mode.keys())[0][13:-4] for mode in data]
-
+def plot_wrk(demos):
     barWidth = 0.15
     fig = plt.figure()
     brs = []
-    brs.append(list(range(3)))
-    for i in range(1,len(data)):
+    brs.append(list(range(len(wrk_demo.workloads))))
+    for i in range(1,len(demos)):
         brs.append([x + barWidth for x in brs[i-1]])
-    for i in range(len(data)):
-        plt.bar(brs[i], data[i].values(), width=barWidth, edgecolor='grey', label=labels[i])
+    for i in range(len(demos)):
+        plt.bar(brs[i], demos[i].bench_avg, width=barWidth, edgecolor='grey', label=demos[i].label)
     
     plt.xlabel('Workload')
     plt.ylabel('Time (ms)')
-    plt.xticks([r + barWidth for r in range(3)],
-        ['create-shop-carts', 'populate-shop-carts', 'read-shop-carts'])
+    plt.xticks([r + barWidth for r in range(len(wrk_demo.workloads))], wrk_demo.workloads)
     plt.legend()
 
     output = datetime.now().strftime("PLOT_%Y%m%d_%H_%M_%S.jpg")
     plt.savefig(os.path.join("plots", output))
 
-def read_wrk_log_file(log_file):
-    try:
-        f = open(log_file, 'r')
-        data = f.read().split('\n')
-        time_per_request = float(data[5].split()[1][:-2])
-        f.close()
-        return time_per_request
-    except IOError as e:
-        print(e)
-
 if __name__ == "__main__":
-    def get_log_files(to_search):
-        log_files = []
+    def get_wrk_demos(to_search):
+        demos = []
         for suite in to_search:
             if os.path.isdir(suite) and not os.path.exists(os.path.join(suite, ".testignore")):
-                log_files.append([os.path.join(suite, log) for log in list(filter(lambda x: ".log" in x, os.listdir(suite)))])
-        return log_files      
+                demos.append(wrk_demo(suite))
+        return demos    
     
     # Run 
     to_search = sys.argv[1:] if len(sys.argv) > 1 else os.listdir(os.curdir)
-    log_files = get_log_files(to_search)
-    plot_wrk(log_files)
+    demos = get_wrk_demos(to_search)
+    plot_wrk(demos)
