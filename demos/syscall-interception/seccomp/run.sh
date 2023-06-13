@@ -19,3 +19,8 @@ run $@
 LOG=test_seccomp_mode_fs.log
 MODE="$BIN --mode-fs"
 run $@
+
+# run mode net
+LOG=test_seccomp_mode_net.log
+MODE="$BIN --mode-net"
+run $@

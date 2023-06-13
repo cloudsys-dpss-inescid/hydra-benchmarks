@@ -22,10 +22,11 @@
 
 #define MODE_STRICT_STRING "--mode-strict"
 #define MODE_FS_STRING "--mode-fs" 
+#define MODE_NET_STRING "--mode-net"
 
 #define FILE_SIZE 256
 
-typedef enum seccomp_mode_enum { MODE_STRICT, MODE_FS } seccomp_mode;
+typedef enum seccomp_mode_enum { MODE_STRICT, MODE_FS, MODE_NET } seccomp_mode;
 
 int target_pid;
 sem_t *fd_sem, *exec_sem;
@@ -52,6 +53,22 @@ struct sock_filter fs_filter[] = {
     BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, nr))),
 
     BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_openat, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_close, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
+
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+};
+
+struct sock_filter net_filter[] = {
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_KILL),
+
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, nr))),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_socket, 0, 1),
     BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
 
     BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_close, 0, 1),
@@ -100,6 +117,8 @@ int get_seccomp_mode(char *mode) {
         return MODE_STRICT;
     else if (strncmp(mode, MODE_FS_STRING, sizeof(MODE_FS_STRING)) == 0)
         return MODE_FS;
+    else if (strncmp(mode, MODE_NET_STRING, sizeof(MODE_NET_STRING)) == 0)
+        return MODE_NET;
     else
         return -1;
 }
@@ -143,6 +162,10 @@ int install_notify_filter(int mode) {
         case MODE_STRICT:
             prog.len = (unsigned short)(sizeof(strict_filter) / sizeof(strict_filter[0]));
             prog.filter = strict_filter;
+            break;
+        case MODE_NET:
+            prog.len = (unsigned short)(sizeof(net_filter) / sizeof(net_filter[0]));
+            prog.filter = net_filter;
             break;
         default:
             break;
