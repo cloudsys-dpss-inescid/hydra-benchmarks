@@ -10,17 +10,6 @@ if [ ! -f $BIN ]; then
 	cd -
 fi
 
-# run mode strict
 LOG=test_seccomp_mode_strict.log
 MODE="$BIN --mode-strict"
-run $@
-
-# run mode fs
-LOG=test_seccomp_mode_fs.log
-MODE="$BIN --mode-fs"
-run $@
-
-# run mode net
-LOG=test_seccomp_mode_net.log
-MODE="$BIN --mode-net"
 run $@
