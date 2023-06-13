@@ -25,8 +25,9 @@ class wrk_demo:
         except IOError as e:
             print(e)
 
-    def normalize(self, idx, minimum):
-        self.bench_avg[idx] /= minimum 
+    def normalize(self, native_demo):
+        for i in range(len(self.bench_avg)):
+            self.bench_avg[i] /= native_demo.bench_avg[i]
 
 # deprecated
 def plot_ab(log_files):
@@ -61,28 +62,33 @@ def read_ab_log_file(log_file):
     except IOError as e:
         print(e)
 
-def get_native_latency(demos, idx):
+def get_native_demo(demos):
     for demo in demos:
         if demo.label == "native":
-            return demo.bench_avg[idx]
+            return demo
     raise Exception("native demo not found")
 
 def normalize_demos(demos):
+    native_demo = get_native_demo(demos)
+    del demos[demos.index(native_demo)]
+    for demo in demos:
+        demo.normalize(native_demo)
+
+def sort(demos, barWidth):
+    x = [[] for i in range(len(demos))]
     for i in range(len(wrk_demo.workloads)):
-        minimum = get_native_latency(demos, i)
-        for demo in demos:
-            demo.normalize(i, minimum)
+        demos_list = sorted(demos, key=lambda demo: demo.bench_avg[i])
+        for j in range(len(demos_list)):
+            x[j] += [i + demos_list.index(demos[j]) * barWidth]
+    return x
 
 def plot_wrk(demos):
     normalize_demos(demos)
     barWidth = 0.15
     fig = plt.figure()
-    brs = []
-    brs.append(list(range(len(wrk_demo.workloads))))
-    for i in range(1,len(demos)):
-        brs.append([x + barWidth for x in brs[i-1]])
+    x = sort(demos, barWidth) 
     for i in range(len(demos)):
-        plt.bar(brs[i], demos[i].bench_avg, width=barWidth, edgecolor='grey', label=demos[i].label)
+        plt.bar(x[i], demos[i].bench_avg, width=barWidth, edgecolor='grey', label=demos[i].label)
     
     plt.ylim(bottom=1)
     plt.xlabel('Workload')
