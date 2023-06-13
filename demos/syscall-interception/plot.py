@@ -25,6 +25,9 @@ class wrk_demo:
         except IOError as e:
             print(e)
 
+    def normalize(self, idx, minimum):
+        self.bench_avg[idx] /= minimum 
+
 # deprecated
 def plot_ab(log_files):
     data = {os.path.basename(log_file):read_ab_log_file(log_file) for suite in log_files for log_file in suite}
@@ -58,7 +61,20 @@ def read_ab_log_file(log_file):
     except IOError as e:
         print(e)
 
+def get_native_latency(demos, idx):
+    for demo in demos:
+        if demo.label == "native":
+            return demo.bench_avg[idx]
+    raise Exception("native demo not found")
+
+def normalize_demos(demos):
+    for i in range(len(wrk_demo.workloads)):
+        minimum = get_native_latency(demos, i)
+        for demo in demos:
+            demo.normalize(i, minimum)
+
 def plot_wrk(demos):
+    normalize_demos(demos)
     barWidth = 0.15
     fig = plt.figure()
     brs = []
@@ -68,6 +84,7 @@ def plot_wrk(demos):
     for i in range(len(demos)):
         plt.bar(brs[i], demos[i].bench_avg, width=barWidth, edgecolor='grey', label=demos[i].label)
     
+    plt.ylim(bottom=1)
     plt.xlabel('Workload')
     plt.ylabel('Time (ms)')
     plt.xticks([r + barWidth for r in range(len(wrk_demo.workloads))], wrk_demo.workloads)
