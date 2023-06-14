@@ -19,7 +19,8 @@ class wrk_demo:
         try:
             f = open(log_file, 'r')
             data = f.read().split('\n')
-            time_per_request = float(data[5].split()[1][:-2])
+            row = list(filter(lambda x: "Latency" in x, data))[0]
+            time_per_request = float(row.split()[1][:-2]) 
             f.close()
             return time_per_request
         except IOError as e:
