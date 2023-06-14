@@ -33,32 +33,32 @@ function run {
 	stop_micronaut
 }
 
-function small {
+function request {
 	cd $WORKLOADS
-	rm shopcart-userids.txt
-	wrk -t2 -c2 -d30s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t2 -c2 -d15s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT > $DIR/1-small-$LOG
-	wrk -t2 -c2 -d60s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t2 -c2 -d15s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT > $DIR/2-small-$LOG
-	wrk -t2 -c2 -d30s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t2 -c2 -d15s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT > $DIR/3-small-$LOG
+	rm -f shopcart-userids.txt
+	wrk -t$1 -c$1 -d30s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT &> /dev/null
+	wrk -t$1 -c$1 -d${2}s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT > $DIR/1-$LOG
+	wrk -t$1 -c$1 -d60s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT &> /dev/null
+        wrk -t$1 -c$1 -d${2}s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT > $DIR/2-$LOG
+        wrk -t$1 -c$1 -d30s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT &> /dev/null
+        wrk -t$1 -c$1 -d${2}s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT > $DIR/3-$LOG
 	cd - > /dev/null
 }
 
+function tiny {
+	request 1 10
+}
+
+function small {
+	request 2 15
+}
+
 function medium {
-	cd $WORKLOADS
-        rm shopcart-userids.txt
-        wrk -t4 -c4 -d30s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t4 -c4 -d20s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT > $DIR/1-medium-$LOG
-        wrk -t4 -c4 -d60s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t4 -c4 -d20s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT > $DIR/2-medium-$LOG
-        wrk -t4 -c4 -d30s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t4 -c4 -d20s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT > $DIR/3-medium-$LOG
-        cd - > /dev/null
+	request 4 20
 }
 
 if [ $# -eq 0 ] || [[ ! $(type -t $1) == function ]]; then
-        echo "usage $0 <small|medium>"
+        echo "usage $0 <tiny|small|medium>"
         exit 1
 fi
 
