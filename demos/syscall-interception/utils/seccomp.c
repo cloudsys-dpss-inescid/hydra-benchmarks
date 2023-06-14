@@ -23,10 +23,11 @@
 #define MODE_STRICT_STRING "--mode-strict"
 #define MODE_FS_STRING "--mode-fs" 
 #define MODE_NET_STRING "--mode-net"
+#define MODE_ALLOW_RW_STRING "--mode-allow-rw"
 
 #define FILE_SIZE 256
 
-typedef enum seccomp_mode_enum { MODE_STRICT, MODE_FS, MODE_NET } seccomp_mode;
+typedef enum seccomp_mode_enum { MODE_STRICT, MODE_FS, MODE_NET, MODE_ALLOW_RW } seccomp_mode;
 
 int target_pid;
 sem_t *fd_sem, *exec_sem;
@@ -77,6 +78,51 @@ struct sock_filter net_filter[] = {
     BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
 };
 
+struct sock_filter allow_rw_filter[] = {
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, AUDIT_ARCH_X86_64, 1, 0),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_KILL),
+
+    BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, nr))),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_futex, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_read, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_readv, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_pread64, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_preadv, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_write, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_writev, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_pwrite64, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_pwritev, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_lseek, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, __NR_sendfile, 0, 1),
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_ALLOW),
+
+    BPF_STMT(BPF_RET + BPF_K, SECCOMP_RET_USER_NOTIF),
+};
+
+
+
 // Prototypes
 
 void sigchld_handler(int signum);
@@ -119,6 +165,8 @@ int get_seccomp_mode(char *mode) {
         return MODE_FS;
     else if (strncmp(mode, MODE_NET_STRING, sizeof(MODE_NET_STRING)) == 0)
         return MODE_NET;
+    else if (strncmp(mode, MODE_ALLOW_RW_STRING, sizeof(MODE_ALLOW_RW_STRING)) == 0)
+        return MODE_ALLOW_RW;
     else
         return -1;
 }
@@ -166,6 +214,10 @@ int install_notify_filter(int mode) {
         case MODE_NET:
             prog.len = (unsigned short)(sizeof(net_filter) / sizeof(net_filter[0]));
             prog.filter = net_filter;
+            break;
+        case MODE_ALLOW_RW:
+            prog.len = (unsigned short)(sizeof(allow_rw_filter) / sizeof(allow_rw_filter[0]));
+            prog.filter = allow_rw_filter;
             break;
         default:
             break;
