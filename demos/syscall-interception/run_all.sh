@@ -5,11 +5,16 @@ if [ $# -eq 0 ]; then
 	exit 1
 fi
 
+backup=backup/$(date +%Y.%m.%d.%H.%M.%S)
+mkdir $backup
+
 for d in */ ; do
-	pushd $d > /dev/null
-	if [ ! -f .testignore ]; then
+	if [ ! -f $d/.testignore ]; then
+		pushd $d > /dev/null
 		find -type f -name '*.log' -delete
 		./run.sh $@
+		popd > /dev/null
+		cp --parent $d/*.log $backup
 	fi
-	popd > /dev/null
 done
+
