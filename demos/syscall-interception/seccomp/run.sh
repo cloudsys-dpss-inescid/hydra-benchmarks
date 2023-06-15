@@ -10,6 +10,6 @@ if [ ! -f $BIN ]; then
 	cd -
 fi
 
-LOG=test_seccomp_mode_strict.log
+LOG=test_seccomp_strict.log
 MODE="$BIN --mode-strict"
 run $@

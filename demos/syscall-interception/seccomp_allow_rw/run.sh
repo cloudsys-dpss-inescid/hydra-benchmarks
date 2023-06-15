@@ -10,6 +10,6 @@ if [ ! -f $BIN ]; then
 	cd -
 fi
 
-LOG=test_seccomp_mode_allow_rw.log
+LOG=test_seccomp_allow_rw.log
 MODE="$BIN --mode-allow-rw"
 run $@
