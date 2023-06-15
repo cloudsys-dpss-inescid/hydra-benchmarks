@@ -33,6 +33,8 @@ int target_pid;
 sem_t *fd_sem, *exec_sem;
 char pathname[FILE_SIZE];
 
+int intercept_count = 0;
+
 struct sock_filter strict_filter[] = {
     BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
     BPF_JUMP(BPF_JMP + BPF_JEQ + BPF_K, AUDIT_ARCH_X86_64, 1, 0),
@@ -238,6 +240,7 @@ int install_notify_filter(int mode) {
 }
 
 void sigchld_handler(int signum) {
+    printf("Number of intercepted system calls: %d\n", intercept_count);
     exit(0);
 }
 
@@ -280,7 +283,10 @@ void handle_notifications(int nfd) {
         }
 
         // Print notification
+        intercept_count++;
+#ifdef DEBUG
         printf("Received notifaction id [%lld], from tid: %d, syscall nr: %d\n", req->id, req->pid, req->data.nr);
+#endif
 
         // Validate notification
         if (ioctl(nfd, SECCOMP_IOCTL_NOTIF_ID_VALID, &req->id) == -1 ) {
