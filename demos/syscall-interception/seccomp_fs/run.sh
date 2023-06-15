@@ -10,6 +10,5 @@ if [ ! -f $BIN ]; then
 	cd -
 fi
 
-LOG=test_seccomp_mode_fs.log
 MODE="$BIN --mode-fs"
 run $@

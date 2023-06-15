@@ -11,7 +11,7 @@ function start_micronaut {
         while ! nc -z $HOST $PORT; do
                 sleep 1
         done
-        echo "Running ${LOG%.*}"
+        echo "Running $(basename $DIR)"
 }
 
 function stop_micronaut {
@@ -22,46 +22,26 @@ function stop_micronaut {
 }
 
 function benchmark {
-	ab -n $1 -T 'application/json' -p $WORKLOADS/1-create-shop-carts.json localhost:8080/ > $DIR/$LOG
-#        ab -n $1 $HOST:$PORT/ > $DIR/$LOG
-	echo "Check results: $DIR/$LOG"
+	# warmup
+	ab -n 1000 -T 'application/json' -p $WORKLOADS/create-shop-cart.json localhost:8080/ &> /dev/null
+	ab -n 1000 localhost:8080$(cat $WORKLOADS/cart.id) &> /dev/null
+
+	for i in {1..1}
+	do
+		output=$DIR/post.log
+		ab -n $1 -T 'application/json' -p $WORKLOADS/create-shop-cart.json localhost:8080/ > $output
+		echo "Check results: $output"
+		output=$DIR/get.log
+		ab -n $1 localhost:8080/$(cat $WORKLOADS/cart.id) > $output
+		echo "Check results: $output"
+	done
 }
 
 function run {
 	start_micronaut
 	benchmark $1
-#	$1
 	stop_micronaut
 }
-
-function request {
-	cd $WORKLOADS
-	rm -f shopcart-userids.txt
-	wrk -t$1 -c$1 -d30s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT &> /dev/null
-	wrk -t$1 -c$1 -d${2}s -R285 -s 1-create-shop-carts.lua http://$HOST:$PORT > $DIR/1-$LOG
-	wrk -t$1 -c$1 -d60s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT &> /dev/null
-        wrk -t$1 -c$1 -d${2}s -R714 -s 2-populate-shop-carts.lua http://$HOST:$PORT > $DIR/2-$LOG
-        wrk -t$1 -c$1 -d30s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT &> /dev/null
-        wrk -t$1 -c$1 -d${2}s -R285 -s 3-read-shop-carts.lua http://$HOST:$PORT > $DIR/3-$LOG
-	cd - > /dev/null
-}
-
-function tiny {
-	request 1 10
-}
-
-function small {
-	request 2 15
-}
-
-function medium {
-	request 4 20
-}
-
-#if [ $# -eq 0 ] || [[ ! $(type -t $1) == function ]]; then
-#        echo "usage $0 <tiny|small|medium>"
-#        exit 1
-#fi
 
 if [ $# -eq 0 ]; then
 	echo "usage $0 iter_count"

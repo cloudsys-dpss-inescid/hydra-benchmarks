@@ -2,6 +2,5 @@
 
 DIR=$(cd $(dirname $0) && pwd)
 source $DIR/../utils/shared.sh
-LOG=test_strace.log
 MODE="strace -f"
 run $@
