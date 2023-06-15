@@ -32,7 +32,7 @@ class wrk_demo:
 
 # deprecated
 def plot_ab(log_files):
-    data = {os.path.basename(log_file):read_ab_log_file(log_file) for suite in log_files for log_file in suite}
+    data = {os.path.basename(log_file):read_ab_log_file(log_file) for log_file in log_files}
     labels = [label[5:-4] for label in list(data.keys())]
     bench_avg = list(data.values())
     
@@ -108,7 +108,16 @@ if __name__ == "__main__":
                 demos.append(wrk_demo(suite))
         return demos    
     
+    def get_ab_demos(to_search):
+        demos = []
+        for suite in to_search:
+            if os.path.isdir(suite) and not os.path.exists(os.path.join(suite, ".testignore")):
+                demos += [os.path.join(suite, demo) for demo in list(filter(lambda x: x[-4:] == ".log", os.listdir(suite)))]
+        return demos
+    
     # Run 
     to_search = sys.argv[1:] if len(sys.argv) > 1 else os.listdir(os.curdir)
-    demos = get_wrk_demos(to_search)
-    plot_wrk(demos)
+    # demos = get_wrk_demos(to_search)
+    # plot_wrk(demos)
+    demos = get_ab_demos(to_search)
+    plot_ab(demos)

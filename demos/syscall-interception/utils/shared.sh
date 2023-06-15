@@ -22,14 +22,15 @@ function stop_micronaut {
 }
 
 function benchmark {
-        ab -n $1 $HOST:$PORT/ > $DIR/$LOG
+	ab -n $1 -T 'application/json' -p $WORKLOADS/1-create-shop-carts.json localhost:8080/ > $DIR/$LOG
+#        ab -n $1 $HOST:$PORT/ > $DIR/$LOG
 	echo "Check results: $DIR/$LOG"
 }
 
 function run {
 	start_micronaut
-#	benchmark $1
-	$1
+	benchmark $1
+#	$1
 	stop_micronaut
 }
 
@@ -57,9 +58,14 @@ function medium {
 	request 4 20
 }
 
-if [ $# -eq 0 ] || [[ ! $(type -t $1) == function ]]; then
-        echo "usage $0 <tiny|small|medium>"
-        exit 1
+#if [ $# -eq 0 ] || [[ ! $(type -t $1) == function ]]; then
+#        echo "usage $0 <tiny|small|medium>"
+#        exit 1
+#fi
+
+if [ $# -eq 0 ]; then
+	echo "usage $0 iter_count"
+	exit 1
 fi
 
 if [ -z $BENCHMARKS_HOME ]; then
