@@ -15,12 +15,12 @@ This demo aims to benchmark the execution times without intercepting system call
 Each demo is placed in a separate directory with a `run.sh` script that invokes the demo.
 ```sh
 $ cd demo/directory/you/wish/to/execute
-$ ./run.sh iter_count
+$ ./run.sh <iter_count>
 ```
 
 If you wish to run all demos at once, use the `run_all.sh` script:
 ```sh
-$ ./run_all.sh iter_count
+$ ./run_all.sh <iter_count>
 ```
 
 ## Plotting the results
