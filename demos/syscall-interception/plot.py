@@ -46,7 +46,8 @@ def calculate_overheads(demos):
 
 def plot(demos): 
     calculate_overheads(demos)
-
+    plt.rcParams["figure.figsize"] = (6,3)
+    plt.rcParams.update({'font.size': 12})
     plt.rcParams.update({'figure.autolayout': True})
     plt.style.use('ggplot')
     fig = plt.figure()
