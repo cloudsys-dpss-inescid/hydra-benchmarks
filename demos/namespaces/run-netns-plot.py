@@ -3,7 +3,10 @@
 import numpy
 import matplotlib.pyplot as plt
 
-labels             = numpy.loadtxt('results-netns/experiment-procs.dat', dtype='str')
+plt.rcParams["figure.figsize"] = (4,5)
+plt.rcParams.update({'font.size': 12})
+
+labels = numpy.loadtxt('results-netns/experiment-procs.dat', dtype='str')
 
 netnscreation_mean = numpy.loadtxt('results-netns/experiment-netnscreation-mean.dat')
 plt.bar(labels, netnscreation_mean, label='Netns creation')
@@ -32,5 +35,6 @@ plt.ylim(ymin=0)
 plt.legend()
 plt.xlabel('Concurrent invocations')
 plt.ylabel('Time (us)')
+plt.tight_layout()
 plt.savefig('run-netns.pdf')
 plt.savefig('run-netns.png', dpi=300)
