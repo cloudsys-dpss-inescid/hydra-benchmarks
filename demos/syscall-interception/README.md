@@ -30,3 +30,16 @@ Each demo places the results in the appropriate `.log` files. The `plot.py` scri
 $ ./plot.py                            # will discover all logs and plot those demos
 $ ./plot.py demo_dir1 demo_dir2        # will plot only chosen demos
 ```
+
+## Plotting system calls histogram
+
+First, generate the system call dump using strace.
+```sh
+$ cd strace
+$ ./dump_syscalls.sh
+```
+
+Then, run the `plot_histogram.py` script to generate a graph of the histogram.
+```
+$ ./plot_histogram.py
+```
