@@ -73,13 +73,9 @@ def plot(demos):
 
 if __name__ == "__main__":
     def get_demos(to_search):
-        demos = []
-        for suite in to_search:
-            if os.path.isdir(suite) and not os.path.exists(os.path.join(suite, ".testignore")):
-                demos.append(demo(suite))
-        return demos
+        return [demo(suite) for suite in to_search]
     
     # Run 
-    to_search = sys.argv[1:] if len(sys.argv) > 1 else os.listdir(os.curdir)
+    to_search = sys.argv[1:] if len(sys.argv) > 1 else ['native', 'seccomp', 'seccomp_allow_rw', 'strace']
     demos = get_demos(to_search)
     plot(demos)
