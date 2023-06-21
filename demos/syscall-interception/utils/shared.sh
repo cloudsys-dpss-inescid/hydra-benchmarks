@@ -21,24 +21,23 @@ function stop_micronaut {
 	done
 }
 
-function benchmark {
-	# warmup
-	ab -n 1000 -T 'application/json' -p $WORKLOADS/create-shop-cart.json localhost:8080/ &> /dev/null
-	ab -n 1000 localhost:8080$(cat $WORKLOADS/cart.id) &> /dev/null
+function warmup {
+	ab -n 1000 -T 'application/json' -p $WORKLOADS/create-shop-cart.json $HOST:$PORT/ &> /dev/null
+        ab -n 1000 $HOST:$PORT/$(cat $WORKLOADS/cart.id) &> /dev/null
+}
 
-	for i in {1..1}
-	do
-		output=$DIR/post.log
-		ab -n $1 -T 'application/json' -p $WORKLOADS/create-shop-cart.json localhost:8080/ > $output
-		echo "Check results: $output"
-		output=$DIR/get.log
-		ab -n $1 localhost:8080/$(cat $WORKLOADS/cart.id) > $output
-		echo "Check results: $output"
-	done
+function benchmark {
+	output=$DIR/post.log
+	ab -n $1 -T 'application/json' -p $WORKLOADS/create-shop-cart.json $HOST:$PORT/ > $output
+	echo "Check results: $output"
+	output=$DIR/get.log
+	ab -n $1 $HOST:$PORT/$(cat $WORKLOADS/cart.id) > $output
+	echo "Check results: $output"
 }
 
 function run {
 	start_micronaut
+	warmup
 	benchmark $1
 	stop_micronaut
 }
