@@ -33,7 +33,7 @@ int target_pid;
 sem_t *fd_sem, *exec_sem;
 char pathname[FILE_SIZE];
 
-int intercept_count = 0;
+unsigned long intercept_count = 0;
 
 struct sock_filter strict_filter[] = {
     BPF_STMT(BPF_LD + BPF_W + BPF_ABS, (offsetof(struct seccomp_data, arch))),
@@ -239,13 +239,22 @@ int install_notify_filter(int mode) {
     }
 }
 
+void log_syscalls() {
+    char buf[22];
+    FILE *f = fopen("seccomp.out", "w");
+    sprintf(buf, "%lu\n", intercept_count);
+    fwrite(buf, sizeof(char), strlen(buf), f);
+    fclose(f);
+}
+
 void sigchld_handler(int signum) {
-    printf("Number of intercepted system calls: %d\n", intercept_count);
+    log_syscalls();
     exit(0);
 }
 
 void sigterm_handler(int signum) {
     kill(target_pid, SIGKILL);
+    log_syscalls();
     exit(0);
 }
 
@@ -285,7 +294,7 @@ void handle_notifications(int nfd) {
         // Print notification
         intercept_count++;
 #ifdef DEBUG
-        printf("Received notifaction id [%lld], from tid: %d, syscall nr: %d\n", req->id, req->pid, req->data.nr);
+        fprintf(stderr, "Received notifaction id [%lld], from tid: %d, syscall nr: %d\n", req->id, req->pid, req->data.nr);
 #endif
 
         // Validate notification
