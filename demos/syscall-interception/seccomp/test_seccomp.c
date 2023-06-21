@@ -19,14 +19,8 @@ int main(int argc, char *argv[]) {
         fprintf(stderr, "%s: command not found\n", argv[2]);
         exit(1);
     }
-
-    seccomp_init();
-
-    int child;
-    if ((child = fork()) == 0)
-        exec(pathname, argv+2, mode);
-    else
-        intercept_syscalls(child);
+    
+    exec(pathname, argv+2, mode);
 
     return 0;
 }
