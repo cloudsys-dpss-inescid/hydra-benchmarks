@@ -1,4 +1,5 @@
 .vscode
 *.log
 *.jpg
+*.out
 shopcart-userids.txt
