@@ -1,5 +1,6 @@
 #!/usr/bin/python
 import os
+import pathlib
 from datetime import datetime
 import matplotlib.pyplot as plt
 
@@ -38,5 +39,10 @@ class syscall_dump:
         plt.savefig(os.path.join("plots", output), dpi=300)
 
 if __name__ == "__main__":
+    try:
+        pathlib.Path('plots').mkdir()
+    except FileExistsError:
+        pass
+    
     syscalls = syscall_dump(os.path.join("strace", "strace.out"))
     syscalls.plot_histogram()

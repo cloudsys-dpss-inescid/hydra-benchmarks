@@ -1,7 +1,7 @@
 #!/usr/bin/python
 import os
 import sys
-import numpy as np
+import pathlib
 from datetime import datetime
 import matplotlib.pyplot as plt
 
@@ -72,6 +72,11 @@ def plot(demos):
         plt.savefig(os.path.join("plots", output))
 
 if __name__ == "__main__":
+    try:
+        pathlib.Path('plots').mkdir()
+    except FileExistsError:
+        pass
+    
     def get_demos(to_search):
         return [demo(suite) for suite in to_search]
     
