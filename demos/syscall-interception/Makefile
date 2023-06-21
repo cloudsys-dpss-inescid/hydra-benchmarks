@@ -1,11 +1,15 @@
 .PHONY: all clean
 
 CC := gcc
-OBJ_DIR := build/obj
-BIN_DIR := build/bin
+BUILD_DIR := build
+OBJ_DIR := $(BUILD_DIR)/obj
+BIN_DIR := $(BUILD_DIR)/bin
 CFLAGS := -g -Wall
 
-all: $(BIN_DIR)/test_seccomp
+all: $(BUILD_DIR) $(BIN_DIR)/test_seccomp
+
+$(BUILD_DIR):
+	mkdir -p $(OBJ_DIR) $(BIN_DIR)
 
 # Executables
 $(BIN_DIR)/test_seccomp: $(OBJ_DIR)/test_seccomp.o $(OBJ_DIR)/seccomp.o

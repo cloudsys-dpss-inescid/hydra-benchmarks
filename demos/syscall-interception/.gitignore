@@ -2,4 +2,4 @@
 *.log
 *.jpg
 *.out
-shopcart-userids.txt
+build/
