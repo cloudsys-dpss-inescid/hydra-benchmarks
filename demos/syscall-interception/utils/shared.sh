@@ -42,6 +42,12 @@ function run {
 	stop_micronaut
 }
 
+function compile_seccomp {
+	cd $DIR/..
+	make > /dev/null
+	cd - > /dev/null
+}
+
 if [ $# -eq 0 ]; then
 	echo "usage $0 iter_count"
 	exit 1
