@@ -159,6 +159,17 @@ function java_videoprocessing {
     echo '{"name":"'$NAME'","async":"false","cached":"true","arguments":"{\"ffmpeg\":\"http://localhost:8000/ffmpeg\",\"video\":\"http://localhost:8000/file_example_MP4_480_1_5MG.mp4\"}"}' > "$APP_POST"
 }
 
+function java_genericapp {
+	APP_LANG=java
+	APP_NAME=gv-genericapp
+	APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libgenericapp.so
+	APP_MAIN=com.genericapp.GenericApp
+	APP=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libs/genericapp-1.0-all.jar
+	SANDBOX=isolate
+	NAME=genericapp
+	echo '{"name":"'$NAME'","async":"false","cached":"true","arguments":"{\"memory\":\"100\",\"duration\":\"1000\"}"}' > "$APP_POST"
+}
+
 $app
 
 if [ -z $proxy ]; then
