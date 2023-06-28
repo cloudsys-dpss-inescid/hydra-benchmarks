@@ -77,4 +77,8 @@ public class Invocation {
         memory = (int) ((double) memory * OPTIMIZED_FOOTPRINT_RATIO);
         optimized = true;
     }
+
+    public boolean isOptimized() {
+        return optimized;
+    }
 }

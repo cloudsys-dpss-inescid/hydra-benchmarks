@@ -31,7 +31,7 @@ public class InvocationTraceSimulator {
     /**
      * Minimum number of cold starts within a period.
      */
-    private static final int AOT_OPTIMIZATION_THRESHOLD = 10;
+    private static final int AOT_OPTIMIZATION_THRESHOLD = 5;
 
     /**
      * Period during which we count number of cold starts (in ms).
@@ -123,6 +123,7 @@ public class InvocationTraceSimulator {
         List<Invocation> runningInvocations = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentTimestamp).collect(Collectors.toList());
         int runningUsers = (int) runningInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
         int runningFunctions  = (int) runningInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
+        int runningOptimizedFunctions  = (int) runningInvocations.parallelStream().filter(Invocation::isOptimized).map(Invocation::getFunction).distinct().count();
         int runningInvocationsFootprint = (int) runningInvocations.parallelStream().mapToInt(Invocation::getMemory).sum();
 
         int totalUsers = (int) activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
@@ -139,6 +140,7 @@ public class InvocationTraceSimulator {
                 optimizedColdStarts,
                 runningUsers,
                 runningFunctions,
+                runningOptimizedFunctions,
                 runningInvocations.size(),
                 runningInvocationsFootprint,
                 cachedUsers,
