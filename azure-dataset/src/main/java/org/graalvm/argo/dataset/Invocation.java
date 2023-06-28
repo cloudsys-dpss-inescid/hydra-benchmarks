@@ -41,6 +41,10 @@ public class Invocation {
         return memory;
     }
 
+    public void setMemory(int memory) {
+        this.memory = memory;
+    }
+
     public int getDuration() {
         return duration;
     }

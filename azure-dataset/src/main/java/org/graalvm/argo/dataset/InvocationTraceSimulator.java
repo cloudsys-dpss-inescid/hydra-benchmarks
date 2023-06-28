@@ -172,12 +172,15 @@ public class InvocationTraceSimulator {
                 coldStarts++;
                 if (window.optimized(currentFunction) || window.worthOptimizing(currentFunction, currentTimestamp)) {
                     optimizedColdStarts++;
+                    // Cold start happened, but the function is optimized.
                     currentInvocation.optimize();
                 } else {
                     window.add(currentFunction, currentTimestamp);
                 }
             } else {
                 activeInvocations.remove(warm);
+                // Reuse memory of the warm invocation instead of always using unoptimized.
+                currentInvocation.setMemory(warm.getMemory());
             }
 
             // Add invocation to array of active invocations.
