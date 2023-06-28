@@ -8,6 +8,7 @@ public class OutputEntry {
     protected int invocationsProcessed;
     // Cold starts since the last output entry.
     protected int coldStarts;
+    protected int optimizedColdStarts;
     // Current number of users, functions, invocations, and invocation footprint (MBs).
     protected int runningUsers;
     protected int runningFunctions;
@@ -22,6 +23,7 @@ public class OutputEntry {
             int timestamp,
             int invocationsProcessed,
             int coldStarts,
+            int optimizedColdStarts,
             int runningUsers,
             int runningFunctions,
             int runningInvocations,
@@ -32,6 +34,7 @@ public class OutputEntry {
         this.timestamp = timestamp;
         this.invocationsProcessed = invocationsProcessed;
         this.coldStarts = coldStarts;
+        this.optimizedColdStarts = optimizedColdStarts;
         this.runningUsers = runningUsers;
         this.runningFunctions = runningFunctions;
         this.runningInvocations = runningInvocations;
@@ -45,6 +48,7 @@ public class OutputEntry {
             int timestamp,
             int invocationsProcessed,
             int coldStarts,
+            int optimizedColdStarts,
             int runningUsers,
             int runningFunctions,
             int runningInvocations,
@@ -52,12 +56,12 @@ public class OutputEntry {
             int cachedUsers,
             int cachedFunctions,
             int cachedInvocationsFootprint) {
-        return String.format("time %s | invocations %s cold %s | running users %s functions %s invocations %s footprint %s | cached users %s functions %s footprint %s",
-                timestamp, invocationsProcessed, coldStarts, runningUsers, runningFunctions, runningInvocations, runningInvocationsFootprint, cachedUsers, cachedFunctions, cachedInvocationsFootprint);
+        return String.format("time %s | invocations %s cold %s optimized_cold %s | running users %s functions %s invocations %s footprint %s | cached users %s functions %s footprint %s",
+                timestamp, invocationsProcessed, coldStarts, optimizedColdStarts, runningUsers, runningFunctions, runningInvocations, runningInvocationsFootprint, cachedUsers, cachedFunctions, cachedInvocationsFootprint);
     }
 
     @Override
     public String toString() {
-        return toString(timestamp, invocationsProcessed, coldStarts, runningUsers, runningFunctions, runningInvocations, runningInvocationsFootprint, cachedUsers, cachedFunctions, cachedInvocationsFootprint);
+        return toString(timestamp, invocationsProcessed, coldStarts, optimizedColdStarts, runningUsers, runningFunctions, runningInvocations, runningInvocationsFootprint, cachedUsers, cachedFunctions, cachedInvocationsFootprint);
     }
 }

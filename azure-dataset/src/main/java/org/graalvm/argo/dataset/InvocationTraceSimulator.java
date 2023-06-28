@@ -14,6 +14,7 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
+import org.graalvm.argo.dataset.utils.ColdStartSlidingWindow;
 
 /**
  * This class loads an invocation trace and replays each invocation, one at a
@@ -26,6 +27,16 @@ public class InvocationTraceSimulator {
      * Minimum number of milliseconds to wait before recalculating aggregated data.
      */
     private static final int SAMPLE_INTERVAL = 1000;
+
+    /**
+     * Minimum number of cold starts within a period.
+     */
+    private static final int AOT_OPTIMIZATION_THRESHOLD = 10;
+
+    /**
+     * Period during which we count number of cold starts (in ms).
+     */
+    private static final int SLIDING_WINDOW_PERIOD = 60000;
 
     private static Options prepareOptions() {
         Options options = new Options();
@@ -106,6 +117,7 @@ public class InvocationTraceSimulator {
             int previousTimestamp,
             int lastInvocationsProcessed,
             int coldStarts,
+            int optimizedColdStarts,
             int invocationsProcessed) {
 
         List<Invocation> runningInvocations = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentTimestamp).collect(Collectors.toList());
@@ -124,6 +136,7 @@ public class InvocationTraceSimulator {
                 currentTimestamp,
                 invocationsProcessed - lastInvocationsProcessed,
                 coldStarts,
+                optimizedColdStarts,
                 runningUsers,
                 runningFunctions,
                 runningInvocations.size(),
@@ -136,23 +149,33 @@ public class InvocationTraceSimulator {
     public static List<OutputEntry> simulateInvocations(List<Invocation> invocations, int keepalive, int interval) throws Exception {
         TreeSet<Invocation> activeInvocations = new TreeSet<Invocation>(Invocation.comparator());
         List<OutputEntry> statistics = new LinkedList<>();
+        ColdStartSlidingWindow window = new ColdStartSlidingWindow(AOT_OPTIMIZATION_THRESHOLD, SLIDING_WINDOW_PERIOD);
+        String currentFunction;
         int invocationsProcessed = 0;
         int currentTimestamp = 0;
         int previousTimestamp = 0;
         int lastInvocationsProcessed = 0;
         int coldStarts = 0;
+        int optimizedColdStarts = 0;
 
         System.err.println("Simulating trace with " + invocations.size() + " invocations and keepalive of " + keepalive);
         for (Invocation currentInvocation : invocations) {
             currentTimestamp = currentInvocation.getTimestamp();
+            currentFunction = currentInvocation.getFunction();
 
             // Remove invocations that have past their keep alive time.
             evictTimedOutInvocations(activeInvocations, currentTimestamp, keepalive);
 
             // We try to find an inactive invocation that can be replaced with the new one.
-            Invocation warm = findWarmInvocation(activeInvocations, currentTimestamp, currentInvocation.getFunction());
+            Invocation warm = findWarmInvocation(activeInvocations, currentTimestamp, currentFunction);
             if (warm == null) {
                 coldStarts++;
+                if (window.optimized(currentFunction) || window.worthOptimizing(currentFunction, currentTimestamp)) {
+                    optimizedColdStarts++;
+                    currentInvocation.optimize();
+                } else {
+                    window.add(currentFunction, currentTimestamp);
+                }
             } else {
                 activeInvocations.remove(warm);
             }
@@ -163,12 +186,13 @@ public class InvocationTraceSimulator {
 
             if (currentTimestamp - previousTimestamp > interval) {
                 // Calculate and update statistics.
-                updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, invocationsProcessed);
+                updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, optimizedColdStarts, invocationsProcessed);
 
                 // Reset values until the next round.
                 previousTimestamp = currentTimestamp;
                 lastInvocationsProcessed = invocationsProcessed;
                 coldStarts = 0;
+                optimizedColdStarts = 0;
             }
 
             // Progress update...
@@ -178,7 +202,7 @@ public class InvocationTraceSimulator {
         }
 
         // Final update to statistics.
-        updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, invocationsProcessed);
+        updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, optimizedColdStarts, invocationsProcessed);
 
         return statistics;
     }
