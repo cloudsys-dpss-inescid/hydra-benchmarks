@@ -31,7 +31,7 @@ public class InvocationTraceSimulator {
     /**
      * Minimum number of cold starts within a period.
      */
-    private static final int AOT_OPTIMIZATION_THRESHOLD = 5;
+    private static final int AOT_OPTIMIZATION_THRESHOLD = 10;
 
     /**
      * Period during which we count number of cold starts (in ms).
