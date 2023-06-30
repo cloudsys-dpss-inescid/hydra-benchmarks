@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 FOOTPRINT_METRIC = "max-rss"
 width = 0.3
 benchmark_labels = [
-    "tika",
-    "petclinic",
-    "shopcart"
+    "Tika",
+    "Petclinic",
+    "Shopcart"
 ]
 x = np.arange(len(benchmark_labels))
 
@@ -30,7 +30,7 @@ ni_footprint = [
     results.get_benchmark_metric(FOOTPRINT_METRIC, bench_results_petclinic_ni),
     results.get_benchmark_metric(FOOTPRINT_METRIC, bench_results_shopcart_ni)]
 
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 13})
 fig, ax = plt.subplots()
 ax.bar(x + 0*width, jvm_footprint, width=width, hatch='*', label='JVM',           alpha=0.75)
 ax.bar(x + 1*width, ni_footprint,  width=width, hatch='O', label='Native Image',  alpha=0.75)

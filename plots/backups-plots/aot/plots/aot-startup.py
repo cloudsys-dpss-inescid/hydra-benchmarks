@@ -6,9 +6,9 @@ import matplotlib.pyplot as plt
 THROUGHPUT_METRIC = "app-startup"
 width = 0.3
 benchmark_labels = [
-    "tika",
-    "petclinic",
-    "shopcart"
+    "Tika",
+    "Petclinic",
+    "Shopcart"
 ]
 x = np.arange(len(benchmark_labels))
 
@@ -30,7 +30,7 @@ ni_startup = [
     results.get_startup_metric(bench_results_petclinic_ni),
     results.get_startup_metric(bench_results_shopcart_ni)]
 
-plt.rcParams.update({'font.size': 12})
+plt.rcParams.update({'font.size': 13})
 fig, ax = plt.subplots()
 ax.bar(x + 0*width, jvm_startup, width=width, hatch='*', label='JVM',           alpha=0.75)
 ax.bar(x + 1*width, ni_startup,  width=width, hatch='O', label='Native Image',  alpha=0.75)

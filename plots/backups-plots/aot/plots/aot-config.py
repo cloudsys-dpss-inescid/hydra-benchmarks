@@ -6,9 +6,9 @@ import numbers
 
 width = 0.15
 benchmark_labels = [
-    "tika",
-    "petclinic",
-    "shopcart"
+    "Tika",
+    "Petclinic",
+    "Shopcart"
 ]
 x = np.arange(len(benchmark_labels))
 
@@ -74,7 +74,7 @@ resource_complexity = [
     petclinic_config_complexity[5],
     shopcart_config_complexity[5]]
 
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 24})
 fig, ax = plt.subplots()
 ax.bar(x + 0*width, proxy_complexity,              width=width, hatch='/', label='Proxy',              alpha=0.75)
 ax.bar(x + 1*width, predefined_classes_complexity, width=width, hatch='O', label='Predefined Classes', alpha=0.75)
@@ -95,12 +95,12 @@ plt.xticks(rotation = 35)
 #     labelbottom=False) # labels along the bottom edge are off
 
 ax.set_yscale('log')
-ax.set_ylim(ymin=0.1, ymax=100000)
+ax.set_ylim(ymin=0.1, ymax=500000)
 # ax.set_xlim(xmin=-.25, xmax=14.7)
 fig.set_figwidth(15)
 fig.set_figheight(7)
 
-ax.legend(ncol=5, loc='upper center')
+ax.legend(ncol=3, loc='upper center')
 plt.savefig("aot-config.pdf", bbox_inches='tight')
 plt.savefig("aot-config.png", bbox_inches='tight')
 plt.show()
