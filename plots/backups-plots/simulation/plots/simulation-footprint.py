@@ -6,8 +6,8 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-RESULTS_FILE_UNOPTIMIZED = "../results/simulation_d02_256GB_unoptimized_keepalive_2min.txt"
-RESULTS_FILE_OPTIMIZED = "../results/simulation_d02_256GB_10inv_per_1min_keepalive_2min.txt"
+RESULTS_FILE_UNOPTIMIZED = "../results/simulation_d02_unoptimized_keepalive_10min.txt"
+RESULTS_FILE_OPTIMIZED = "../results/simulation_d02_10inv_per_1min_keepalive_10min.txt"
 width = 1.0
 
 
@@ -21,8 +21,8 @@ x = [elem - first for elem in x]
 # Convert from ms to sec
 x = [elem / 1000 for elem in x]
 
-plt.rcParams["figure.figsize"] = (15, 7)
-plt.rcParams.update({'font.size': 18})
+plt.rcParams["figure.figsize"] = (10, 7)
+plt.rcParams.update({'font.size': 24})
 plt.xlabel("Time (s)")
 plt.ylabel("Memory (GB)")
 
@@ -31,7 +31,7 @@ plt.plot(x, yRunningFootprint,          linewidth=3, label='Unoptimized')
 
 plt.grid()
 # plt.yscale('log', base=10)
-plt.ylim(ymin=0, ymax=300)
+plt.ylim(ymin=0, ymax=1600)
 plt.xlim(xmin=0, xmax=1200)
 plt.legend(ncol=5, loc='upper center')
 plt.savefig("simulation-footprint.pdf", bbox_inches='tight')

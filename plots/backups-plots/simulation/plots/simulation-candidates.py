@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-RESULTS_FILE = "../results/simulation_d02_256GB_10inv_per_1min_keepalive_2min.txt"
+RESULTS_FILE = "../results/simulation_d02_10inv_per_1min_keepalive_10min.txt"
 width = 1.0
 
 
@@ -22,7 +22,7 @@ x = [elem - first for elem in x]
 # Convert from ms to sec
 x = [elem / 1000 for elem in x]
 
-plt.rcParams.update({'font.size': 18})
+plt.rcParams.update({'font.size': 24})
 fig, ax = plt.subplots()
 
 bottom = np.zeros(len(x))
@@ -37,7 +37,7 @@ plt.grid()
 # ax.set_yscale('log')
 ax.set_ylim(ymin=0)
 ax.set_xlim(xmin=0, xmax=1200)
-fig.set_figwidth(15)
+fig.set_figwidth(10)
 fig.set_figheight(7)
 
 ax.legend(ncol=5, loc='upper center')
