@@ -20,10 +20,8 @@ def read_stdin_xy():
   x = []
   yInvocations = []
   yColdstarts = []
-  yOptimizedColdstarts = []
   yRunningUsers = []
   yRunningFunctions = []
-  yRunningOptimizedFunctions = []
   yRunningInvocations = []
   yRunningFootprint = []
   yCachedUsers = []
@@ -36,18 +34,16 @@ def read_stdin_xy():
       x.append(float(cols[1]))
       yInvocations.append(float(cols[4]))
       yColdstarts.append(float(cols[6]))
-      yOptimizedColdstarts.append(float(cols[8]))
-      yRunningUsers.append(float(cols[12]))
-      yRunningFunctions.append(float(cols[14]))
-      yRunningOptimizedFunctions.append(float(cols[16]))
-      yRunningInvocations.append(float(cols[18]))
-      yRunningFootprint.append(float(cols[20]))
-      yCachedUsers.append(float(cols[24]))
-      yCachedFunctions.append(float(cols[26]))
-      yCachedFootprint.append(float(cols[28]))
+      yRunningUsers.append(float(cols[10]))
+      yRunningFunctions.append(float(cols[12]))
+      yRunningInvocations.append(float(cols[14]))
+      yRunningFootprint.append(float(cols[16]))
+      yCachedUsers.append(float(cols[20]))
+      yCachedFunctions.append(float(cols[22]))
+      yCachedFootprint.append(float(cols[24]))
     except Exception as e:
       print("Warning ignoring " + e)
-  return x, yInvocations, yColdstarts, yOptimizedColdstarts, yRunningUsers, yRunningFunctions, yRunningOptimizedFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint
+  return x, yInvocations, yColdstarts, yRunningUsers, yRunningFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint
 
 
 parser = argparse.ArgumentParser(description='Plot two-dimensional datapoints.')
@@ -58,7 +54,7 @@ parser.add_argument('-ymax', '--ymax', required=False)
 
 args = parser.parse_args()
 
-x, yInvocations, yColdstarts, yOptimizedColdstarts, yRunningUsers, yRunningFunctions, yRunningOptimizedFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint = read_stdin_xy()
+x, yInvocations, yColdstarts, yRunningUsers, yRunningFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint = read_stdin_xy()
 
 # Adjust startin point.
 first = x[0]
@@ -69,10 +65,8 @@ ax1 = fig.add_subplot(111)
 
 ax1.scatter(x, yInvocations, s=1, label='Invocations')
 ax1.scatter(x, yColdstarts, s=1, label='Cold starts')
-ax1.scatter(x, yOptimizedColdstarts, s=1, label='Optimized cold starts')
 ax1.scatter(x, yRunningUsers, s=1, label='Running users')
 ax1.scatter(x, yRunningFunctions, s=1, label='Running functions')
-ax1.scatter(x, yRunningOptimizedFunctions, s=1, label='Running optimized functions')
 ax1.scatter(x, yRunningInvocations, s=1, label='Running invocations')
 ax1.scatter(x, yRunningFootprint, s=1, label='Running Footprint') # TODO - show on another axis
 ax1.scatter(x, yCachedUsers, s=1, label='Cached users')

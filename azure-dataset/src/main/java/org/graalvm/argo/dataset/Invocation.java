@@ -8,16 +8,13 @@ public class Invocation {
     // Function identifier.
     private final String function;
     // Memory footprint in MBs.
-    private int memory;
+    protected int memory;
     // Function execution time in ms.
     private final int duration;
     // Function start timestamp in ms.
     private final int timestamp;
     // Function finish timestamp in ms.
     private final int endTimestamp;
-
-    private boolean optimized;
-    private static final double OPTIMIZED_FOOTPRINT_RATIO = 0.375;
 
     public Invocation(String owner, String function, int memory, int duration, int timestamp) {
         this.owner = owner;
@@ -26,7 +23,6 @@ public class Invocation {
         this.duration = duration;
         this.timestamp = timestamp;
         this.endTimestamp = timestamp + duration;
-        this.optimized = false;
     }
 
     public String getOwner() {
@@ -39,10 +35,6 @@ public class Invocation {
 
     public int getMemory() {
         return memory;
-    }
-
-    public void setMemory(int memory) {
-        this.memory = memory;
     }
 
     public int getDuration() {
@@ -70,15 +62,5 @@ public class Invocation {
                 return o1.endTimestamp - o2.endTimestamp;
             }
         };
-    }
-
-    public void optimize() {
-        assert optimized == false;
-        memory = (int) ((double) memory * OPTIMIZED_FOOTPRINT_RATIO);
-        optimized = true;
-    }
-
-    public boolean isOptimized() {
-        return optimized;
     }
 }
