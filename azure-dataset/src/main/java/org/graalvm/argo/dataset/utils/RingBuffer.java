@@ -4,7 +4,6 @@ import java.util.Arrays;
 
 public class RingBuffer {
 
-
     private final int[] buffer;
     private int writeSequence;
     private final int capacity;
