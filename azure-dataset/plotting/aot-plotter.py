@@ -20,15 +20,15 @@ def read_stdin_xy():
   x = []
   yInvocations = []
   yColdstarts = []
-  yOptimizedColdstarts = []
   yRunningUsers = []
   yRunningFunctions = []
-  yRunningOptimizedFunctions = []
   yRunningInvocations = []
   yRunningFootprint = []
   yCachedUsers = []
   yCachedFunctions = []
   yCachedFootprint = []
+  yOptimizedColdstarts = []
+  yRunningOptimizedFunctions = []
 
   # For each line, split and add to x and or y.
   for cols in reader:
@@ -36,18 +36,18 @@ def read_stdin_xy():
       x.append(float(cols[1]))
       yInvocations.append(float(cols[4]))
       yColdstarts.append(float(cols[6]))
-      yOptimizedColdstarts.append(float(cols[8]))
-      yRunningUsers.append(float(cols[12]))
-      yRunningFunctions.append(float(cols[14]))
-      yRunningOptimizedFunctions.append(float(cols[16]))
-      yRunningInvocations.append(float(cols[18]))
-      yRunningFootprint.append(float(cols[20]))
-      yCachedUsers.append(float(cols[24]))
-      yCachedFunctions.append(float(cols[26]))
-      yCachedFootprint.append(float(cols[28]))
+      yRunningUsers.append(float(cols[10]))
+      yRunningFunctions.append(float(cols[12]))
+      yRunningInvocations.append(float(cols[14]))
+      yRunningFootprint.append(float(cols[16]))
+      yCachedUsers.append(float(cols[20]))
+      yCachedFunctions.append(float(cols[22]))
+      yCachedFootprint.append(float(cols[24]))
+      yOptimizedColdstarts.append(float(cols[27]))
+      yRunningOptimizedFunctions.append(float(cols[29]))
     except Exception as e:
       print("Warning ignoring " + e)
-  return x, yInvocations, yColdstarts, yOptimizedColdstarts, yRunningUsers, yRunningFunctions, yRunningOptimizedFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint
+  return x, yInvocations, yColdstarts, yRunningUsers, yRunningFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint, yOptimizedColdstarts, yRunningOptimizedFunctions
 
 
 parser = argparse.ArgumentParser(description='Plot two-dimensional datapoints.')
@@ -58,7 +58,7 @@ parser.add_argument('-ymax', '--ymax', required=False)
 
 args = parser.parse_args()
 
-x, yInvocations, yColdstarts, yOptimizedColdstarts, yRunningUsers, yRunningFunctions, yRunningOptimizedFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint = read_stdin_xy()
+x, yInvocations, yColdstarts, yRunningUsers, yRunningFunctions, yRunningInvocations, yRunningFootprint, yCachedUsers, yCachedFunctions, yCachedFootprint, yOptimizedColdstarts, yRunningOptimizedFunctions = read_stdin_xy()
 
 # Adjust startin point.
 first = x[0]
