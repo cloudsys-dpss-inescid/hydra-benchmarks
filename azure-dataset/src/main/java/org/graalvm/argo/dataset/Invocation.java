@@ -25,10 +25,6 @@ public class Invocation {
         this.endTimestamp = timestamp + duration;
     }
 
-    public static Invocation create(String owner, String function, int memory, int duration, int timestamp) {
-        return new Invocation(owner, function, memory, duration, timestamp);
-    }
-
     public String getOwner() {
         return owner;
     }
