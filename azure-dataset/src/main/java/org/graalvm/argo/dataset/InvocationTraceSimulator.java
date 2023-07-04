@@ -3,17 +3,10 @@ package org.graalvm.argo.dataset;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
 
 /**
  * This class loads an invocation trace and replays each invocation, one at a
@@ -22,49 +15,19 @@ import org.apache.commons.cli.ParseException;
  */
 public class InvocationTraceSimulator {
 
-    /**
-     * Minimum number of milliseconds to wait before recalculating aggregated data.
-     */
-    protected static final int SAMPLE_INTERVAL = 1000;
-
-    protected static Options prepareOptions() {
-        Options options = new Options();
-        Option input = new Option("i", "input", true, "Input invocation trace file path.");
-        input.setRequired(true);
-        options.addOption(input);
-        Option keepalive = new Option("k", "keepalive", true, "Function keep alive time in milliseconds.");
-        keepalive.setRequired(false);
-        options.addOption(keepalive);
-        return options;
+    protected Invocation createInvocation(String owner, String function, int memory, int duration, int timestamp) {
+        return new Invocation(owner, function, memory, duration, timestamp);
     }
 
-    public static void main(String[] args) throws Exception {
-        Options options = prepareOptions();
-        try {
-            CommandLine cmd = new DefaultParser().parse(options, args);
-            String inputfile = cmd.getOptionValue("input");
-            int keepalive = Integer.parseInt(cmd.getOptionValue("keepalive", "600000"));
-            List<Invocation> invocations = loadInvocations(inputfile);
-            List<OutputEntry> output = simulateInvocations(invocations, keepalive, SAMPLE_INTERVAL);
-
-            for (OutputEntry entry : output) {
-                System.out.println(entry);
-            }
-        } catch (ParseException e) {
-            System.err.println(e.getMessage());
-            new HelpFormatter().printHelp("utility-name", options);
-        }
-    }
-
-    private static List<Invocation> loadInvocations(String invocationsFile) {
-        List<Invocation> invocations = new ArrayList<>();
+    protected List<Invocation> loadInvocations(String invocationsFile) {
+        List<Invocation> invocations = new LinkedList<>();
         try (BufferedReader br = new BufferedReader(new FileReader(invocationsFile))) {
             String line;
             String[] splitRow;
             br.readLine(); // To skip the header
             while ((line = br.readLine()) != null) {
                 splitRow = line.split(InvocationTraceGenerator.DELIMITER);
-                invocations.add(new Invocation(splitRow[0], splitRow[1], Integer.valueOf(splitRow[2]), Integer.valueOf(splitRow[3]), Integer.valueOf(splitRow[4])));
+                invocations.add(createInvocation(splitRow[0], splitRow[1], Integer.valueOf(splitRow[2]), Integer.valueOf(splitRow[3]), Integer.valueOf(splitRow[4])));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -72,7 +35,7 @@ public class InvocationTraceSimulator {
         return invocations;
     }
 
-    protected static void evictTimedOutInvocations(TreeSet<? extends Invocation> activeInvocations, int timestamp, int keepalive) {
+    protected void evictTimedOutInvocations(TreeSet<? extends Invocation> activeInvocations, int timestamp, int keepalive) {
         List<Invocation> evict = new LinkedList<>();
         for (Invocation invocation : activeInvocations) {
             if (timestamp >= invocation.getEndTimestamp() + keepalive) {
@@ -86,7 +49,7 @@ public class InvocationTraceSimulator {
     }
 
     // TODO - for these, I don't see a clear reason not to doit in a stream.
-    protected static Invocation findWarmInvocation(TreeSet<? extends Invocation> activeInvocations, int timestamp, String function) {
+    protected Invocation findWarmInvocation(TreeSet<? extends Invocation> activeInvocations, int timestamp, String function) {
         for (Invocation invocation : activeInvocations) {
             if (timestamp < invocation.getEndTimestamp()) {
                 continue;
@@ -97,7 +60,7 @@ public class InvocationTraceSimulator {
         return null;
     }
 
-    private static void updateStatistics(
+    private void updateStatistics(
             TreeSet<Invocation> activeInvocations,
             List<OutputEntry> statistics,
             int currentTimestamp,
@@ -131,8 +94,8 @@ public class InvocationTraceSimulator {
                 cachedInvocationsFootprint));
     }
 
-    public static List<OutputEntry> simulateInvocations(List<Invocation> invocations, int keepalive, int interval) throws Exception {
-        TreeSet<Invocation> activeInvocations = new TreeSet<Invocation>(Invocation.comparator());
+    protected List<OutputEntry> simulateInvocations(List<Invocation> invocations, int keepalive, int interval) {
+        TreeSet<Invocation> activeInvocations = new TreeSet<>(Invocation.comparator());
         List<OutputEntry> statistics = new LinkedList<>();
         int invocationsProcessed = 0;
         int currentTimestamp = 0;
@@ -179,5 +142,10 @@ public class InvocationTraceSimulator {
         updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, invocationsProcessed);
 
         return statistics;
+    }
+
+    public List<OutputEntry> simulate(String inputFile, int keepAlive, int sampleInterval) {
+        List<Invocation> invocations = loadInvocations(inputFile);
+        return simulateInvocations(invocations, keepAlive, sampleInterval);
     }
 }

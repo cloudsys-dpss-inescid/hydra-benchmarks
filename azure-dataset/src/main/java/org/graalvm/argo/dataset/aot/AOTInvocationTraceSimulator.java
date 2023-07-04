@@ -16,12 +16,12 @@ import org.apache.commons.cli.ParseException;
 import org.graalvm.argo.dataset.Invocation;
 import org.graalvm.argo.dataset.InvocationTraceGenerator;
 import org.graalvm.argo.dataset.InvocationTraceSimulator;
+import org.graalvm.argo.dataset.OutputEntry;
 import org.graalvm.argo.dataset.utils.ColdStartSlidingWindow;
 
 /**
- * This class loads an invocation trace and replays each invocation, one at a
- * time. Periodically, it will generate information regarding the number of
- * users, functions, and invocations that would be active on a real platform.
+ * This class is an extension of InvocationTraceSimulator that also
+ * allows for simulating AOT optimizations.
  */
 public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
 
@@ -35,43 +35,14 @@ public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
      */
     private static final int SLIDING_WINDOW_PERIOD = 60000;
 
-    public static void main(String[] args) throws Exception {
-        Options options = InvocationTraceSimulator.prepareOptions();
-        try {
-            CommandLine cmd = new DefaultParser().parse(options, args);
-            String inputfile = cmd.getOptionValue("input");
-            int keepalive = Integer.parseInt(cmd.getOptionValue("keepalive", "600000"));
-            List<AOTInvocation> invocations = loadInvocations(inputfile);
-            List<AOTOutputEntry> output = simulateInvocationsWithAOTOptimization(invocations, keepalive, SAMPLE_INTERVAL);
-
-            for (AOTOutputEntry entry : output) {
-                System.out.println(entry);
-            }
-        } catch (ParseException e) {
-            System.err.println(e.getMessage());
-            new HelpFormatter().printHelp("utility-name", options);
-        }
+    @Override
+    protected Invocation createInvocation(String owner, String function, int memory, int duration, int timestamp) {
+        return new AOTInvocation(owner, function, memory, duration, timestamp);
     }
 
-    private static List<AOTInvocation> loadInvocations(String invocationsFile) {
-        List<AOTInvocation> invocations = new ArrayList<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(invocationsFile))) {
-            String line;
-            String[] splitRow;
-            br.readLine(); // To skip the header
-            while ((line = br.readLine()) != null) {
-                splitRow = line.split(InvocationTraceGenerator.DELIMITER);
-                invocations.add(new AOTInvocation(splitRow[0], splitRow[1], Integer.valueOf(splitRow[2]), Integer.valueOf(splitRow[3]), Integer.valueOf(splitRow[4])));
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        return invocations;
-    }
-
-    private static void updateStatistics(
+    private void updateStatistics(
             TreeSet<AOTInvocation> activeInvocations,
-            List<AOTOutputEntry> statistics,
+            List<OutputEntry> statistics,
             int currentTimestamp,
             int previousTimestamp,
             int lastInvocationsProcessed,
@@ -107,9 +78,10 @@ public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
                 cachedInvocationsFootprint));
     }
 
-    public static List<AOTOutputEntry> simulateInvocationsWithAOTOptimization(List<AOTInvocation> invocations, int keepalive, int interval) throws Exception {
+    @Override
+    protected List<OutputEntry> simulateInvocations(List<Invocation> invocations, int keepalive, int interval) {
         TreeSet<AOTInvocation> activeInvocations = new TreeSet<>(AOTInvocation.comparator());
-        List<AOTOutputEntry> statistics = new LinkedList<>();
+        List<OutputEntry> statistics = new LinkedList<>();
         ColdStartSlidingWindow window = new ColdStartSlidingWindow(AOT_OPTIMIZATION_THRESHOLD, SLIDING_WINDOW_PERIOD);
         String currentFunction;
         int invocationsProcessed = 0;
@@ -120,15 +92,16 @@ public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
         int optimizedColdStarts = 0;
 
         System.err.println("Simulating trace with " + invocations.size() + " invocations and keepalive of " + keepalive);
-        for (AOTInvocation currentInvocation : invocations) {
+        for (Invocation baseCurrentInvocation : invocations) {
+            AOTInvocation currentInvocation = (AOTInvocation) baseCurrentInvocation;
             currentTimestamp = currentInvocation.getTimestamp();
             currentFunction = currentInvocation.getFunction();
 
             // Remove invocations that have past their keep alive time.
-            InvocationTraceSimulator.evictTimedOutInvocations(activeInvocations, currentTimestamp, keepalive);
+            evictTimedOutInvocations(activeInvocations, currentTimestamp, keepalive);
 
             // We try to find an inactive invocation that can be replaced with the new one.
-            Invocation warm = InvocationTraceSimulator.findWarmInvocation(activeInvocations, currentTimestamp, currentFunction);
+            Invocation warm = findWarmInvocation(activeInvocations, currentTimestamp, currentFunction);
             if (warm == null) {
                 coldStarts++;
                 if (window.optimized(currentFunction) || window.worthOptimizing(currentFunction, currentTimestamp)) {
