@@ -140,8 +140,8 @@ public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
                 }
             } else {
                 activeInvocations.remove(warm);
-                // Reuse memory of the warm invocation instead of always using unoptimized.
-                currentInvocation.setMemory(warm.getMemory());
+                // Reuse memory and optimization status of the warm invocation instead of always using unoptimized.
+                currentInvocation.setOptimizedMemory((AOTInvocation) warm);
             }
 
             // Add invocation to array of active invocations.

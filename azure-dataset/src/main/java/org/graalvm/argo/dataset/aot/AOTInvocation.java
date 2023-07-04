@@ -12,8 +12,9 @@ public class AOTInvocation extends Invocation {
         this.optimized = false;
     }
 
-    public void setMemory(int memory) {
-        this.memory = memory;
+    public void setOptimizedMemory(AOTInvocation other) {
+        this.optimized = other.optimized;
+        this.memory = other.memory;
     }
 
     public void optimize() {
