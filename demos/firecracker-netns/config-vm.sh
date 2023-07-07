@@ -182,7 +182,7 @@ VM_SOCKET=$VM_DIR/firecracker.socket
 
 if [ -z $OLD_VM_IP ];
 then
-    load_snapshot
-else
     load_new
+else
+    load_snapshot
 fi
