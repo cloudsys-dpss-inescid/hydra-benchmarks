@@ -159,7 +159,11 @@ VM_DIR=$DIR/$IMAGE_NAME/$PUBLIC_VM_IP/root
 rm $VM_DIR &> /dev/null
 sudo ln -s $DIR/$IMAGE_NAME/$PUBLIC_VM_IP/firecracker/$VM_ID/root $VM_DIR
 
+# TODO: this is a dirty hack to avoid having socket path too long.
+if [ ! -L /tmp/snapshots ]; then
+    ln -s $DIR /tmp/snapshots
+fi
 # Socket that will be used to control the vm.
-VM_SOCKET=$VM_DIR/firecracker.socket
+VM_SOCKET=/tmp/snapshots/$IMAGE_NAME/$PUBLIC_VM_IP/root/firecracker.socket
 
 load_new

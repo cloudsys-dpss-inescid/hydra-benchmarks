@@ -24,7 +24,7 @@ ID=3
 IP=172.18.0.3
 
 if [ -z "$IMAGE" ]; then
-    for image_name in graalvisor hotspot hotspot-agent; do
+    for image_name in graalvisor hotspot hotspot-agent java-openwhisk; do
         make_snapshot $image_name
     done
 else

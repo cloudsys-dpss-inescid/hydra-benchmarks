@@ -23,7 +23,7 @@ IMAGE_NAME=$3
 VM_ID=$(echo $PUBLIC_VM_IP | tr . -)
 
 # Kill the process that has that file open.
-kill $(ps aux | grep $VM_ID | grep jailer | awk '{print $2}')
+kill $(ps aux | grep $VM_ID | grep firecracker | awk '{print $2}')
 
 # Then delete namespace.
 sudo ip netns delete ns$CLONE_ID

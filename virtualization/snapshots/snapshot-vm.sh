@@ -22,11 +22,12 @@ IMAGE_NAME=$3
 # ID of the vm (based on the public ip).
 VM_ID=$(echo $PUBLIC_VM_IP | tr . -)
 
-# VM directory.
-VM_DIR=$DIR/$IMAGE_NAME/$PUBLIC_VM_IP/root
-
-# VM socket.
-VM_SOCKET=$VM_DIR/firecracker.socket
+# TODO: this is a dirty hack to avoid having socket path too long.
+if [ ! -L /tmp/snapshots ]; then
+    ln -s $DIR /tmp/snapshots
+fi
+# Socket that will be used to control the vm.
+VM_SOCKET=/tmp/snapshots/$IMAGE_NAME/$PUBLIC_VM_IP/root/firecracker.socket
 
 # Snapshot file paths (files insire the chroot).
 VM_SNAP_FILE=snapshot_file
