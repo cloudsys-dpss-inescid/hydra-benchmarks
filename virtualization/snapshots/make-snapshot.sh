@@ -11,6 +11,12 @@ function make_snapshot {
     echo "($ID) Configuring vm..."
     $DIR/config-vm.sh $ID $IP $image_name &> $DIR/$image_name/config-vm-$ID.log
 
+    if [ "$image_name" == "graalvisor" ] && [ -n "$FUNCTION_ENTRYPOINT" ] && [ -n "$FUNCTION_BINARY" ]; then
+        response=$(curl -X POST "$IP":8080/register?name=function\&entryPoint="$FUNCTION_ENTRYPOINT"\&language=java\&sandbox=isolate -H 'Content-Type: application/json' --data-binary @"$FUNCTION_BINARY")
+        echo $response  # To ensure that VM is up and the function is registered.
+        # curl -X POST "$IP":8080 -H 'Content-Type: application/json' -d '{"name":"function","async":"false","arguments":"{\"memory\":\"128\",\"duration\":\"1\"}"}'  # Example invocation for gv-genericapp.
+    fi
+
     echo "($ID) Snapshotting vm..."
     $DIR/snapshot-vm.sh $ID $IP $image_name &> $DIR/$image_name/snapshot-vm-$ID.log
 
@@ -19,6 +25,8 @@ function make_snapshot {
 }
 
 IMAGE=$1
+FUNCTION_ENTRYPOINT=$2
+FUNCTION_BINARY=$3
 
 ID=3
 IP=172.18.0.3

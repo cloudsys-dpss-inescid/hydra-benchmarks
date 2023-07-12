@@ -3,8 +3,8 @@
 # Inspired by: https://github.com/firecracker-microvm/firecracker/blob/main/docs/snapshotting/network-for-clones.md
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-if [ -z "$2" ]; then # TODO - can we take a thrid argument (the directory from which to clone?)
-    echo "Syntax: ./config-vm.sh <clone id> <vm ip> [<snapshot vm ip>]"
+if [ -z "$3" ]; then
+    echo "Syntax: ./config-vm.sh <clone id> <vm ip> <vm image name>"
     echo "Clone id should an integer higher than zero which is not being used by another clone vm."
     echo "Please use a free IP 172.18.[0,255].[3,255]. The IP will be used to create a firecracker directory and to route requests to the vm."
     echo "The snapshot vm ip will be used to find the vm directory where the snapshot resides."
