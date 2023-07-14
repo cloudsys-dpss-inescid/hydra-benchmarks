@@ -60,92 +60,84 @@ public class InvocationTraceSimulator {
         return null;
     }
 
-    private void updateStatistics(
-            TreeSet<Invocation> activeInvocations,
-            List<OutputEntry> statistics,
-            int currentTimestamp,
-            int previousTimestamp,
-            int lastInvocationsProcessed,
-            int coldStarts,
-            int invocationsProcessed) {
+    protected OutputEntry updateStatistics(TreeSet<Invocation> activeInvocations, List<Invocation> runningInvocations, SimulationState ss) {
+        return updateStatistics(activeInvocations, runningInvocations, new OutputEntry(), ss);
+    }
 
-        List<Invocation> runningInvocations = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > currentTimestamp).collect(Collectors.toList());
-        int runningUsers = (int) runningInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
-        int runningFunctions  = (int) runningInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
-        int runningInvocationsFootprint = (int) runningInvocations.parallelStream().mapToInt(Invocation::getMemory).sum();
-
+    protected OutputEntry updateStatistics(TreeSet<Invocation> activeInvocations, List<Invocation> runningInvocations, OutputEntry outputEntry, SimulationState ss) {
+        outputEntry.timestamp = ss.currentTimestamp;
+        outputEntry.invocationsProcessed = ss.invocationsProcessed - ss.lastInvocationsProcessed;
+        outputEntry.coldStarts = ss.coldStarts;
+        outputEntry.runningUsers = (int) runningInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
+        outputEntry.runningFunctions  = (int) runningInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
+        outputEntry.runningInvocations = runningInvocations.size();
+        outputEntry.runningInvocationsFootprint = (int) runningInvocations.parallelStream().mapToInt(Invocation::getMemory).sum();
         int totalUsers = (int) activeInvocations.parallelStream().map(Invocation::getOwner).distinct().count();
         int totalFunctions = (int) activeInvocations.parallelStream().map(Invocation::getFunction).distinct().count();
+        outputEntry.cachedUsers = totalUsers - outputEntry.runningUsers;
+        outputEntry.cachedFunctions = totalFunctions - outputEntry.runningFunctions;
+        outputEntry.cachedInvocationsFootprint = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() < ss.currentTimestamp).mapToInt(Invocation::getMemory).sum();
+        return outputEntry;
+    }
 
-        int cachedUsers = totalUsers - runningUsers;
-        int cachedFunctions = totalFunctions - runningFunctions;
-        int cachedInvocationsFootprint = activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() < currentTimestamp).mapToInt(Invocation::getMemory).sum();
+    protected void resetSimulationStateAfterUpdateStatistics(SimulationState ss) {
+        ss.previousTimestamp = ss.currentTimestamp;
+        ss.lastInvocationsProcessed = ss.invocationsProcessed;
+        ss.coldStarts = 0;
+    }
 
-        statistics.add(new OutputEntry(
-                currentTimestamp,
-                invocationsProcessed - lastInvocationsProcessed,
-                coldStarts,
-                runningUsers,
-                runningFunctions,
-                runningInvocations.size(),
-                runningInvocationsFootprint,
-                cachedUsers,
-                cachedFunctions,
-                cachedInvocationsFootprint));
+    protected void updateAfterWarmCheck(SimulationState ss, Invocation currentInvocation, Invocation warm) {
+        if (warm == null) {
+            ss.coldStarts++;
+        } else {
+            ss.activeInvocations.remove(warm);
+        }
     }
 
     protected List<OutputEntry> simulateInvocations(List<Invocation> invocations, int keepalive, int interval) {
-        TreeSet<Invocation> activeInvocations = new TreeSet<>(Invocation.comparator());
+        return simulateInvocations(invocations, new SimulationState(), keepalive, interval);
+    }
+
+    protected List<OutputEntry> simulateInvocations(List<Invocation> invocations, SimulationState ss, int keepalive, int interval) {
         List<OutputEntry> statistics = new LinkedList<>();
-        int invocationsProcessed = 0;
-        int currentTimestamp = 0;
-        int previousTimestamp = 0;
-        int lastInvocationsProcessed = 0;
-        int coldStarts = 0;
 
         System.err.println("Simulating trace with " + invocations.size() + " invocations and keepalive of " + keepalive);
         for (Invocation currentInvocation : invocations) {
-            currentTimestamp = currentInvocation.getTimestamp();
+            ss.currentTimestamp = currentInvocation.getTimestamp();
 
             // Remove invocations that have past their keep alive time.
-            evictTimedOutInvocations(activeInvocations, currentTimestamp, keepalive);
+            evictTimedOutInvocations(ss.activeInvocations, ss.currentTimestamp, keepalive);
 
             // We try to find an inactive invocation that can be replaced with the new one.
-            Invocation warm = findWarmInvocation(activeInvocations, currentTimestamp, currentInvocation.getFunction());
-            if (warm == null) {
-                coldStarts++;
-            } else {
-                activeInvocations.remove(warm);
-            }
+            Invocation warm = findWarmInvocation(ss.activeInvocations, ss.currentTimestamp, currentInvocation.getFunction());
+            updateAfterWarmCheck(ss, currentInvocation, warm);
 
             // Add invocation to array of active invocations.
-            activeInvocations.add(currentInvocation);
-            invocationsProcessed++;
+            ss.activeInvocations.add(currentInvocation);
+            ss.invocationsProcessed++;
 
-            if (currentTimestamp - previousTimestamp > interval) {
+            if (ss.currentTimestamp - ss.previousTimestamp > interval) {
                 // Calculate and update statistics.
-                updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, invocationsProcessed);
+                List<Invocation> runningInvocations = ss.activeInvocations.parallelStream().filter(i -> i.getEndTimestamp() > ss.currentTimestamp).collect(Collectors.toList());
+                statistics.add(updateStatistics(ss.activeInvocations, runningInvocations, ss));
 
                 // Reset values until the next round.
-                previousTimestamp = currentTimestamp;
-                lastInvocationsProcessed = invocationsProcessed;
-                coldStarts = 0;
+                resetSimulationStateAfterUpdateStatistics(ss);
             }
 
             // Progress update...
-            if (invocationsProcessed  % Math.max(invocations.size() / 100, 1) == 0) {
-                System.err.println(String.format("Processed %s (%.2f %%)", invocationsProcessed, ((float) invocationsProcessed / (float)invocations.size() * 100)));
+            if (ss.invocationsProcessed  % Math.max(invocations.size() / 100, 1) == 0) {
+                System.err.println(String.format("Processed %s (%.2f %%)", ss.invocationsProcessed, ((float) ss.invocationsProcessed / (float)invocations.size() * 100)));
             }
         }
 
         // Final update to statistics.
-        updateStatistics(activeInvocations, statistics, currentTimestamp, previousTimestamp, lastInvocationsProcessed, coldStarts, invocationsProcessed);
+        statistics.add(updateStatistics(ss.activeInvocations, ss.runningInvocations(), ss));
 
         return statistics;
     }
 
     public List<OutputEntry> simulate(String inputFile, int keepAlive, int sampleInterval) {
-        List<Invocation> invocations = loadInvocations(inputFile);
-        return simulateInvocations(invocations, keepAlive, sampleInterval);
+        return simulateInvocations(loadInvocations(inputFile), keepAlive, sampleInterval);
     }
 }
