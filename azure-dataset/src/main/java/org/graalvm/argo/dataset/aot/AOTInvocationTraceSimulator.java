@@ -31,6 +31,7 @@ public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
 
     class AOTSimulationState extends SimulationState {
         int optimizedColdStarts;
+        ColdStartSlidingWindow window = new ColdStartSlidingWindow(AOT_OPTIMIZATION_THRESHOLD, SLIDING_WINDOW_PERIOD);
     }
 
 
@@ -53,15 +54,15 @@ public class AOTInvocationTraceSimulator extends InvocationTraceSimulator {
     @Override
     protected void updateAfterWarmCheck(SimulationState ss, Invocation currentInvocation, Invocation warm) {
         AOTInvocation currentAOTInvocation = (AOTInvocation) currentInvocation;
+        AOTSimulationState aotss = ((AOTSimulationState)ss);
         if (warm == null) {
-            ColdStartSlidingWindow window = new ColdStartSlidingWindow(AOT_OPTIMIZATION_THRESHOLD, SLIDING_WINDOW_PERIOD);
             String currentFunction = currentAOTInvocation.getFunction();
-            if (window.optimized(currentFunction) || window.worthOptimizing(currentFunction, ss.currentTimestamp)) {
-                ((AOTSimulationState)ss).optimizedColdStarts++;
+            if (aotss.window.optimized(currentFunction) || aotss.window.worthOptimizing(currentFunction, ss.currentTimestamp)) {
+                aotss.optimizedColdStarts++;
                 // Cold start happened, but the function is optimized.
                 currentAOTInvocation.optimize();
             } else {
-                window.add(currentFunction, ss.currentTimestamp);
+                aotss.window.add(currentFunction, ss.currentTimestamp);
             }
         } else {
             // Reuse memory and optimization status of the warm invocation instead of always using unoptimized.
