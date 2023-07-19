@@ -11,7 +11,15 @@ import java.util.Set;
 
 public class InvocationTraceExecutor {
 
+    private static final int MS_IN_HOUR = 3600000;
+    private static final int BYTES_IN_MB = 1048576;
+    /**
+     * Empirical value used to calculate request-specific memory consumption.
+     */
+    private static final double MEMORY_COEFFICIENT = 0.05;
+
     private final ExecutorConfiguration config;
+
 
     public InvocationTraceExecutor(ExecutorConfiguration config) {
         this.config = config;
@@ -38,8 +46,8 @@ public class InvocationTraceExecutor {
                     uploadedFunctions.add(function);
                 }
 
-                int timeToSleep = (timestamp - currentTimestamp) % 3600000;
-                int memoryToAllocate = (int) (allocatedMemoryMb * 1024 * 1024 * 0.05);
+                int timeToSleep = (timestamp - currentTimestamp) % MS_IN_HOUR;
+                int memoryToAllocate = (int) (allocatedMemoryMb * BYTES_IN_MB * MEMORY_COEFFICIENT);
                 currentTimestamp = timestamp;
                 if (timeToSleep != 0) {
                     try {
