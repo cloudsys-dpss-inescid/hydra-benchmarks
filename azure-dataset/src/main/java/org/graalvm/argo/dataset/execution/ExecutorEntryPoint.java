@@ -28,7 +28,8 @@ public class ExecutorEntryPoint {
             String gvSandbox = cmd.getOptionValue("gvSandbox");
             boolean debug = cmd.hasOption("debug");
             byte[] functionCode = Files.readAllBytes(Paths.get(functionCodeFilePath));
-            ExecutorConfiguration config = new ExecutorConfiguration(functionCode, functionLanguage, functionEntryPoint, functionMemory, functionRuntime, invocationCollocation, functionIsolation, gvSandbox, debug);
+            String lambdaManagerAddress = cmd.getOptionValue("lambdaManagerAddress", "localhost:30009");
+            ExecutorConfiguration config = new ExecutorConfiguration(functionCode, functionLanguage, functionEntryPoint, functionMemory, functionRuntime, invocationCollocation, functionIsolation, gvSandbox, debug, lambdaManagerAddress);
             InvocationTraceExecutor executor = new InvocationTraceExecutor(config);
             executor.execute(inputFilePath);
         } catch (ParseException e) {
@@ -71,6 +72,9 @@ public class ExecutorEntryPoint {
         Option debug = new Option("d", "debug", false, "Just print requests instead of sending them.");
         debug.setRequired(false);
         options.addOption(debug);
+        Option lambdaManagerAddress = new Option("lm", "lambdaManagerAddress", true, "Full address of the lambda manager.");
+        lambdaManagerAddress.setRequired(false);
+        options.addOption(lambdaManagerAddress);
         return options;
     }
 

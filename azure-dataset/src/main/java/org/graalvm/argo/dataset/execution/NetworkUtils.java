@@ -9,14 +9,12 @@ import java.time.Duration;
 
 public class NetworkUtils {
 
-    private static final String LAMBDA_MANAGER_ADDRESS = "localhost:30009";
-
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(30)).build();
 
-    public static void sendPost(String path, String contentType, byte[] content, boolean async) {
-        HttpRequest request = HttpRequest.newBuilder(URI.create("http://" + LAMBDA_MANAGER_ADDRESS + path))
+    public static void sendPost(String address, String path, String contentType, byte[] content, boolean async) {
+        HttpRequest request = HttpRequest.newBuilder(URI.create("http://" + address + path))
                 .timeout(Duration.ofMinutes(3))
                 .header("Content-Type", contentType)
                 .header("accept", "application/json; charset=UTF-8")

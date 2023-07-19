@@ -53,7 +53,7 @@ public class InvocationTraceExecutor {
                 if (config.isDebugMode()) {
                     System.out.println("Sending request with timestamp: " + timestamp);
                 } else {
-                    NetworkUtils.sendPost("/" + owner + "/" + function, "application/json; charset=UTF-8", data, true);
+                    NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/" + owner + "/" + function, "application/json; charset=UTF-8", data, true);
                 }
             }
         } catch (IOException e) {
@@ -76,7 +76,7 @@ public class InvocationTraceExecutor {
             queryParameters = queryParameters + "&gv_sandbox=" + config.gvSandbox;
         }
         if (!config.isDebugMode()) {
-            NetworkUtils.sendPost("/upload_function?" + queryParameters, "application/octet-stream", config.functionCode, false);
+            NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/upload_function?" + queryParameters, "application/octet-stream", config.functionCode, false);
         }
     }
 
