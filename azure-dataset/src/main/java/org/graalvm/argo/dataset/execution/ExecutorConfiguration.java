@@ -10,6 +10,9 @@ public class ExecutorConfiguration {
     final String invocationCollocation;
     final String functionIsolation;
     final String gvSandbox;
+    /**
+     * If true, then print timestamps instead of issuing requests.
+     */
     private final boolean debug;
 
     ExecutorConfiguration(byte[] functionCode, String functionLanguage, String functionEntryPoint, String functionMemory, String functionRuntime, String invocationCollocation, String functionIsolation, String gvSandbox, boolean debug) {
