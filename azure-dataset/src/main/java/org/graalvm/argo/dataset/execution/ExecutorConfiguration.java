@@ -1,0 +1,30 @@
+package org.graalvm.argo.dataset.execution;
+
+public class ExecutorConfiguration {
+
+    final byte[] functionCode;
+    final String functionLanguage;
+    final String functionEntryPoint;
+    final String functionMemory;
+    final String functionRuntime;
+    final String invocationCollocation;
+    final String functionIsolation;
+    final String gvSandbox;
+    private final boolean debug;
+
+    ExecutorConfiguration(byte[] functionCode, String functionLanguage, String functionEntryPoint, String functionMemory, String functionRuntime, String invocationCollocation, String functionIsolation, String gvSandbox, boolean debug) {
+        this.functionCode = functionCode;
+        this.functionLanguage = functionLanguage;
+        this.functionEntryPoint = functionEntryPoint;
+        this.functionMemory = functionMemory;
+        this.functionRuntime = functionRuntime;
+        this.invocationCollocation = invocationCollocation;
+        this.functionIsolation = functionIsolation;
+        this.gvSandbox = gvSandbox;
+        this.debug = debug;
+    }
+
+    public boolean isDebugMode() {
+        return debug;
+    }
+}
