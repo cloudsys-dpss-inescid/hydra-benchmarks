@@ -253,7 +253,7 @@ function gv_java_filehashing {
     APP_MAIN=com.filehashing.FileHashing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
     curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"false","arguments":"{\"url\":\"http://'$IP':'$PORT'/snap.png\"}"}' > $APP_POST
+    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/snap.png\"}"}' > $APP_POST
 }
 
 function cr_java_filehashing {
