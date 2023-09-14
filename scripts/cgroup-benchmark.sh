@@ -1,5 +1,12 @@
 #!/bin/bash
 
+function DIR {
+    echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+}
+
+source $(DIR)/shared.sh
+source $(DIR)/benchmarks.sh
+
 # Setting up environment.
 ip=127.0.0.1
 start_svm &> $tmpdir/lambda.log &
