@@ -1,5 +1,6 @@
-# Setting up environment.
+#!/bin/bash
 
+# Setting up environment.
 ip=127.0.0.1
 start_svm &> $tmpdir/lambda.log &
 
