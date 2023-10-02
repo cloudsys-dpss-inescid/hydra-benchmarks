@@ -15,13 +15,14 @@ public class DbRead {
     private static final String PASS = "0000";
     private static final String QUERY = "SELECT id, manufacturer, model FROM cars";
 
+    private static final HostedConnection conn = HostedConnection.getConnection(DB_URL, USER, PASS);
+
     public static Map<String, Object> main(Map<String, Object> input) {
         Map<String, Object> output = new HashMap<>();
-        HostedConnection conn = HostedConnection.getConnection(DB_URL, USER, PASS);
         HostedStatement stmt = conn.createStatement();
         HostedResultSet rs = stmt.executeQuery(QUERY);
         String result = resultSetToString(rs);
-        conn.release();
+        // conn.release();
         stmt.close();
         rs.close();
         output.put("result", result);
