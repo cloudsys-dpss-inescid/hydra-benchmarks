@@ -87,22 +87,16 @@ PID=$(cat $tmpdir/lambda.pid)
 # log_rss $PID $tmpdir/lambda.rss & ############### Do I need this?
 
 # Run test/benchmark.
-<<<<<<< Updated upstream
 test_java_fh &> $tmpdir/hello_world.log &
 HW_PID=$!
-=======
-#test_java_fh &> $tmpdir/hello_world.log &
-#HW_PID=$!
->>>>>>> Stashed changes
 test_java_fh &> $tmpdir/file_hashing.log &
 FH_PID=$!
 
-#wait $HW_PID
+wait $HW_PID
 wait $FH_PID
 
 # Teardown the lambda.
 stop_svm
-<<<<<<< Updated upstream
 
 # Remove main cgroup
 start=$(date +%s%N)
@@ -110,5 +104,3 @@ rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate/cgroup-*
 rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
 end=$(date +%s%N)
 echo "Removing cgroup took $((($end - $start)/1000)) us"
-=======
->>>>>>> Stashed changes
