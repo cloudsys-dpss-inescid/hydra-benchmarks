@@ -100,6 +100,7 @@ stop_svm
 
 # Remove main cgroup
 start=$(date +%s%N)
+rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate/cgroup-*
 rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
 end=$(date +%s%N)
 echo "Removing cgroup took $((($end - $start)/1000)) us"
