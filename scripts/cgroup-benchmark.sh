@@ -107,8 +107,8 @@ echo "Removing cgroup took $((($end - $start)/1000)) us"
 
 sudo mkdir $tmpdir/output
 
-python3 main.py $tmpdir/lambda.log "process time" $tmpdir/output "hwProcessTime"
-python3 main.py $tmpdir/lambda.log "Time taken" $tmpdir/output "hwTimeTaken"
-python3 main.py $tmpdir/hello_world.log "New" $tmpdir/output "newCgroupTimes"
-python3 main.py $tmpdir/hello_world.log "Inserted" $tmpdir/output "insertCgroupTimes"
-python3 main.py $tmpdir/hello_world.log "Removed" $tmpdir/output "removeCgroupTimes"
+python3 main.py $tmpdir/hello_world.log "process time" $tmpdir/output "hwProcessTime"
+python3 main.py $tmpdir/hello_world.log "Time taken" $tmpdir/output "hwTimeTaken"
+python3 main.py $tmpdir/lambda.log "New" $tmpdir/output "newCgroupTimes"
+python3 main.py $tmpdir/lambda.log "Inserted" $tmpdir/output "insertCgroupTimes"
+python3 main.py $tmpdir/lambda.log "Removed" $tmpdir/output "removeCgroupTimes"
