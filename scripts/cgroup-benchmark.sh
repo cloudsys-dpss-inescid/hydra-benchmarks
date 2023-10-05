@@ -105,13 +105,14 @@ rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
 end=$(date +%s%N)
 echo "Removing cgroup took $((($end - $start)/1000)) us"
 
-outputDir = "~/Documents/output"
-sudo mkdir outputDir
-
 label = "cachedSandbox+cachedCgroups"
 
-python3 main.py $tmpdir/hello_world.log "process time" outputDir "hwProcessTime" label
-python3 main.py $tmpdir/hello_world.log "Time taken" outputDir "hwTimeTaken" label
-python3 main.py $tmpdir/lambda.log "New" outputDir "newCgroupTimes" label
-python3 main.py $tmpdir/lambda.log "Inserted" outputDir "insertCgroupTimes" label
-python3 main.py $tmpdir/lambda.log "Removed" outputDir "removeCgroupTimes" label
+outputDir = "~/Documents/output/$label"
+sudo mkdir outputDir
+
+
+python3 main.py $tmpdir/hello_world.log "process time" $outputDir "hwProcessTime" $label
+python3 main.py $tmpdir/hello_world.log "Time taken" $outputDir "hwTimeTaken" $label
+python3 main.py $tmpdir/lambda.log "New" $outputDir "newCgroupTimes" $label
+python3 main.py $tmpdir/lambda.log "Inserted" $outputDir "insertCgroupTimes" $label
+python3 main.py $tmpdir/lambda.log "Removed" $outputDir "removeCgroupTimes" $label
