@@ -14,7 +14,7 @@ function gv_java_hw {
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
     APP_MAIN=com.hello_world.HelloWorld
     curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"hw","async":"false","cached":"true","arguments":""}' > $APP_POST
+    echo '{"name":"hw","async":"false","cached":"false","arguments":""}' > $APP_POST
 }
 
 function gv_java_filehashing {
@@ -22,8 +22,8 @@ function gv_java_filehashing {
     APP_NAME=gv-file-hashing
     APP_MAIN=com.filehashing.FileHashing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
-    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Tsype: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"false","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
+    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Tsype: application/json' --data-binary @$APP_SO
+    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
 }
 
 function test_java_hw {
@@ -87,13 +87,13 @@ PID=$(cat $tmpdir/lambda.pid)
 # log_rss $PID $tmpdir/lambda.rss & ############### Do I need this?
 
 # Run test/benchmark.
-test_java_fh &> $tmpdir/hello_world.log &
+test_java_hw &> $tmpdir/hello_world.log &
 HW_PID=$!
-test_java_fh &> $tmpdir/file_hashing.log &
-FH_PID=$!
+#test_java_fh &> $tmpdir/file_hashing.log &
+#FH_PID=$!
 
 wait $HW_PID
-wait $FH_PID
+#wait $FH_PID
 
 # Teardown the lambda.
 stop_svm
@@ -104,3 +104,9 @@ rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate/cgroup-*
 rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
 end=$(date +%s%N)
 echo "Removing cgroup took $((($end - $start)/1000)) us"
+
+python main.py $tmpdir/lamda.log "process time" "hwProcessTime"
+python main.py $tmpdir/lamda.log "Time taken" "hwTimeTaken"
+python main.py $tmpdir/hello_world.log "New" "newCgroupTimes"
+python main.py $tmpdir/hello_world.log "Inserted" "insertCgroupTimes"
+python main.py $tmpdir/hello_world.log "Removed" "removeCgroupTimes"
