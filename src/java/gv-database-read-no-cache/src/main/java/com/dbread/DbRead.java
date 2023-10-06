@@ -12,7 +12,7 @@ import java.sql.DriverManager;
 
 public class DbRead {
 
-    private static final String DB_URL = "jdbc:postgresql://172.18.0.1:5432/jdbc_experiment";
+    private static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/jdbc_experiment";
     private static final String USER = "postgres";
     private static final String PASS = "0000";
     private static final String QUERY = "SELECT id, manufacturer, model FROM cars";
