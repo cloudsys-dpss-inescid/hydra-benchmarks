@@ -17,19 +17,8 @@ function gv_java_hw {
     echo '{"name":"hw","async":"false","cached":"false","arguments":""}' > $APP_POST
 }
 
-function gv_java_filehashing {
-    APP_LANG=java
-    APP_NAME=gv-file-hashing
-    APP_MAIN=com.filehashing.FileHashing
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
-    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Tsype: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
-}
-
 function test_java_hw {
-    # Writing post file to disk
-    mkdir $tmpdir/hw &> /dev/null
-    APP_POST=$tmpdir/hw/payload.post
+    APP_POST=$tmpdir/payload.post
     gv_java_hw
     for i in $(seq 1 $number_of_tests)
     do
@@ -37,6 +26,15 @@ function test_java_hw {
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
         postime
     done
+}
+
+function gv_java_filehashing {
+    APP_LANG=java
+    APP_NAME=gv-file-hashing
+    APP_MAIN=com.filehashing.FileHashing
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
+    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
 }
 
 function test_java_fh {
@@ -50,6 +48,73 @@ function test_java_fh {
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
         postime
     done
+}
+
+function run_test_and_plot {
+    test_name = $1
+    sandbox_cache = $2
+    cgroup_cache = $3
+
+    # Preparing working directory
+    tmpdir=/tmp/test-proxy/$test_name
+    sudo rm -r $tmpdir/ &> /dev/null
+    mkdir $tmpdir &> /dev/null
+
+    # Setting up environment.
+    ip=127.0.0.1
+    start_svm &> $tmpdir/lambda.log &
+
+    # Let the lambda start.
+    wait_port $ip 8080
+
+    PID=$(cat $tmpdir/lambda.pid)
+
+    # Run test/benchmark.
+    if [$test_name = "hw"]
+    then
+        test_java_hw &> $tmpdir/run.log &
+    # elif [$test_name = "fh"]
+    # then
+    #     test_java_fh &> $tmpdir/run.log &
+    else
+        echo "Unknown test name"
+        exit 1
+    fi
+
+    RUN_PID=$!
+
+    wait $RUN_PID
+
+    # Teardown the lambda.
+    stop_svm
+
+    # Remove main cgroup
+    start=$(date +%s%N)
+    rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate/cgroup-*
+    rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
+    end=$(date +%s%N)
+    echo "Removing cgroup took $((($end - $start)/1000)) us"
+
+    if [ "$sandbox_cache" = true ]
+    then
+        label="cacheS_"
+    else
+        label="noCacheS_"
+    fi
+    if [ "$cgroup_cache" = true ]
+    then
+        label="$label""cacheCgroup"
+    else
+        label="$label""noCacheCgroup"
+    fi
+
+    sudo mkdir -p $outputDir
+
+    python3 main.py $tmpdir/run.log "process time" $outputDir "hwProcessTime" $label
+    python3 main.py $tmpdir/run.log "Time taken" $outputDir "hwTimeTaken" $label
+    python3 main.py $tmpdir/lambda.log "New" $outputDir "newCgroupTimes" $label
+    python3 main.py $tmpdir/lambda.log "Inserted" $outputDir "insertCgroupTimes" $label
+    python3 main.py $tmpdir/lambda.log "Removed" $outputDir "removeCgroupTimes" $label
 }
 
 source $(DIR)/shared.sh
@@ -67,52 +132,7 @@ then
     export SANDBOX=isolate
 fi
 
-# Preparing working directory
-sudo rm -r $tmpdir/ &> /dev/null
-mkdir $tmpdir &> /dev/null
-
-# Setting up environment.
-ip=127.0.0.1
-start_svm &> $tmpdir/lambda.log &
-
-# Let the lambda start.
-wait_port $ip 8080
-
-PID=$(cat $tmpdir/lambda.pid)
-
-# Write lambda pid to file.
-# echo -n "$PID" > $tmpdir/lambda.pid ############### Do I need this?
-
-# Log memory.
-# log_rss $PID $tmpdir/lambda.rss & ############### Do I need this?
-
-# Run test/benchmark.
-test_java_hw &> $tmpdir/hello_world.log &
-HW_PID=$!
-#test_java_fh &> $tmpdir/file_hashing.log &
-#FH_PID=$!
-
-wait $HW_PID
-#wait $FH_PID
-
-# Teardown the lambda.
-stop_svm
-
-# Remove main cgroup
-start=$(date +%s%N)
-rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate/cgroup-*
-rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
-end=$(date +%s%N)
-echo "Removing cgroup took $((($end - $start)/1000)) us"
-
-label = "cachedSandbox+cachedCgroups"
-
-outputDir = "~/Documents/output/$label"
-sudo mkdir outputDir
-
-
-python3 main.py $tmpdir/hello_world.log "process time" $outputDir "hwProcessTime" $label
-python3 main.py $tmpdir/hello_world.log "Time taken" $outputDir "hwTimeTaken" $label
-python3 main.py $tmpdir/lambda.log "New" $outputDir "newCgroupTimes" $label
-python3 main.py $tmpdir/lambda.log "Inserted" $outputDir "insertCgroupTimes" $label
-python3 main.py $tmpdir/lambda.log "Removed" $outputDir "removeCgroupTimes" $label
+run_test_and_plot "hw" true true
+run_test_and_plot "hw" true false
+run_test_and_plot "hw" false true
+run_test_and_plot "hw" false false
