@@ -70,7 +70,6 @@ function run_test_and_plot {
     fi
 
     runtmpdir=$tmpdir/$test_name
-    sudo rm -r $runtmpdir/ &> /dev/null
     mkdir $runtmpdir &> /dev/null
 
     # Setting up environment.
@@ -134,7 +133,6 @@ fi
 # Preparing working directory
 rm -r $tmpdir &> /dev/null
 mkdir -p $tmpdir &> /dev/null
-
 
 run_test_and_plot "hw" true true
 run_test_and_plot "hw" true false
