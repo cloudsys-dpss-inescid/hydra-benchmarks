@@ -14,7 +14,7 @@ function gv_java_hw {
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
     APP_MAIN=com.hello_world.HelloWorld
     curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"hw","async":"false","cached":"false","arguments":""}' > $APP_POST
+    echo '{"name":"hw","async":"false","cached":"$1","arguments":""}' > $APP_POST
 }
 
 function test_java_hw {
@@ -51,9 +51,9 @@ function test_java_fh {
 }
 
 function run_test_and_plot {
-    test_name = $1
-    sandbox_cache = $2
-    cgroup_cache = $3
+    test_name=$1
+    sandbox_cache=$2
+    cgroup_cache=$3
 
     # Preparing working directory
     tmpdir=/tmp/test-proxy/$test_name
@@ -72,7 +72,7 @@ function run_test_and_plot {
     # Run test/benchmark.
     if [$test_name = "hw"]
     then
-        test_java_hw &> $tmpdir/run.log &
+        test_java_hw $cgroup_cache &> $tmpdir/run.log &
     # elif [$test_name = "fh"]
     # then
     #     test_java_fh &> $tmpdir/run.log &
@@ -133,6 +133,3 @@ then
 fi
 
 run_test_and_plot "hw" true true
-run_test_and_plot "hw" true false
-run_test_and_plot "hw" false true
-run_test_and_plot "hw" false false
