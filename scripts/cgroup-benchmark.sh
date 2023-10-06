@@ -70,8 +70,7 @@ function run_test_and_plot {
     wait_port $ip 8080
 
     # Run test/benchmark.
-    if ["$test_name" = "hw"]
-    then
+    if [ "$test_name" = "hw" ]; then
         test_java_hw $cgroup_cache &> $tmpdir/run.log &
     # elif [$test_name = "fh"]
     # then
@@ -95,14 +94,12 @@ function run_test_and_plot {
     end=$(date +%s%N)
     echo "Removing cgroup took $((($end - $start)/1000)) us"
 
-    if [ "$sandbox_cache" = true ]
-    then
+    if [ "$sandbox_cache" = true ]; then
         label="cacheS_"
     else
         label="noCacheS_"
     fi
-    if [ "$cgroup_cache" = true ]
-    then
+    if [ "$cgroup_cache" = true ]; then
         label="$label""cacheCgroup"
     else
         label="$label""noCacheCgroup"
@@ -127,8 +124,7 @@ else
 fi
 
 # Setting a sandbox if not already set.
-if [ -z "$SANDBOX" ]
-then
+if [ -z "$SANDBOX" ]; then
     export SANDBOX=isolate
 fi
 
