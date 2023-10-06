@@ -56,7 +56,7 @@ public class InvocationTraceExecutor {
             // To let the last request complete.
             waitForInvocation(0, 5000);
             // Write the latencies to a file.
-            Path output = Paths.get("latencies" + config.getProxyAddress().replaceAll(".", "_") + ".txt");
+            Path output = Paths.get("latencies" + config.getProxyAddress().replaceAll("\\.", "_") + ".txt");
             Files.write(output, latencies, Charset.defaultCharset());
         } catch (IOException e) {
             e.printStackTrace();
