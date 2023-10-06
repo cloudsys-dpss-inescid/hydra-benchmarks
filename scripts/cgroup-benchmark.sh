@@ -55,8 +55,6 @@ function run_test_and_plot {
     sandbox_cache=$2
     cgroup_cache=$3
 
-    PID=$(cat $tmpdir/lambda.pid)
-
     # Preparing working directory
     mkdir -p $tmpdir &> /dev/null
 
@@ -70,6 +68,8 @@ function run_test_and_plot {
 
     # Let the lambda start.
     wait_port $ip 8080
+
+    PID=$(cat $tmpdir/lambda.pid)
 
     # Run test/benchmark.
     if [ "$test_name" = "hw" ]; then
