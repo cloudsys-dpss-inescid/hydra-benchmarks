@@ -56,9 +56,9 @@ function run_test_and_plot {
     cgroup_cache=$3
 
     if $sandbox_cache ; then
-        label="cacheS_"
+        label="cacheSB_"
     else
-        label="noCacheS_"
+        label="noCacheSB_"
     fi
 
     if $cgroup_cache ; then
