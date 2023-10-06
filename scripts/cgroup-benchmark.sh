@@ -55,11 +55,21 @@ function run_test_and_plot {
     sandbox_cache=$2
     cgroup_cache=$3
 
-    # Preparing working directory
-    mkdir -p $tmpdir &> /dev/null
+    if $sandbox_cache ; then
+        label="cacheS_"
+    else
+        label="noCacheS_"
+    fi
+
+    if $cgroup_cache ; then
+        export use_cpu_cache=true
+        label="$label""cacheCgroup"
+    else
+        export use_cpu_cache=false
+        label="$label""noCacheCgroup"
+    fi
 
     runtmpdir=$tmpdir/$test_name
-    sudo rm -r $runtmpdir/ &> /dev/null
     mkdir $runtmpdir &> /dev/null
 
     # Setting up environment.
@@ -96,21 +106,6 @@ function run_test_and_plot {
     end=$(date +%s%N)
     echo "Removing cgroup took $((($end - $start)/1000)) us"
 
-    if $sandbox_cache ; then
-        label="cacheS_"
-    else
-        label="noCacheS_"
-    fi
-    if $cgroup_cache ; then
-        export use_cpu_cache=true
-        label="$label""cacheCgroup"
-    else
-        export use_cpu_cache=false
-        label="$label""noCacheCgroup"
-    fi
-
-    echo $label
-
     plotsDir=$runtmpdir/plots/$label
     sudo mkdir -p $plotsDir
 
@@ -134,6 +129,10 @@ fi
 if [ -z "$SANDBOX" ]; then
     export SANDBOX=isolate
 fi
+
+# Preparing working directory
+mkdir -p $tmpdir &> /dev/null
+rm -r $tmpdir &> /dev/null
 
 run_test_and_plot "hw" true true
 run_test_and_plot "hw" true false
