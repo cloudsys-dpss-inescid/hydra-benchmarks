@@ -58,7 +58,9 @@ function run_test_and_plot {
     PID=$(cat $tmpdir/lambda.pid)
 
     # Preparing working directory
-    tmpdir=/tmp/test-proxy/$test_name
+    mkdir -p $tmpdir &> /dev/null
+
+    tmpdir=$tmpdir/$test_name
     sudo rm -r $tmpdir/ &> /dev/null
     mkdir $tmpdir &> /dev/null
 
