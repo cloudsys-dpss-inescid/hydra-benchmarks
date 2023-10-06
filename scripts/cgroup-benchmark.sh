@@ -70,7 +70,7 @@ function run_test_and_plot {
     fi
 
     runtmpdir=$tmpdir/$test_name
-    mkdir $runtmpdir &> /dev/null
+    mkdir -p $runtmpdir &> /dev/null
 
     # Setting up environment.
     ip=127.0.0.1
