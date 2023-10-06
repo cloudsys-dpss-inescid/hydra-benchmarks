@@ -26,7 +26,6 @@ public class DbRead {
         stmt.close();
         rs.close();
         output.put("result", result);
-        System.out.println(output);
         return output;
     }
 

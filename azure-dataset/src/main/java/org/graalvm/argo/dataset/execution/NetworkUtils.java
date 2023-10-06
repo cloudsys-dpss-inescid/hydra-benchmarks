@@ -6,14 +6,18 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class NetworkUtils {
+
+    private static final Pattern pattern = Pattern.compile("process time \\(us\\)\":(\\d+)");
 
     private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(30)).build();
 
-    public static void sendPost(String address, String path, String contentType, byte[] content, boolean async) {
+    public static void sendPost(String address, String path, String contentType, byte[] content, int timestamp, boolean async) {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://" + address + path))
                 .timeout(Duration.ofMinutes(3))
                 .header("Content-Type", contentType)
@@ -23,7 +27,7 @@ public class NetworkUtils {
         if (async) {
             HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(HttpResponse::body)
-                    .thenAccept(System.out::println);
+                    .thenAccept(r -> acceptRequestResult(timestamp, r));
         } else {
             try {
                 HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
@@ -34,4 +38,11 @@ public class NetworkUtils {
         }
     }
 
+     public static void acceptRequestResult(int timestamp, String result) {
+        System.out.println(result);
+         Matcher matcher = pattern.matcher(result);
+         if (matcher.find()) {
+             InvocationTraceExecutor.latencies.add(timestamp + " " + matcher.group(1));
+         }
+     }
 }

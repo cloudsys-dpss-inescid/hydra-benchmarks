@@ -31,17 +31,16 @@ public class DbRead {
     public static Map<String, Object> main(Map<String, Object> input) {
         Map<String, Object> output = new HashMap<>();
         try {
-        Statement stmt = conn.createStatement();
-        ResultSet rs = stmt.executeQuery(QUERY);
-        String result = resultSetToString(rs);
-        // conn.release();
-        stmt.close();
-        rs.close();
-        output.put("result", result);
+            Statement stmt = conn.createStatement();
+            ResultSet rs = stmt.executeQuery(QUERY);
+            String result = resultSetToString(rs);
+            // conn.release();
+            stmt.close();
+            rs.close();
+            output.put("result", result);
         } catch (SQLException e) {
             output.put("result", e.getMessage());
         }
-        System.out.println(output);
         return output;
     }
 
