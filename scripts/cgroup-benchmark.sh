@@ -70,6 +70,7 @@ function run_test_and_plot {
     fi
 
     runtmpdir=$tmpdir/$test_name
+    sudo rm -r $runtmpdir/ &> /dev/null
     mkdir $runtmpdir &> /dev/null
 
     # Setting up environment.
@@ -131,8 +132,9 @@ if [ -z "$SANDBOX" ]; then
 fi
 
 # Preparing working directory
-mkdir -p $tmpdir &> /dev/null
 rm -r $tmpdir &> /dev/null
+mkdir -p $tmpdir &> /dev/null
+
 
 run_test_and_plot "hw" true true
 run_test_and_plot "hw" true false
