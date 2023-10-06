@@ -107,14 +107,14 @@ function run_test_and_plot {
         label="$label""noCacheCgroup"
     fi
 
-    outputDir=$tmpdir/$label
-    sudo mkdir -p $outputDir
+    plotsDir=$tmpdir/plots/$label
+    sudo mkdir -p $plotsDir
 
-    python3 main.py $tmpdir/run.log "process time" $outputDir "hwProcessTime" $label
-    python3 main.py $tmpdir/run.log "Time taken" $outputDir "hwTimeTaken" $label
-    python3 main.py $tmpdir/lambda.log "New" $outputDir "newCgroupTimes" $label
-    python3 main.py $tmpdir/lambda.log "Inserted" $outputDir "insertCgroupTimes" $label
-    python3 main.py $tmpdir/lambda.log "Removed" $outputDir "removeCgroupTimes" $label
+    python3 main.py $tmpdir/run.log "process time" $plotsDir "hwProcessTime" $label
+    python3 main.py $tmpdir/run.log "Time taken" $plotsDir "hwTimeTaken" $label
+    python3 main.py $tmpdir/lambda.log "New" $plotsDir "newCgroupTimes" $label
+    python3 main.py $tmpdir/lambda.log "Inserted" $plotsDir "insertCgroupTimes" $label
+    python3 main.py $tmpdir/lambda.log "Removed" $plotsDir "removeCgroupTimes" $label
 }
 
 source $(DIR)/shared.sh
@@ -132,3 +132,6 @@ if [ -z "$SANDBOX" ]; then
 fi
 
 run_test_and_plot "hw" true true
+run_test_and_plot "hw" true false
+run_test_and_plot "hw" false true
+run_test_and_plot "hw" false false
