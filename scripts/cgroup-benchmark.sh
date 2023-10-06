@@ -60,23 +60,23 @@ function run_test_and_plot {
     # Preparing working directory
     mkdir -p $tmpdir &> /dev/null
 
-    tmpdir=$tmpdir/$test_name
-    sudo rm -r $tmpdir/ &> /dev/null
-    mkdir $tmpdir &> /dev/null
+    runtmpdir=$tmpdir/$test_name
+    sudo rm -r $runtmpdir/ &> /dev/null
+    mkdir $runtmpdir &> /dev/null
 
     # Setting up environment.
     ip=127.0.0.1
-    start_svm &> $tmpdir/lambda.log &
+    start_svm &> $runtmpdir/lambda.log &
 
     # Let the lambda start.
     wait_port $ip 8080
 
     # Run test/benchmark.
     if [ "$test_name" = "hw" ]; then
-        test_java_hw $sandbox_cache &> $tmpdir/run.log &
+        test_java_hw $sandbox_cache &> $runtmpdir/run.log &
     # elif [$test_name = "fh"]
     # then
-    #     test_java_fh &> $tmpdir/run.log &
+    #     test_java_fh &> $runtmpdir/run.log &
     else
         echo "Unknown test name"
         exit 1
@@ -109,14 +109,14 @@ function run_test_and_plot {
         label="$label""noCacheCgroup"
     fi
 
-    plotsDir=$tmpdir/plots/$label
+    plotsDir=$runtmpdir/plots/$label
     sudo mkdir -p $plotsDir
 
-    python3 main.py $tmpdir/run.log "process time" $plotsDir "hwProcessTime" $label
-    python3 main.py $tmpdir/run.log "Time taken" $plotsDir "hwTimeTaken" $label
-    python3 main.py $tmpdir/lambda.log "New" $plotsDir "newCgroupTimes" $label
-    python3 main.py $tmpdir/lambda.log "Inserted" $plotsDir "insertCgroupTimes" $label
-    python3 main.py $tmpdir/lambda.log "Removed" $plotsDir "removeCgroupTimes" $label
+    python3 main.py $runtmpdir/run.log "process time" $plotsDir "hwProcessTime" $label
+    python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "hwTimeTaken" $label
+    python3 main.py $runtmpdir/lambda.log "New" $plotsDir "newCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "Inserted" $plotsDir "insertCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "Removed" $plotsDir "removeCgroupTimes" $label
 }
 
 source $(DIR)/shared.sh
