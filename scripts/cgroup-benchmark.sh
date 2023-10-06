@@ -71,7 +71,7 @@ function run_test_and_plot {
 
     # Run test/benchmark.
     if [ "$test_name" = "hw" ]; then
-        test_java_hw $cgroup_cache &> $tmpdir/run.log &
+        test_java_hw $sandbox_cache &> $tmpdir/run.log &
     # elif [$test_name = "fh"]
     # then
     #     test_java_fh &> $tmpdir/run.log &
@@ -100,11 +100,14 @@ function run_test_and_plot {
         label="noCacheS_"
     fi
     if [ "$cgroup_cache" = true ]; then
+        export use_cpu_cache=true
         label="$label""cacheCgroup"
     else
+        export use_cpu_cache=false
         label="$label""noCacheCgroup"
     fi
 
+    outputDir=$tmpdir/$label
     sudo mkdir -p $outputDir
 
     python3 main.py $tmpdir/run.log "process time" $outputDir "hwProcessTime" $label
