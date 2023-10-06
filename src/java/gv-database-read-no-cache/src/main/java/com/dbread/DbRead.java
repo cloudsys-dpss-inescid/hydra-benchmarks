@@ -37,7 +37,7 @@ public class DbRead {
             // conn.release();
             stmt.close();
             rs.close();
-            output.put("result", result);
+            output.put("result", result.length());
         } catch (SQLException e) {
             output.put("result", e.getMessage());
         }
