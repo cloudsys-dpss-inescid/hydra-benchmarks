@@ -67,6 +67,8 @@ function run_test_and_plot {
         label="$label""noCacheCgroup"
     fi
 
+    export use_cgroup_cache=$cgroup_cache
+
     echo "Running test $test_name with $label"
 
     runtmpdir=$tmpdir/$test_name/$label
@@ -74,7 +76,7 @@ function run_test_and_plot {
 
     # Setting up environment.
     ip=127.0.0.1
-    start_svm $cgroup_cache &> $runtmpdir/lambda.log &
+    start_svm &> $runtmpdir/lambda.log &
 
     # Let the lambda start.
     wait_port $ip 8080
