@@ -69,6 +69,8 @@ function run_test_and_plot {
         label="$label""noCacheCgroup"
     fi
 
+    echo "Running test $test_name with $label"
+
     runtmpdir=$tmpdir/$test_name
     mkdir -p $runtmpdir &> /dev/null
 
