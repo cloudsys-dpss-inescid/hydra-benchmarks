@@ -251,6 +251,7 @@ function start_svm {
     cd $tmpdir
     export lambda_timestamp="$(date +%s%N | cut -b1-13)"
     export lambda_port="8080"
+    export use_cpu_cache=$1
     #sudo perf stat -e cache-misses,context-switches,branch-misses,page-faults ./app
     #strace -o $tmpdir/strace.log -f ./app
     #strace -f ./app

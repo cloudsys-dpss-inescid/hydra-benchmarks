@@ -62,10 +62,8 @@ function run_test_and_plot {
     fi
 
     if $cgroup_cache ; then
-        export use_cpu_cache=true
         label="$label""cacheCgroup"
     else
-        export use_cpu_cache=false
         label="$label""noCacheCgroup"
     fi
 
@@ -76,7 +74,7 @@ function run_test_and_plot {
 
     # Setting up environment.
     ip=127.0.0.1
-    start_svm &> $runtmpdir/lambda.log &
+    start_svm $cgroup_cache &> $runtmpdir/lambda.log &
 
     # Let the lambda start.
     wait_port $ip 8080
