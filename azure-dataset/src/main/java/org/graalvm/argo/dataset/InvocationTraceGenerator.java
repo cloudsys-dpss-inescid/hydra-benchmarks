@@ -84,7 +84,8 @@ public class InvocationTraceGenerator {
 
             if (maxFunctions != 0) {
                 System.out.println("Number of invocations *before* filter by number of functions: " + invocations.size());
-                downscaleByFunctions(maxFunctions);
+                downscaleByFunctions(maxFunctions * 100);
+                downscaleByIAT(maxFunctions);
                 System.out.println("Number of invocations *after* filter by number of functions: " + invocations.size());
             }
 
@@ -228,6 +229,32 @@ public class InvocationTraceGenerator {
                  .limit(maxFunctions)
                  .forEach(entry -> selectedFunctions.add(entry.getKey()));
         invocations.removeIf(i -> !selectedFunctions.contains(i.getFunction()));
+    }
+
+    /* Remove invocations that are not from the N first functions that appear in the trace (by inter-arrival time). */
+    private static void downscaleByIAT(int maxFunctions) {
+        Set<String> selectedFunctions = new HashSet<>();
+        Map<String, List<Invocation>> functionInvocations = invocations.stream().collect(Collectors.groupingBy(Invocation::getFunction));
+        Map<String, Double> functionIAT = new HashMap<>();
+        functionInvocations.forEach((f, l) -> getIAT(f, l, functionIAT));
+
+        int skipFunctions = (int) (((double) functionIAT.size()) * 0.95);
+
+        functionIAT.entrySet().stream()
+                 .sorted(Map.Entry.comparingByValue())
+                 .skip(skipFunctions)
+                 .limit(maxFunctions)
+                 .forEach(entry -> selectedFunctions.add(entry.getKey()));
+        invocations.removeIf(i -> !selectedFunctions.contains(i.getFunction()));
+    }
+
+    private static void getIAT(String function, List<Invocation> functionInvocations, Map<String, Double> functionIAT) {
+        List<Integer> IATs = new LinkedList<>();
+        for (int i = functionInvocations.size() - 1; i > 0; --i) {
+            IATs.add(functionInvocations.get(i).getTimestamp() - functionInvocations.get(i - 1).getTimestamp());
+        }
+        Double avgIAT = IATs.stream().mapToInt(i -> i).average().orElse(0.0);
+        functionIAT.put(function, avgIAT);
     }
 
     /* Remove invocations that go over the maximum memory. */
