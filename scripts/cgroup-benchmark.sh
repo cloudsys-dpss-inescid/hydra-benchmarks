@@ -113,9 +113,9 @@ function run_test_and_plot {
 
     python3 main.py $runtmpdir/run.log "process time" $plotsDir "hwProcessTime" $label
     python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "hwTimeTaken" $label
-    python3 main.py $runtmpdir/lambda.log "New cgroup" $plotsDir "newCgroupTimes" $label
-    python3 main.py $runtmpdir/lambda.log "Inserted" $plotsDir "insertCgroupTimes" $label
-    python3 main.py $runtmpdir/lambda.log "Removed" $plotsDir "removeCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "Created cgroup" $plotsDir "CreateCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "Updated" $plotsDir "UpdateCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
 }
 
 source $(DIR)/shared.sh
@@ -136,7 +136,7 @@ fi
 rm -r $tmpdir &> /dev/null
 mkdir -p $tmpdir &> /dev/null
 
-run_test_and_plot "hw" true true
-run_test_and_plot "hw" true false
+# run_test_and_plot "hw" true true
+# run_test_and_plot "hw" true false
 run_test_and_plot "hw" false true
 run_test_and_plot "hw" false false
