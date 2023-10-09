@@ -62,7 +62,7 @@ function run_test_and_plot {
     fi
 
     if $cgroup_cache ; then
-        echo $use_cpu_cache
+        export use_cpu_cache=true
         label="$label""cacheCgroup"
     else
         export use_cpu_cache=false
