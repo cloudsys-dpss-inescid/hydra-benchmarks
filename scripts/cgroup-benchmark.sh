@@ -62,7 +62,7 @@ function run_test_and_plot {
     fi
 
     if $cgroup_cache ; then
-        export use_cpu_cache=true
+        echo $use_cpu_cache
         label="$label""cacheCgroup"
     else
         export use_cpu_cache=false
@@ -71,7 +71,7 @@ function run_test_and_plot {
 
     echo "Running test $test_name with $label"
 
-    runtmpdir=$tmpdir/$test_name
+    runtmpdir=$tmpdir/$test_name/$label
     mkdir -p $runtmpdir &> /dev/null
 
     # Setting up environment.
@@ -108,12 +108,12 @@ function run_test_and_plot {
     end=$(date +%s%N)
     echo "Removing cgroup took $((($end - $start)/1000)) us"
 
-    plotsDir=$runtmpdir/plots/$label
+    plotsDir=$runtmpdir/plots
     sudo mkdir -p $plotsDir
 
     python3 main.py $runtmpdir/run.log "process time" $plotsDir "hwProcessTime" $label
     python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "hwTimeTaken" $label
-    python3 main.py $runtmpdir/lambda.log "New" $plotsDir "newCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "New cgroup" $plotsDir "newCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "Inserted" $plotsDir "insertCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "Removed" $plotsDir "removeCgroupTimes" $label
 }
