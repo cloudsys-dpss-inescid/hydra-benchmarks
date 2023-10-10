@@ -42,7 +42,9 @@ function run_test {
         pretime
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
         postime
-        echo -en "$test_name ($i/$number_of_tests)\r" &> /dev/pts/1
+       if (($i % ($number_of_tests/10) == 0)); then
+           echo -en "$test_name ($i/$number_of_tests)\r" &> /dev/pts/1
+        fi
     done
     echo -en "\n" &> /dev/pts/1
 }
