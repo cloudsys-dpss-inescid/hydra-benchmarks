@@ -8,26 +8,6 @@ function DIR {
    echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 }
 
-function gv_java_hw {
-    APP_LANG=java
-    APP_NAME=gv-hello-world
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
-    APP_MAIN=com.hello_world.HelloWorld
-    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"hw","async":"false","cached":"$1","arguments":""}' > $APP_POST
-}
-
-function test_java_hw {
-    APP_POST=$tmpdir/payload.post
-    gv_java_hw
-    for i in $(seq 1 $number_of_tests)
-    do
-        pretime
-        curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
-        postime
-    done
-}
-
 function gv_java_filehashing {
     APP_LANG=java
     APP_NAME=gv-file-hashing
@@ -37,16 +17,32 @@ function gv_java_filehashing {
     echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
 }
 
-function test_java_fh {
-    # Writing post file to disk
-    mkdir $tmpdir/fh &> /dev/null
-    APP_POST=$tmpdir/fh/payload.post
-    gv_java_filehashing
+function gv_java_hw {
+    APP_LANG=java
+    APP_NAME=gv-hello-world
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
+    APP_MAIN=com.hello_world.HelloWorld
+    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"hw","async":"false","cached":"$1","arguments":""}' > $APP_POST
+}
+
+function run_test {
+    APP_POST=$runtmpdir/payload.post
+    if [ "$1" = "hw" ]; then
+        gv_java_hw
+    elif [ "$1" = "fh" ]; then
+        gv_java_filehashing
+    else
+        echo "Unknown test name"
+        exit 1
+    fi
+
     for i in $(seq 1 $number_of_tests)
     do
         pretime
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
         postime
+        echo -en "$test_name $i/$number_of_tests\r"
     done
 }
 
@@ -84,18 +80,8 @@ function run_test_and_plot {
     PID=$(cat $tmpdir/lambda.pid)
 
     # Run test/benchmark.
-    if [ "$test_name" = "hw" ]; then
-        test_java_hw $sandbox_cache &> $runtmpdir/run.log &
-    # elif [$test_name = "fh"]
-    # then
-    #     test_java_fh &> $runtmpdir/run.log &
-    else
-        echo "Unknown test name"
-        exit 1
-    fi
-
+    run_test &> $runtmpdir/run.log &
     RUN_PID=$!
-
     wait $RUN_PID
 
     # Teardown the lambda.
