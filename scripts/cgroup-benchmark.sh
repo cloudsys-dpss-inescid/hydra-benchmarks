@@ -81,7 +81,7 @@ function run_test_and_plot {
     PID=$(cat $tmpdir/lambda.pid)
 
     # Run test/benchmark.
-    run_test &
+    run_test &> $runtmpdir/run.log &
     RUN_PID=$!
     wait $RUN_PID
 
