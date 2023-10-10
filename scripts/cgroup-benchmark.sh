@@ -28,9 +28,9 @@ function gv_java_hw {
 
 function run_test {
     APP_POST=$runtmpdir/payload.post
-    if [ "$1" = "hw" ]; then
+    if [ "$test_name" = "hw" ]; then
         gv_java_hw
-    elif [ "$1" = "fh" ]; then
+    elif [ "$test_name" = "fh" ]; then
         gv_java_filehashing
     else
         echo "Unknown test name"
@@ -41,9 +41,10 @@ function run_test {
     do
         pretime
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
-        postime
-        echo -en "$test_name $i/$number_of_tests\r"
+        postime &> $runtmpdir/run.log
+        echo -en "$test_name ($i/$number_of_tests)\r" &> /dev/pts/1
     done
+    echo -en "\n" &> /dev/pts/1
 }
 
 function run_test_and_plot {
@@ -80,7 +81,7 @@ function run_test_and_plot {
     PID=$(cat $tmpdir/lambda.pid)
 
     # Run test/benchmark.
-    run_test &> $runtmpdir/run.log &
+    run_test &
     RUN_PID=$!
     wait $RUN_PID
 
