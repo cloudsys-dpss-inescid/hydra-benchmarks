@@ -41,7 +41,7 @@ function run_test {
     do
         pretime
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
-        postime &> $runtmpdir/run.log
+        postime
         echo -en "$test_name ($i/$number_of_tests)\r" &> /dev/pts/1
     done
     echo -en "\n" &> /dev/pts/1
