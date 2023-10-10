@@ -127,7 +127,7 @@ echo "Logs available at $tmpdir..."
 APP_POST=$tmpdir/payload.post
 
 # Preparing working directory
-sudo rm -r $tmpdir/ &> /dev/null
+rm -r $tmpdir/ &> /dev/null
 mkdir $tmpdir &> /dev/null
 
 for iter in $(seq 1 $ITERATIONS)

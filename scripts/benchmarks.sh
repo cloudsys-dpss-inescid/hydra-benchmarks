@@ -5,6 +5,7 @@ IP=$(ip route get 8.8.8.8 | grep -oP  'src \K\S+')
 PORT=8000
 
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_sleep"
+JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_native_hw" 
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_hw"                 # 256 MB
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_shopcart"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_filehashing"        # 256 MB
@@ -61,6 +62,15 @@ PH_BENCHMARKS="$PH_BENCHMARKS gv_java_filehashing"        # 256 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_httprequest"        # 256 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_videoprocessing"    # 1024 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_classify"           # 1024 MB
+
+function gv_java_native_hw {
+    APP_LANG=java
+    APP_NAME=gv-native-hw
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhellojni.so
+    APP_MAIN=com.hello_jni.HelloJNI
+    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"hw","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
 
 function gv_java_hw {
     APP_LANG=java

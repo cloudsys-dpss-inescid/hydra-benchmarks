@@ -67,8 +67,8 @@ function postime {
 function log_rss {
     PID=$1
     OFILE=$2
-    sudo rm $OFILE &> /dev/null
-        while sudo kill -0 $PID &> /dev/null; do
+    rm $OFILE &> /dev/null
+        while kill -0 $PID &> /dev/null; do
                 ps -q $PID -o rss= >> $OFILE
                 sleep .5
         done
@@ -324,6 +324,6 @@ function stop_container {
 }
 
 function stop_svm {
-    sudo kill $PID
+    kill $PID
 }
 
