@@ -42,7 +42,7 @@ function run_test {
         pretime
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
         postime
-       if (($i % ($number_of_tests/10) == 0)); then
+        if (($i % ($number_of_tests/10) == 0)); then
            echo -en "$test_name ($i/$number_of_tests)\r" &> /dev/pts/1
         fi
     done
@@ -100,8 +100,8 @@ function run_test_and_plot {
     plotsDir=$runtmpdir/plots
     sudo mkdir -p $plotsDir
 
-    python3 main.py $runtmpdir/run.log "process time" $plotsDir "hwProcessTime" $label
-    python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "hwTimeTaken" $label
+    python3 main.py $runtmpdir/run.log "process time" $plotsDir "ProcessTime" $label
+    python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "TimeTaken" $label
     python3 main.py $runtmpdir/lambda.log "Created cgroup" $plotsDir "CreateCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "Updated" $plotsDir "UpdateCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
