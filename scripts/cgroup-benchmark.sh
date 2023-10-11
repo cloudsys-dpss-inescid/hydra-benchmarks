@@ -90,9 +90,9 @@ function run_test_and_plot {
     wait $RUN_PID
 
     exec >&3 3>&-
-
     # Teardown the lambda.
     stop_svm
+    sleep 1
 
     # Remove main cgroup
     start=$(date +%s%N)
