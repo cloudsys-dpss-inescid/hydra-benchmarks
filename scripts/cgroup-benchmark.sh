@@ -40,13 +40,13 @@ function run_test {
     for i in $(seq 1 $number_of_tests)
     do
         pretime
-        curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST) &> $runtmpdir/run.log
-        postime &> $runtmpdir/run.log
+        curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
+        postime
         if (($i % ($number_of_tests/10) == 0)); then
-           echo -en "$test_name ($i/$number_of_tests)\r"
+           echo -en "$test_name ($i/$number_of_tests)\r" &>&3
         fi
     done
-    echo -en "\n"
+    echo -en "\n" &>&3
 }
 
 function run_test_and_plot {
@@ -82,10 +82,14 @@ function run_test_and_plot {
 
     PID=$(cat $tmpdir/lambda.pid)
 
+    exec 3>&1
+
     # Run test/benchmark.
-    run_test &
+    run_test &> $runtmpdir/run.log &
     RUN_PID=$!
     wait $RUN_PID
+
+    exec >&3 3>&-
 
     # Teardown the lambda.
     stop_svm
