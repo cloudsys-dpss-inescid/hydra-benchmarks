@@ -92,10 +92,10 @@ function run_test_and_plot {
 
     # Remove main cgroup
     start=$(date +%s%N)
-    rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate/cgroup-*
-    rmdir /sys/fs/cgroup/user.slice/user-1000.slice/isolate
+    rmdir /sys/fs/cgroup/user.slice/user-1000.slice/gv-cgroups/cgroup-*
+    rmdir /sys/fs/cgroup/user.slice/user-1000.slice/gv-cgroups
     end=$(date +%s%N)
-    echo "Removing cgroup took $((($end - $start)/1000)) us"
+    echo "Deleted cgroup (main and children) took $((($end - $start)/1000)) us" >> $runtmpdir/lambda.log
 
     plotsDir=$runtmpdir/plots
     sudo mkdir -p $plotsDir
