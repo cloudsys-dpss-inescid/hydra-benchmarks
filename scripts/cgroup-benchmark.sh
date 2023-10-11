@@ -14,7 +14,7 @@ function gv_java_filehashing {
     APP_MAIN=com.filehashing.FileHashing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
     curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
+    echo '{"name":"filehashing","async":"false","cached":"$sandbox_cache","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
 }
 
 function gv_java_hw {
@@ -23,7 +23,7 @@ function gv_java_hw {
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
     APP_MAIN=com.hello_world.HelloWorld
     curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"hw","async":"false","cached":"$1","arguments":""}' > $APP_POST
+    echo '{"name":"hw","async":"false","cached":"$sandbox_cache","arguments":""}' > $APP_POST
 }
 
 function run_test {
