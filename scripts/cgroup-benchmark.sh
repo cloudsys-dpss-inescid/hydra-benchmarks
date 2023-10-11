@@ -40,13 +40,13 @@ function run_test {
     for i in $(seq 1 $number_of_tests)
     do
         pretime
-        curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
-        postime
+        curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST) &> $runtmpdir/run.log
+        postime &> $runtmpdir/run.log
         if (($i % ($number_of_tests/10) == 0)); then
-           echo -en "$test_name ($i/$number_of_tests)\r" &> /dev/pts/1
+           echo -en "$test_name ($i/$number_of_tests)\r"
         fi
     done
-    echo -en "\n" &> /dev/pts/1
+    echo -en "\n"
 }
 
 function run_test_and_plot {
@@ -83,7 +83,7 @@ function run_test_and_plot {
     PID=$(cat $tmpdir/lambda.pid)
 
     # Run test/benchmark.
-    run_test &> $runtmpdir/run.log &
+    run_test &
     RUN_PID=$!
     wait $RUN_PID
 
