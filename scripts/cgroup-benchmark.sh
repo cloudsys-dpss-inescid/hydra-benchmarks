@@ -43,10 +43,10 @@ function run_test {
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST)
         postime
         if (($i % ($number_of_tests/10) == 0)); then
-           echo -en "$test_name ($i/$number_of_tests)\r" &>&3
+           echo -en "$test_name ($i/$number_of_tests)\r" >&3
         fi
     done
-    echo -en "\n" &>&3
+    echo -en "\n" >&3
 }
 
 function run_test_and_plot {
