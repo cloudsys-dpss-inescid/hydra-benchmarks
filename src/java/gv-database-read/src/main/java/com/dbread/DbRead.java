@@ -18,23 +18,44 @@ public class DbRead {
     private static final HostedConnection conn = HostedConnection.getConnection(DB_URL, USER, PASS);
 
     public static Map<String, Object> main(Map<String, Object> input) {
-        Object rowsObject = input.get("rows");
-        int rows = 10;
-        if (rowsObject != null) {
-            rows = Integer.valueOf((String) rowsObject);
+        Object iterationsObject = input.get("iterations");
+        int iterations = 5;
+        if (iterationsObject != null) {
+            iterations = Integer.valueOf((String) iterationsObject);
         }
+
+        warmup(iterations);
+
         Map<String, Object> output = new HashMap<>();
-        HostedStatement stmt = conn.createStatement();
-        long before = System.nanoTime();
-        HostedResultSet rs = stmt.executeQuery(String.format(QUERY, rows));
-        String result = resultSetToString(rs);
-        long after = System.nanoTime();
-        // conn.release();
-        stmt.close();
-        rs.close();
-        output.put("resultLength", result.length());
-        output.put("time", after - before);
+
+        for (int rows = 2; rows <= 16384; rows *= 2) {
+            long[] res = readDatabase(iterations, rows);
+            output.put(Integer.toString(rows), res);
+        }
         return output;
+    }
+
+    private static void warmup(int iterations) {
+        readDatabase(iterations, iterations);
+    }
+
+    private static long[] readDatabase(int iterations, int rows) {
+        long[] executionTimes = new long[iterations];
+
+        for (int i = 0; i < iterations; ++i) {
+            HostedStatement stmt = conn.createStatement();
+            long before = System.nanoTime();
+            HostedResultSet rs = stmt.executeQuery(String.format(QUERY, rows));
+            String result = resultSetToString(rs);
+            long after = System.nanoTime();
+            // conn.release();
+            stmt.close();
+            rs.close();
+            executionTimes[i] = after - before;
+            System.gc();
+        }
+
+        return executionTimes;
     }
 
     private static String resultSetToString(HostedResultSet rs) {

@@ -29,27 +29,46 @@ public class DbRead {
     }
 
     public static Map<String, Object> main(Map<String, Object> input) {
-        Object rowsObject = input.get("rows");
-        int rows = 10;
-        if (rowsObject != null) {
-            rows = Integer.valueOf((String) rowsObject);
+        Object iterationsObject = input.get("iterations");
+        int iterations = 5;
+        if (iterationsObject != null) {
+            iterations = Integer.valueOf((String) iterationsObject);
         }
+
+        warmup(iterations);
+
         Map<String, Object> output = new HashMap<>();
-        try {
-            Statement stmt = conn.createStatement();
-            long before = System.nanoTime();
-            ResultSet rs = stmt.executeQuery(String.format(QUERY, rows));
-            String result = resultSetToString(rs);
-            long after = System.nanoTime();
-            // conn.release();
-            stmt.close();
-            rs.close();
-            output.put("resultLength", result.length());
-            output.put("time", after - before);
-        } catch (SQLException e) {
-            output.put("result", e.getMessage());
+
+        for (int rows = 2; rows <= 16384; rows *= 2) {
+            long[] res = readDatabase(iterations, rows);
+            output.put(Integer.toString(rows), res);
         }
         return output;
+    }
+
+    private static void warmup(int iterations) {
+        readDatabase(iterations, iterations);
+    }
+
+    private static long[] readDatabase(int iterations, int rows) {
+        long[] executionTimes = new long[iterations];
+
+        try {
+            for (int i = 0; i < iterations; ++i) {
+                Statement stmt = conn.createStatement();
+                long before = System.nanoTime();
+                ResultSet rs = stmt.executeQuery(String.format(QUERY, rows));
+                String result = resultSetToString(rs);
+                long after = System.nanoTime();
+                stmt.close();
+                rs.close();
+                executionTimes[i] = after - before;
+                System.gc();
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return executionTimes;
     }
 
     private static String resultSetToString(ResultSet rs) throws SQLException {
