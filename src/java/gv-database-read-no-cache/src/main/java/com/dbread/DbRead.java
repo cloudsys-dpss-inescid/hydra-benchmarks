@@ -15,7 +15,7 @@ public class DbRead {
     private static final String DB_URL = "jdbc:postgresql://127.0.0.1:5432/jdbc_experiment";
     private static final String USER = "postgres";
     private static final String PASS = "0000";
-    private static final String QUERY = "SELECT id, manufacturer, model FROM cars";
+    private static final String QUERY = "SELECT id, manufacturer, model FROM cars FETCH FIRST %d ROWS ONLY";
 
     private static Connection conn;// = DriverManager.getConnection(DB_URL, USER, PASS);
 
@@ -29,15 +29,23 @@ public class DbRead {
     }
 
     public static Map<String, Object> main(Map<String, Object> input) {
+        Object rowsObject = input.get("rows");
+        int rows = 10;
+        if (rowsObject != null) {
+            rows = Integer.valueOf((String) rowsObject);
+        }
         Map<String, Object> output = new HashMap<>();
         try {
             Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(QUERY);
+            long before = System.nanoTime();
+            ResultSet rs = stmt.executeQuery(String.format(QUERY, rows));
             String result = resultSetToString(rs);
+            long after = System.nanoTime();
             // conn.release();
             stmt.close();
             rs.close();
-            output.put("result", result.length());
+            output.put("resultLength", result.length());
+            output.put("time", after - before);
         } catch (SQLException e) {
             output.put("result", e.getMessage());
         }
