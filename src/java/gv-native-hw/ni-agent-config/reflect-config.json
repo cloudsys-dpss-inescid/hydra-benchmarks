@@ -1,5 +1,5 @@
 [
 {
   "name":"com.hello_jni.HelloJNI",
-  "methods":[{"name":"main"}]}
+  "methods":[{"name":"main","parameterTypes":["java.util.Map"] }]}
 ]
