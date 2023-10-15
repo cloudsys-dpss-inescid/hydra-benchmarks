@@ -1,4 +1,4 @@
-package com.hello_jni;
+package com.jni;
 
 import java.util.HashMap;
 import java.util.Map;

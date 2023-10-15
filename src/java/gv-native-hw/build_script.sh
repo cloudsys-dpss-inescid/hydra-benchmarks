@@ -10,10 +10,19 @@ ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src -DSNI_DBG"
 
+
 function run_hotspot {
-        $JAVA_HOME/bin/java \
-                -cp build/classes/java/main:build/libs/native-hw-1.0-all.jar \
-                com.hello_jni.HelloJNI
+	rm -rf config-dir
+        CLASS_PATH="classes/java/main"
+
+        cd build
+        export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:libs:$LD_LIBRARY_PATH
+	$JAVA_HOME/bin/java \
+		-Djava.awt.headless=true \
+		-agentlib:native-image-agent=config-output-dir=config-dir/ \
+		-cp $CLASS_PATH:libs/native-hw-1.0-all.jar \
+                -Djava.library.path=$LD_LIBRARY_PATH \
+                com.jni.HelloJNI
 }
 
 function build_ni {
@@ -35,7 +44,7 @@ function build_ni {
 }
 
 function build_ni_standalone {
-	NI_BIN_OPTS="com.hello_jni.HelloJNI"
+	NI_BIN_OPTS="com.jni.HelloJNI"
 	build_ni
 }
 
@@ -61,8 +70,7 @@ function build_snippets {
 
 function manipulate_bytecode {
         CLASS_PATH="build/classes/java/main"
-        BIN_PATH="$CLASS_PATH/com/hello_jni"
-        ENTRYPOINT="com.hello_jni.HelloJNI"
+        ENTRYPOINT="com.jni.HelloJNI"
         TOOL="NativeRedirection"
         
         mkdir -p $DIR/build/snippets
@@ -71,7 +79,7 @@ function manipulate_bytecode {
         export ENV="memisolation"
         $DEF_JAVA_HOME/bin/java \
                 -cp $CLASS_PATH \
-                -javaagent:$JAVA_AGENT=$TOOL::$BIN_PATH \
+                -javaagent:$JAVA_AGENT=$TOOL::$CLASS_PATH \
                 $ENTRYPOINT
 }
 
