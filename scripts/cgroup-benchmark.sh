@@ -13,8 +13,8 @@ function gv_java_filehashing {
     APP_NAME=gv-file-hashing
     APP_MAIN=com.filehashing.FileHashing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
-    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"$sandbox_cache","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
+    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
 }
 
 function gv_java_hw {
@@ -22,8 +22,8 @@ function gv_java_hw {
     APP_NAME=gv-hello-world
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
     APP_MAIN=com.hello_world.HelloWorld
-    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"hw","async":"false","cached":"$sandbox_cache","arguments":""}' > $APP_POST
+    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"hw","async":"false","cached":"${sandbox_cache}","arguments":""}' > $APP_POST
 }
 
 function run_test {
@@ -106,9 +106,11 @@ function run_test_and_plot {
 
     python3 main.py $runtmpdir/run.log "process time" $plotsDir "ProcessTime" $label
     python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "TimeTaken" $label
-    python3 main.py $runtmpdir/lambda.log "Created cgroup" $plotsDir "CreateCgroupTimes" $label
-    python3 main.py $runtmpdir/lambda.log "Updated" $plotsDir "UpdateCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "Created cgroup-" $plotsDir "CreateCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "(deleted" $plotsDir "DeleteThreadCgroupTimes" $label
+    python3 main.py $runtmpdir/lambda.log "(added" $plotsDir "AddThreadCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
+
 }
 
 source $(DIR)/shared.sh
