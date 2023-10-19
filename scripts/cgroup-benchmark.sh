@@ -73,19 +73,13 @@ function run_test {
 
 function run_test_and_plot {
     test_name=$1
-    sandbox_cache=$2
-    cgroup_cache=$3
+    cgroup_cache=$2
 
-    if $sandbox_cache ; then
-        label="cacheSB_"
-    else
-        label="noCacheSB_"
-    fi
 
     if $cgroup_cache ; then
-        label="$label""cacheCgroup"
+        label="cacheCgroup"
     else
-        label="$label""noCacheCgroup"
+        label="noCacheCgroup"
     fi
 
     export use_cgroup_cache=$cgroup_cache
@@ -152,16 +146,14 @@ fi
 rm -r $tmpdir &> /dev/null
 mkdir -p $tmpdir &> /dev/null
 
-# run_test_and_plot "hw" true true
-# run_test_and_plot "hw" true false
-run_test_and_plot "hw" false true
-run_test_and_plot "hw" false false
-run_test_and_plot "fileHashing" false true
-run_test_and_plot "fileHashing" false false
-run_test_and_plot "videoProcess" false true
-run_test_and_plot "videoProcess" false false
-run_test_and_plot "imageClassify" false true
-run_test_and_plot "imageClassify" false false
+run_test_and_plot "hw" true
+run_test_and_plot "hw" false
+run_test_and_plot "fileHashing" true
+run_test_and_plot "fileHashing" false
+run_test_and_plot "videoProcess" true
+run_test_and_plot "videoProcess" false
+run_test_and_plot "imageClassify" true
+run_test_and_plot "imageClassify" false
 
 echo "Done"
 
