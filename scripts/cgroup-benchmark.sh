@@ -14,7 +14,7 @@ function gv_java_filehashing {
     APP_MAIN=com.filehashing.FileHashing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
     curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"true","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
+    echo '{"name":"filehashing","async":"false","cached":"false","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
 }
 
 function gv_java_hw {
@@ -22,16 +22,38 @@ function gv_java_hw {
     APP_NAME=gv-hello-world
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
     APP_MAIN=com.hello_world.HelloWorld
-    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"hw","async":"false","cached":"${sandbox_cache}","arguments":""}' > $APP_POST
+    curl -s -X POST $ip:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"hw","async":"false","cached":"false","arguments":""}' > $APP_POST
+}
+
+function gv_java_videoprocessing {
+    APP_LANG=java
+    APP_NAME=gv-video-processing
+    APP_MAIN=com.videoprocessing.VideoProcessing
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libvideoprocessing.so
+    curl -s -X POST $ip:8080/register?name=videoprocessing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"videoprocessing","async":"false","arguments":"{\"video\":\"http://'$IP':'$PORT'/video.mp4\",\"ffmpeg\":\"http://'$IP':'$PORT'/ffmpeg\"}"}' > $APP_POST
+}
+
+function gv_java_classify {
+    APP_LANG=java
+    APP_NAME=gv-classify
+    APP_MAIN=com.classify.Classify
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libclassify.so
+    curl -s -X POST $ip:8080/register?name=classify\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"classify","async":"false","arguments":"{\"model_url\":\"http://'$IP':'$PORT'/tensorflow_inception_graph.pb\",\"labels_url\":\"http://'$IP':'$PORT'/imagenet_comp_graph_label_strings.txt\",\"image_url\":\"http://'$IP':'$PORT'/eagle.jpg\"}"}' > $APP_POST
 }
 
 function run_test {
     APP_POST=$runtmpdir/payload.post
     if [ "$test_name" = "hw" ]; then
         gv_java_hw
-    elif [ "$test_name" = "fh" ]; then
+    elif [ "$test_name" = "fileHashing" ]; then
         gv_java_filehashing
+    elif [ "$test_name" = "videoProcess" ]; then
+        gv_java_videoprocessing
+    elif [ "$test_name" = "imageClassify" ]; then
+        gv_java_classify
     else
         echo "Unknown test name"
         exit 1
@@ -110,7 +132,6 @@ function run_test_and_plot {
     python3 main.py $runtmpdir/lambda.log "(deleted" $plotsDir "DeleteThreadCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "(added" $plotsDir "AddThreadCgroupTimes" $label
     python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
-
 }
 
 source $(DIR)/shared.sh
@@ -135,3 +156,14 @@ mkdir -p $tmpdir &> /dev/null
 # run_test_and_plot "hw" true false
 run_test_and_plot "hw" false true
 run_test_and_plot "hw" false false
+run_test_and_plot "fileHashing" false true
+run_test_and_plot "fileHashing" false false
+run_test_and_plot "videoProcess" false true
+run_test_and_plot "videoProcess" false false
+run_test_and_plot "imageClassify" false true
+run_test_and_plot "imageClassify" false false
+
+echo "Done"
+
+
+
