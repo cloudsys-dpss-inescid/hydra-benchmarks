@@ -50,7 +50,7 @@ function gv_fibonnaci {
     APP_MAIN=com.fibonnaci.Fibonnaci
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfibonnaci.so
     curl -s -X POST $ip:8080/register?name=libfibonnaci\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"classify","async":"false","arguments":"{\"term\":\"100\"}"}' > $APP_POST
+    echo '{"name":"fibonnaci","async":"false","arguments":"{\"term\":\"100\"}"}' > $APP_POST
 }
 
 function run_test {
