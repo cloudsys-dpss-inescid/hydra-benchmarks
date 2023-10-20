@@ -18,9 +18,9 @@ public class Fibonnaci {
         if (term == 1 || term == 2) {
             return "1";
         }
-        int f1 = 1, f2 = 1, t = 2;
+        long f1 = 1, f2 = 1, t = 2;
         while (t != term) {
-            int new_term = f1 + f2;
+            long new_term = f1 + f2;
             f1 = f2;
             f2 = new_term;
             t++;
