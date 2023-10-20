@@ -44,6 +44,15 @@ function gv_java_classify {
     echo '{"name":"classify","async":"false","arguments":"{\"model_url\":\"http://'$IP':'$PORT'/tensorflow_inception_graph.pb\",\"labels_url\":\"http://'$IP':'$PORT'/imagenet_comp_graph_label_strings.txt\",\"image_url\":\"http://'$IP':'$PORT'/eagle.jpg\"}"}' > $APP_POST
 }
 
+function gv_fibonnaci {
+    APP_LANG=java
+    APP_NAME=gv-fibonnaci
+    APP_MAIN=com.fibonnaci.Fibonnaci
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfibonnaci.so
+    curl -s -X POST $ip:8080/register?name=libfibonnaci\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"classify","async":"false","arguments":"{\"term\":\"100\"}"}' > $APP_POST
+}
+
 function run_test {
     APP_POST=$runtmpdir/payload.post
     if [ "$test_name" = "hw" ]; then
@@ -54,6 +63,8 @@ function run_test {
         gv_java_videoprocessing
     elif [ "$test_name" = "imageClassify" ]; then
         gv_java_classify
+    elif [ "$test_name" = "fibonnaci" ]; then
+        gv_fibonnaci
     else
         echo "Unknown test name"
         exit 1
@@ -120,12 +131,12 @@ function run_test_and_plot {
     plotsDir=$runtmpdir/plots
     sudo mkdir -p $plotsDir
 
-    python3 main.py $runtmpdir/run.log "process time" $plotsDir "ProcessTime" $label
-    python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "TimeTaken" $label
-    python3 main.py $runtmpdir/lambda.log "Created cgroup-" $plotsDir "CreateCgroupTimes" $label
-    python3 main.py $runtmpdir/lambda.log "(deleted" $plotsDir "DeleteThreadCgroupTimes" $label
-    python3 main.py $runtmpdir/lambda.log "(added" $plotsDir "AddThreadCgroupTimes" $label
-    python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
+#     python3 main.py $runtmpdir/run.log "process time" $plotsDir "ProcessTime" $label
+#     python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "TimeTaken" $label
+#     python3 main.py $runtmpdir/lambda.log "Created cgroup-" $plotsDir "CreateCgroupTimes" $label
+#     python3 main.py $runtmpdir/lambda.log "(deleted" $plotsDir "DeleteThreadCgroupTimes" $label
+#     python3 main.py $runtmpdir/lambda.log "(added" $plotsDir "AddThreadCgroupTimes" $label
+#     python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
 }
 
 source $(DIR)/shared.sh
@@ -152,8 +163,10 @@ mkdir -p $tmpdir &> /dev/null
 #run_test_and_plot "fileHashing" false
 #run_test_and_plot "videoProcess" true
 #run_test_and_plot "videoProcess" false
-run_test_and_plot "imageClassify" true
-run_test_and_plot "imageClassify" false
+#run_test_and_plot "imageClassify" true
+#run_test_and_plot "imageClassify" false
+run_test_and_plot "fibonnaci" true
+#run_test_and_plot "fibonnaci" false
 
 echo "Done"
 

@@ -1,0 +1,13 @@
+[
+  {
+    "name": "com.fibonnaci.Fibonnaci",
+    "methods": [
+      {
+        "name": "main",
+        "parameterTypes": [
+          "java.util.Map"
+        ]
+      }
+    ]
+  }
+]
