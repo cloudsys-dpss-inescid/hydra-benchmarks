@@ -16,6 +16,7 @@ function build_ni {
 		-DGraalVisorGuest=true \
 		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
 		--initialize-at-run-time=com.oracle.svm.graalvisor.utils.JsonUtils \
+		--add-exports org.graalvm.nativeimage.builder/com.oracle.svm.core=ALL-UNNAMED \
 		-H:ConfigurationFileDirectories=../ni-agent-config \
 		-H:+ReportExceptionStackTraces \
 		$NI_BIN_OPTS \
