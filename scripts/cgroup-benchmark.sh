@@ -13,8 +13,8 @@ function gv_java_filehashing {
     APP_NAME=gv-file-hashing
     APP_MAIN=com.filehashing.FileHashing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfilehashing.so
-    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=40000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"filehashing","async":"false","cached":"false","arguments":"{\"url\":\"http://'$IP':'$PORT'/blob\"}"}' > $APP_POST
+    curl -s -X POST $ip:8080/register?name=filehashing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"filehashing","async":"false","cached":"false","arguments":"{\"url\":\"http://'$IP':'$PORT'/snap.png\"}"}' > $APP_POST
 }
 
 function gv_java_hw {
@@ -31,7 +31,7 @@ function gv_java_videoprocessing {
     APP_NAME=gv-video-processing
     APP_MAIN=com.videoprocessing.VideoProcessing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libvideoprocessing.so
-    curl -s -X POST $ip:8080/register?name=videoprocessing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=50000 -H 'Content-Type: application/json' --data-binary @$APP_SO
+    curl -s -X POST $ip:8080/register?name=videoprocessing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
     echo '{"name":"videoprocessing","async":"false","arguments":"{\"video\":\"http://'$IP':'$PORT'/video.mp4\",\"ffmpeg\":\"http://'$IP':'$PORT'/ffmpeg\"}"}' > $APP_POST
 }
 
