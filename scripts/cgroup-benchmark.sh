@@ -85,7 +85,7 @@ function run_test {
 function run_test_and_plot {
     test_name=$1
     cgroup_cache=$2
-
+    number_of_tests=$3
 
     if $cgroup_cache ; then
         label="cacheCgroup"
@@ -131,13 +131,6 @@ function run_test_and_plot {
 
 source $(DIR)/shared.sh
 
-if [ "$#" -ne 1 ]; then
-    echo "Illegal number of parameters"
-    exit 1
-else
-    number_of_tests=$1
-fi
-
 # Setting a sandbox if not already set.
 if [ -z "$SANDBOX" ]; then
     export SANDBOX=isolate
@@ -147,16 +140,16 @@ fi
 rm -r $tmpdir &> /dev/null
 mkdir -p $tmpdir &> /dev/null
 
-#run_test_and_plot "hw" true
-#run_test_and_plot "hw" false
-#run_test_and_plot "fileHashing" true
-#run_test_and_plot "fileHashing" false
-#run_test_and_plot "videoProcess" true
-#run_test_and_plot "videoProcess" false
+#run_test_and_plot "videoProcess" true 100
+#run_test_and_plot "videoProcess" false 100
+#run_test_and_plot "hw" true 1000
+#run_test_and_plot "hw" false 1000
+#run_test_and_plot "fileHashing" true 100
+#run_test_and_plot "fileHashing" false 100
+#run_test_and_plot "fibonnaci" true 1000
+#run_test_and_plot "fibonnaci" false 1000
 #run_test_and_plot "imageClassify" true
 #run_test_and_plot "imageClassify" false
-run_test_and_plot "fibonnaci" true
-#run_test_and_plot "fibonnaci" false
 
 echo "Done"
 
