@@ -127,16 +127,6 @@ function run_test_and_plot {
     rmdir /sys/fs/cgroup/user.slice/user-1000.slice/gv-cgroups
     end=$(date +%s%N)
     echo "Deleted cgroup (main and children) took $((($end - $start)/1000)) us" >> $runtmpdir/lambda.log
-
-    plotsDir=$runtmpdir/plots
-    sudo mkdir -p $plotsDir
-
-#     python3 main.py $runtmpdir/run.log "process time" $plotsDir "ProcessTime" $label
-#     python3 main.py $runtmpdir/run.log "Time taken" $plotsDir "TimeTaken" $label
-#     python3 main.py $runtmpdir/lambda.log "Created cgroup-" $plotsDir "CreateCgroupTimes" $label
-#     python3 main.py $runtmpdir/lambda.log "(deleted" $plotsDir "DeleteThreadCgroupTimes" $label
-#     python3 main.py $runtmpdir/lambda.log "(added" $plotsDir "AddThreadCgroupTimes" $label
-#     python3 main.py $runtmpdir/lambda.log "Deleted cgroup" $plotsDir "DeleteCgroupTimes" $label
 }
 
 source $(DIR)/shared.sh
