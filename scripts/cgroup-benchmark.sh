@@ -32,7 +32,7 @@ function gv_java_videoprocessing {
     APP_MAIN=com.videoprocessing.VideoProcessing
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libvideoprocessing.so
     curl -s -X POST $ip:8080/register?name=videoprocessing\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"videoprocessing","async":"false","arguments":"{\"video\":\"http://'$IP':'$PORT'/video.mp4\",\"ffmpeg\":\"http://'$IP':'$PORT'/ffmpeg\"}"}' > $APP_POST
+    echo '{"name":"videoprocessing","async":"false","cached":"false","arguments":"{\"video\":\"http://'$IP':'$PORT'/video.mp4\",\"ffmpeg\":\"http://'$IP':'$PORT'/ffmpeg\"}"}' > $APP_POST
 }
 
 function gv_java_classify {
@@ -41,7 +41,7 @@ function gv_java_classify {
     APP_MAIN=com.classify.Classify
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libclassify.so
     curl -s -X POST $ip:8080/register?name=classify\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"classify","async":"false","arguments":"{\"model_url\":\"http://'$IP':'$PORT'/tensorflow_inception_graph.pb\",\"labels_url\":\"http://'$IP':'$PORT'/imagenet_comp_graph_label_strings.txt\",\"image_url\":\"http://'$IP':'$PORT'/eagle.jpg\"}"}' > $APP_POST
+    echo '{"name":"classify","async":"false","cached":"false","arguments":"{\"model_url\":\"http://'$IP':'$PORT'/tensorflow_inception_graph.pb\",\"labels_url\":\"http://'$IP':'$PORT'/imagenet_comp_graph_label_strings.txt\",\"image_url\":\"http://'$IP':'$PORT'/eagle.jpg\"}"}' > $APP_POST
 }
 
 function gv_fibonnaci {
@@ -50,7 +50,7 @@ function gv_fibonnaci {
     APP_MAIN=com.fibonnaci.Fibonnaci
     APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfibonnaci.so
     curl -s -X POST $ip:8080/register?name=fibonnaci\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX\&cpuCgroupQuota=100000 -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"fibonnaci","async":"false","arguments":"{\"term\":\"50\"}"}' > $APP_POST
+    echo '{"name":"fibonnaci","async":"false","cached":"false","arguments":"{\"term\":\"50\"}"}' > $APP_POST
 }
 
 function run_test {
@@ -82,7 +82,7 @@ function run_test {
     echo -en "\n" >&3
 }
 
-function run_test_and_plot {
+function run_test_and {
     test_name=$1
     cgroup_cache=$2
     number_of_tests=$3
@@ -100,9 +100,12 @@ function run_test_and_plot {
     runtmpdir=$tmpdir/$test_name/$label
     mkdir -p $runtmpdir &> /dev/null
 
+    logsDir=$tmpdir/$test_name/$label
+    mkdir -p $logsDir &> /dev/null
+
     # Setting up environment.
     ip=127.0.0.1
-    start_svm &> $runtmpdir/lambda.log &
+    start_svm &> $logsDir/lambda.log &
 
     # Let the lambda start.
     wait_port $ip 8080
@@ -112,7 +115,7 @@ function run_test_and_plot {
     exec 3>&1
 
     # Run test/benchmark.
-    run_test &> $runtmpdir/run.log &
+    run_test &> $logsDir/run.log &
     RUN_PID=$!
     wait $RUN_PID
 
@@ -126,7 +129,7 @@ function run_test_and_plot {
     rmdir /sys/fs/cgroup/user.slice/user-1000.slice/gv-cgroups/cgroup-*
     rmdir /sys/fs/cgroup/user.slice/user-1000.slice/gv-cgroups
     end=$(date +%s%N)
-    echo "Deleted cgroup (main and children) took $((($end - $start)/1000)) us" >> $runtmpdir/lambda.log
+    echo "Deleted cgroup (main and children) took $((($end - $start)/1000)) us" >> $logsDir/lambda.log
 }
 
 source $(DIR)/shared.sh
@@ -140,16 +143,16 @@ fi
 rm -r $tmpdir &> /dev/null
 mkdir -p $tmpdir &> /dev/null
 
-#run_test_and_plot "videoProcess" true 100
-#run_test_and_plot "videoProcess" false 100
-#run_test_and_plot "hw" true 1000
-#run_test_and_plot "hw" false 1000
-#run_test_and_plot "fileHashing" true 100
-#run_test_and_plot "fileHashing" false 100
-#run_test_and_plot "fibonnaci" true 1000
-#run_test_and_plot "fibonnaci" false 1000
-#run_test_and_plot "imageClassify" true
-#run_test_and_plot "imageClassify" false
+#run_test_and "videoProcess" true 100
+#run_test_and "videoProcess" false 100
+#run_test_and "hw" true 1000
+#run_test_and "hw" false 1000
+#run_test_and "fileHashing" true 100
+#run_test_and "fileHashing" false 100
+#run_test_and "fibonnaci" true 1000
+#run_test_and "fibonnaci" false 1000
+#run_test_and "imageClassify" true
+#run_test_and "imageClassify" false
 
 echo "Done"
 
