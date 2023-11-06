@@ -1,0 +1,20 @@
+Waiting for 127.0.0.1:8087
+Function 36c55f2f69da283614885cb969c20de2f8b756ba992fa4a8bf8a0d38682b3be9 registered!
+{"result":"{\"result\":246}","process time (us)":24730}
+{"result":"{\"result\":246}","process time (us)":20178}
+{"result":"{\"result\":246}","process time (us)":20955}
+{"result":"{\"result\":246}","process time (us)":21415}
+{"result":"{\"result\":246}","process time (us)":22934}
+{"result":"{\"result\":246}","process time (us)":21264}
+{"result":"{\"result\":246}","process time (us)":26986}
+{"result":"{\"result\":246}","process time (us)":18813}
+{"result":"{\"result\":246}","process time (us)":21621}
+{"result":"{\"result\":246}","process time (us)":19873}
+{"result":"{\"result\":246}","process time (us)":23754}
+{"result":"{\"result\":246}","process time (us)":23410}
+
+real	55m28.681s
+user	0m4.099s
+sys	0m2.083s
+Finished benchmark execution.
+Finished executing experiment on port 8087.

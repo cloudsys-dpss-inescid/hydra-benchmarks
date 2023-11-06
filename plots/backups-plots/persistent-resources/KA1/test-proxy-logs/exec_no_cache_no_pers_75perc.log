@@ -1,0 +1,67 @@
+Waiting for 127.0.0.1:8084
+Function 1d42fe7d18df77f2a6db8cf627ecdc29a4bd1ff57bf6ab0ca005d20cdd31e927 registered!
+{"result":"{\"result\":246}","process time (us)":26099}
+{"result":"{\"result\":246}","process time (us)":22457}
+{"result":"{\"result\":246}","process time (us)":16628}
+{"result":"{\"result\":246}","process time (us)":23855}
+{"result":"{\"result\":246}","process time (us)":20393}
+{"result":"{\"result\":246}","process time (us)":24063}
+{"result":"{\"result\":246}","process time (us)":17448}
+{"result":"{\"result\":246}","process time (us)":20188}
+{"result":"{\"result\":246}","process time (us)":23866}
+{"result":"{\"result\":246}","process time (us)":20957}
+{"result":"{\"result\":246}","process time (us)":27376}
+{"result":"{\"result\":246}","process time (us)":22385}
+{"result":"{\"result\":246}","process time (us)":25507}
+{"result":"{\"result\":246}","process time (us)":25297}
+{"result":"{\"result\":246}","process time (us)":24476}
+{"result":"{\"result\":246}","process time (us)":25108}
+{"result":"{\"result\":246}","process time (us)":21244}
+{"result":"{\"result\":246}","process time (us)":19975}
+{"result":"{\"result\":246}","process time (us)":23278}
+{"result":"{\"result\":246}","process time (us)":22776}
+{"result":"{\"result\":246}","process time (us)":25464}
+{"result":"{\"result\":246}","process time (us)":25183}
+{"result":"{\"result\":246}","process time (us)":26110}
+{"result":"{\"result\":246}","process time (us)":24630}
+{"result":"{\"result\":246}","process time (us)":26292}
+{"result":"{\"result\":246}","process time (us)":20172}
+{"result":"{\"result\":246}","process time (us)":52301}
+{"result":"{\"result\":246}","process time (us)":26495}
+{"result":"{\"result\":246}","process time (us)":25047}
+{"result":"{\"result\":246}","process time (us)":20737}
+{"result":"{\"result\":246}","process time (us)":22272}
+{"result":"{\"result\":246}","process time (us)":21108}
+{"result":"{\"result\":246}","process time (us)":21329}
+{"result":"{\"result\":246}","process time (us)":25281}
+{"result":"{\"result\":246}","process time (us)":19431}
+{"result":"{\"result\":246}","process time (us)":20830}
+{"result":"{\"result\":246}","process time (us)":22024}
+{"result":"{\"result\":246}","process time (us)":22002}
+{"result":"{\"result\":246}","process time (us)":21040}
+{"result":"{\"result\":246}","process time (us)":26172}
+{"result":"{\"result\":246}","process time (us)":26256}
+{"result":"{\"result\":246}","process time (us)":22402}
+{"result":"{\"result\":246}","process time (us)":20377}
+{"result":"{\"result\":246}","process time (us)":25478}
+{"result":"{\"result\":246}","process time (us)":24054}
+{"result":"{\"result\":246}","process time (us)":24137}
+{"result":"{\"result\":246}","process time (us)":21706}
+{"result":"{\"result\":246}","process time (us)":22772}
+{"result":"{\"result\":246}","process time (us)":22984}
+{"result":"{\"result\":246}","process time (us)":24872}
+{"result":"{\"result\":246}","process time (us)":22508}
+{"result":"{\"result\":246}","process time (us)":16502}
+{"result":"{\"result\":246}","process time (us)":24233}
+{"result":"{\"result\":246}","process time (us)":25604}
+{"result":"{\"result\":246}","process time (us)":23787}
+{"result":"{\"result\":246}","process time (us)":24839}
+{"result":"{\"result\":246}","process time (us)":20833}
+{"result":"{\"result\":246}","process time (us)":24644}
+{"result":"{\"result\":246}","process time (us)":62744}
+
+real	59m47.951s
+user	0m5.128s
+sys	0m2.424s
+Finished benchmark execution.
+Finished executing experiment on port 8084.

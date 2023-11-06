@@ -1,0 +1,21 @@
+Waiting for 127.0.0.1:8083
+Waiting for 127.0.0.1:8083
+Function 36c55f2f69da283614885cb969c20de2f8b756ba992fa4a8bf8a0d38682b3be9 registered!
+{"result":"{\"result\":246}","process time (us)":19547}
+{"result":"{\"result\":246}","process time (us)":25988}
+{"result":"{\"result\":246}","process time (us)":23687}
+{"result":"{\"result\":246}","process time (us)":22666}
+{"result":"{\"result\":246}","process time (us)":23613}
+{"result":"{\"result\":246}","process time (us)":17359}
+{"result":"{\"result\":246}","process time (us)":18432}
+{"result":"{\"result\":246}","process time (us)":27842}
+{"result":"{\"result\":246}","process time (us)":22672}
+{"result":"{\"result\":246}","process time (us)":25564}
+{"result":"{\"result\":246}","process time (us)":20910}
+{"result":"{\"result\":246}","process time (us)":27436}
+
+real	55m28.730s
+user	0m4.274s
+sys	0m2.054s
+Finished benchmark execution.
+Finished executing experiment on port 8083.

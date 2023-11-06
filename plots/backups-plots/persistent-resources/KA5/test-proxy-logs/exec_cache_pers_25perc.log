@@ -1,0 +1,11 @@
+Waiting for 127.0.0.1:8090
+Function 74242d45e08673b4b755659b8fb5acc3e7670c3ba8444d955df931d70f9eb90f registered!
+{"result":"{\"result\":246}","process time (us)":19224}
+{"result":"{\"result\":246}","process time (us)":4129}
+{"result":"{\"result\":246}","process time (us)":3872}
+
+real	50m13.134s
+user	0m3.027s
+sys	0m1.788s
+Finished benchmark execution.
+Finished executing experiment on port 8090.

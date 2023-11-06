@@ -1,0 +1,21 @@
+Waiting for 127.0.0.1:8091
+Waiting for 127.0.0.1:8091
+Function 36c55f2f69da283614885cb969c20de2f8b756ba992fa4a8bf8a0d38682b3be9 registered!
+{"result":"{\"result\":246}","process time (us)":22755}
+{"result":"{\"result\":246}","process time (us)":1785}
+{"result":"{\"result\":246}","process time (us)":1646}
+{"result":"{\"result\":246}","process time (us)":1731}
+{"result":"{\"result\":246}","process time (us)":1845}
+{"result":"{\"result\":246}","process time (us)":2123}
+{"result":"{\"result\":246}","process time (us)":1753}
+{"result":"{\"result\":246}","process time (us)":1744}
+{"result":"{\"result\":246}","process time (us)":1809}
+{"result":"{\"result\":246}","process time (us)":1956}
+{"result":"{\"result\":246}","process time (us)":1856}
+{"result":"{\"result\":246}","process time (us)":1790}
+
+real	55m28.552s
+user	0m4.014s
+sys	0m2.027s
+Finished benchmark execution.
+Finished executing experiment on port 8091.

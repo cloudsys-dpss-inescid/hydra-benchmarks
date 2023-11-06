@@ -1,0 +1,11 @@
+Waiting for 127.0.0.1:8086
+Function 74242d45e08673b4b755659b8fb5acc3e7670c3ba8444d955df931d70f9eb90f registered!
+{"result":"{\"result\":246}","process time (us)":17630}
+{"result":"{\"result\":246}","process time (us)":25252}
+{"result":"{\"result\":246}","process time (us)":21696}
+
+real	50m13.362s
+user	0m3.512s
+sys	0m1.690s
+Finished benchmark execution.
+Finished executing experiment on port 8086.
