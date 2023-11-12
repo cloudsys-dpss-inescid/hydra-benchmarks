@@ -30,11 +30,15 @@ Before you start, make sure you have the following prerequisites installed on yo
 
 ## Compilation
 
-To compile your benchmark, execute your `build_script.sh`. Additionally, you need to compile [Graalvisor](../../../graalvisor/) by executing the following command inside its directory:
+To compile your benchmark, execute your `build_script.sh`. During the compilation process, you will encounter three questions, you should respond "y" for the third one.
+
+Additionally, you need to compile [Graalvisor](../../../graalvisor/) by executing the following command inside its directory:
 
 ```bash
 $ ./build.sh local
 ```
+
+Type anything other than "y" to the prompted questions.
 
 ## Update benchmarks scripts 
 
