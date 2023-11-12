@@ -251,11 +251,17 @@ function start_svm {
     cd $tmpdir
     export lambda_timestamp="$(date +%s%N | cut -b1-13)"
     export lambda_port="8080"
-    export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs:$LD_LIBRARY_PATH
     #sudo perf stat -e cache-misses,context-switches,branch-misses,page-faults ./app
     #strace -o $tmpdir/strace.log -f ./app
     #strace -f ./app
+    
+    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs:$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
+    #export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-wrapper/build/libs:$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
+    export JNI_DIR=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs
+    export LD_PRELOAD=$ARGO_HOME/graalvisor/build/libs/libtest.so
     ./app &
+    unset LD_PRELOAD
+
     echo -n "$!" > "$tmpdir/lambda.pid"
     wait
 }

@@ -6,6 +6,7 @@ PORT=8000
 
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_sleep"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_native_hw" 
+JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_native_wrapper"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_hw"                 # 256 MB
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_shopcart"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_filehashing"        # 256 MB
@@ -62,6 +63,15 @@ PH_BENCHMARKS="$PH_BENCHMARKS gv_java_filehashing"        # 256 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_httprequest"        # 256 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_videoprocessing"    # 1024 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_classify"           # 1024 MB
+
+function gv_java_native_wrapper {
+    APP_LANG=java
+    APP_NAME=gv-native-wrapper
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativewrapper.so
+    APP_MAIN=com.jni.HelloJNI
+    curl -s -X POST $ip:8080/register?name=nativewrapper\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativewrapper","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
 
 function gv_java_native_hw {
     APP_LANG=java
