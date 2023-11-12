@@ -1,12 +1,13 @@
 package com.jni;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
 
 public class HelloJNI {
     static {
-        System.loadLibrary("hello");
+        //System.loadLibrary("hello");
     }
 
     public static native void printHello();

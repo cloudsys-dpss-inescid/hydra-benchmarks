@@ -10,6 +10,8 @@ ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src -DSNI_DBG"
 
+BENCHMARK_NAME="nativehw"
+SNIPPETS_DIR="$DIR/build/snippets"
 
 function run_hotspot {
 	rm -rf config-dir
@@ -40,7 +42,7 @@ function build_ni {
 		-H:ConfigurationFileDirectories=../ni-agent-config \
 		-H:+ReportExceptionStackTraces \
 		$NI_BIN_OPTS \
-		-H:Name=libnativehw
+		-H:Name=lib$BENCHMARK_NAME
 }
 
 function build_ni_standalone {
@@ -58,7 +60,7 @@ function build_java_agent {
 }
 
 function build_native_library {
-        musl-gcc -static $CFLAGS -o build/libs/libhello.so $DIR/src/main/c/HelloJNI.c
+        musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
 }
 
 function build_snippets {
@@ -75,7 +77,8 @@ function manipulate_bytecode {
         
         mkdir -p $DIR/build/snippets
         
-        export SNIPPETS_DIR=$DIR/build/snippets
+        export BENCHMARK_NAME="$BENCHMARK_NAME"
+        export SNIPPETS_DIR="$SNIPPETS_DIR"
         export ENV="memisolation"
         $DEF_JAVA_HOME/bin/java \
                 -cp $CLASS_PATH \
