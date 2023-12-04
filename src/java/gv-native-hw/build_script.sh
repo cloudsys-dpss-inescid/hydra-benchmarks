@@ -61,6 +61,7 @@ function build_java_agent {
 
 function build_native_library {
         musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
+        mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
 }
 
 function build_snippets {
