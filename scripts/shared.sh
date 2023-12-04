@@ -255,9 +255,10 @@ function start_svm {
     #strace -o $tmpdir/strace.log -f ./app
     #strace -f ./app
     
-    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs:$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
-    #export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-wrapper/build/libs:$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
-    export JNI_DIR=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs
+    export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw-2/build/libs:$LD_LIBRARY_PATH
+
     export LD_PRELOAD=$ARGO_HOME/graalvisor/build/libs/libtest.so
     ./app &
     unset LD_PRELOAD

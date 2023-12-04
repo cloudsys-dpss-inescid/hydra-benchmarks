@@ -56,6 +56,13 @@ function test {
     done
 }
 
+function parallel {
+    for i in $(seq 1 $workload)
+    do
+        curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST) &
+    done
+}
+
 function run {
     # Setting up environment.
     if [ "$backend" == "container" ]; then
