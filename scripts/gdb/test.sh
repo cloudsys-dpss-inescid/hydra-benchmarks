@@ -22,7 +22,9 @@ function gv_java_native_hw_2 {
 gv_java_native_hw
 gv_java_native_hw_2
 
-curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST1) &
-curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST2) &
+ab -p $APP_POST1 -T application/json -c 1 -n 1 127.0.0.1:8080/ &> /tmp/ab.log
 
-wait
+#curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST1) &
+#curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST2) &
+
+#wait
