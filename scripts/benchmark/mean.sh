@@ -1,12 +1,5 @@
 APP_POST1=/tmp/payload1.post
 
-if [ "$#" -ne 2 ]; then
-    echo "Syntax: <# of tests> <aggregate|singular>"
-else
-    workload=$1
-    execution=$2
-fi
-
 function gv_java_native_hw {
     APP_LANG=java
     APP_NAME=gv-native-hw
@@ -26,22 +19,44 @@ function start_svm {
     wait
 }
 
-# Start graalvisor
-start_svm &> /tmp/lambda.log &
+function benchmark {
+    start_svm &> /tmp/lambda.log &
 
-# Register function
-gv_java_native_hw
+    gv_java_native_hw
+
+    for i in $(seq $workload)
+    do
+        ab -p $APP_POST1 -T application/json -c 1 -n 1 127.0.0.1:8080/ | grep -E "Time per request:"&>> /tmp/ab-$i.log
+    done
+
+    # Kill graalvisor
+    pid=$(pgrep -f "$ARGO_HOME/graalvisor/build/native-image/polyglot-proxy")
+    kill $pid
+}
+
+function mean {
+    nruns="$1"
+
+    for i in $(seq $nruns)
+    do
+        benchmark
+    done
+}
+
+# Start
+
+if [ "$#" -ne 2 ]; then
+    echo "Syntax: <# of tests> <aggregate|singular>"
+else
+    workload=$1
+    execution=$2
+fi
+
+rm -f /tmp/ab-*
 
 if [ "$execution" == "aggregate" ]; then
     ab -p $APP_POST1 -T application/json -c 1 -n $workload 127.0.0.1:8080/ | grep -E "Requests per second:|Time per request:"&> /tmp/ab.log
 elif [ "$execution" == "singular" ]; then
-    &> /tmp/ab.log &
-    for ((i = 1; i <= $workload;i++))
-    do
-        ab -p $APP_POST1 -T application/json -c 1 -n 1 127.0.0.1:8080/ | grep -E "Requests per second:|Time per request:"&>> /tmp/ab.log
-    done
+    mean 10
 fi
 
-# Kill graalvisor
-pid=$(pgrep -f "$ARGO_HOME/graalvisor/build/native-image/polyglot-proxy")
-kill $pid
