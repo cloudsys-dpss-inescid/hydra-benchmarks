@@ -20,7 +20,9 @@ function start_svm {
 }
 
 function benchmark {
-    start_svm &> /tmp/lambda.log &
+    nrun="$1"
+
+    start_svm |& grep -E "Execution time" >> "/tmp/lambda-$nrun.log" &
 
     gv_java_native_hw
 
@@ -39,7 +41,7 @@ function mean {
 
     for i in $(seq $nruns)
     do
-        benchmark
+        benchmark $i
     done
 }
 
@@ -53,6 +55,7 @@ else
 fi
 
 rm -f /tmp/ab-*
+rm -f /tmp/lambda-*
 
 if [ "$execution" == "aggregate" ]; then
     ab -p $APP_POST1 -T application/json -c 1 -n $workload 127.0.0.1:8080/ | grep -E "Requests per second:|Time per request:"&> /tmp/ab.log
