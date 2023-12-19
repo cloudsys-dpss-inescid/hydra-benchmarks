@@ -16,7 +16,7 @@ def read_file(file_path, mean_attempts):
 
 
 def apache_benchmark_logs(args):
-    file_path = "/tmp/ab-{run}.log"
+    file_path = "results/ab-{run}.log"
     means = []
 
     for run in range(1, args.workload + 1):
@@ -44,7 +44,7 @@ def lambda_logs(args):
         print(f"\t\t{round(mean_time, 4)} ms")
         print(f"\t\t{round(calc_percentage(mean_time, total_time), 4)} % (total execution)\n")
 
-    file_template = "/tmp/lambda-{run}.log"
+    file_template = "results/lambda-{run}.log"
     pattern = r'\d+\.\d+'
     init_times = []
     load_times = []
@@ -81,11 +81,11 @@ def lambda_logs(args):
     all_domain_mean = np.mean(all_domain_times)/1000
     all_filter_mean = np.mean(all_filter_times)/1000
 
-    first_mean_time = read_file("/tmp/ab-1.log", args.mean_attempts)
+    first_mean_time = read_file("results/ab-1.log", args.mean_attempts)
     total_means = first_mean_time + []
     first_run_mean_total_time = np.mean(first_mean_time)
 
-    file_template = "/tmp/ab-{run}.log"
+    file_template = "results/ab-{run}.log"
     means = []
 
     for run in range(2, args.workload + 1):

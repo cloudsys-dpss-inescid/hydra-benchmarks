@@ -22,13 +22,13 @@ function start_svm {
 function benchmark {
     nrun="$1"
 
-    start_svm |& grep -E "Execution time" >> "/tmp/lambda-$nrun.log" &
+    start_svm 2>&1 | grep -E "Execution time" >> results/lambda-$nrun.log &
 
     gv_java_native_hw
 
     for i in $(seq $workload)
     do
-        ab -p $APP_POST1 -T application/json -c 1 -n 1 127.0.0.1:8080/ | grep -E "Time per request:"&>> /tmp/ab-$i.log
+        ab -p $APP_POST1 -T application/json -c 1 -n 1 127.0.0.1:8080/ | grep -E "Time per request:"&>> results/ab-$i.log
     done
 
     # Kill graalvisor
@@ -37,10 +37,8 @@ function benchmark {
 }
 
 function mean {
-    nruns="$1"
-
-    for i in $(seq $nruns)
-    do
+    for i in $(seq $1)
+    do 
         benchmark $i
     done
 }
@@ -54,8 +52,10 @@ else
     execution=$2
 fi
 
-rm -f /tmp/ab-*
-rm -f /tmp/lambda-*
+if [ -d "results" ]; then
+    rm -rf "results"
+fi
+mkdir -p results
 
 if [ "$execution" == "aggregate" ]; then
     ab -p $APP_POST1 -T application/json -c 1 -n $workload 127.0.0.1:8080/ | grep -E "Requests per second:|Time per request:"&> /tmp/ab.log
