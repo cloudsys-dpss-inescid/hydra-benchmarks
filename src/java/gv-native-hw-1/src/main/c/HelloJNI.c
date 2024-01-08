@@ -4,6 +4,5 @@
 
 JNIEXPORT void JNICALL Java_com_jni_HelloJNI_printHello(JNIEnv *env, jobject obj) {
     fprintf(stderr, "Hello World!\n");
-    getpid();
     return;
 }
