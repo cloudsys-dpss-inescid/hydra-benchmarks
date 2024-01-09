@@ -1,0 +1,42 @@
+APP_POST1=/tmp/payload1.post
+
+function gv_java_native_hw {
+    APP_LANG=java
+    APP_NAME=gv-native-hw
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libnativehw.so
+    APP_MAIN=com.jni.HelloJNI
+    curl -s -X POST 127.0.0.1:8081/register?name=nativehw\&entryPoint=$APP_MAIN\&language=$APP_LANG -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativehw","async":"false","cached":"true","arguments":""}' > $APP_POST1
+}
+
+function start_svm {
+    export lambda_timestamp="$(date +%s%N | cut -b1-13)"
+    export lambda_port="8081"
+    export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs:$LD_LIBRARY_PATH
+    export LD_PRELOAD=$ARGO_HOME/graalvisor/build/libs/libtest.so
+    $ARGO_HOME/graalvisor/build/native-image/polyglot-proxy &
+    wait
+}
+
+# Start
+
+if [ "$#" -ne 1 ]; then
+    echo "Syntax: <# of tests>"
+else
+    workload=$1
+fi
+
+start_svm &> /tmp/lambda.log &
+
+gv_java_native_hw
+
+for i in $(seq $workload)
+do
+    ab -p $APP_POST1 -T application/json -c 1 -n 1 127.0.0.1:8081/ | grep -E "Time per request:"&>> ab.log
+done
+
+# Kill graalvisor
+pid=$(pgrep -f "$ARGO_HOME/graalvisor/build/native-image/polyglot-proxy")
+kill $pid
+
