@@ -10,7 +10,7 @@ ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src -DSNI_DBG"
 
-BENCHMARK_NAME="nativehw"
+BENCHMARK_NAME="nativehw1"
 SNIPPETS_DIR="$DIR/build/snippets"
 
 function run_hotspot {

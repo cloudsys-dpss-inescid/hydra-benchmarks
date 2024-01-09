@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class HelloJNI {
     static {
-        System.loadLibrary("nativehw-jni");
+        System.loadLibrary("nativehw1-jni");
     }
 
     public static native void printHello();

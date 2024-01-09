@@ -62,7 +62,7 @@ function build_java_agent {
 }
 
 function build_native_library {
-        musl-gcc -static $CFLAGS -I"/home/cidra/include" -I"/home/cidra/conf" -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/AESEncryption.c
+        musl-gcc -static $CFLAGS -I"~/include" -I"~/conf" -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/AESEncryption.c
         mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
 }
 
