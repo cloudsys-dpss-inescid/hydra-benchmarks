@@ -15,6 +15,11 @@ import java.util.Map;
 
 import javax.imageio.ImageIO;
 
+import org.graalvm.nativeimage.c.function.CEntryPoint;
+import org.graalvm.nativeimage.IsolateThread;
+import org.graalvm.nativeimage.c.type.CCharPointerPointer;
+import org.graalvm.nativeimage.c.type.CTypeConversion;
+
 public class Classify {
 
     public static InceptionImageClassifier classifier = null;
@@ -83,11 +88,19 @@ public class Classify {
     
     public static void main(String[] args) throws Exception {
     	HashMap<String, Object> output = new HashMap<>();
-    	output.put("model_url", "http://127.0.0.1:8000/tensorflow_inception_graph.pb");
-    	output.put("labels_url", "http://127.0.0.1:8000/imagenet_comp_graph_label_strings.txt");
-    	output.put("image_url", "http://127.0.0.1:8000/eagle.jpg");
+    	output.put("model_url", "http://146.193.41.54:8000/tensorflow_inception_graph.pb");
+    	output.put("labels_url", "http://146.193.41.54:8000/imagenet_comp_graph_label_strings.txt");
+    	output.put("image_url", "http://146.193.41.54:8000/eagle.jpg");
         System.out.println(main(output));
     }
-    
+
+    @CEntryPoint(name = "entrypoint")
+    public static void entrypoint(IsolateThread thread) {
+	HashMap<String, Object> output = new HashMap<>();
+        output.put("model_url", "http://146.193.41.54:8000/tensorflow_inception_graph.pb");
+        output.put("labels_url", "http://146.193.41.54:8000/imagenet_comp_graph_label_strings.txt");
+        output.put("image_url", "http://146.193.41.54:8000/eagle.jpg");
+	System.out.println(main(output));
+    }
 
 }

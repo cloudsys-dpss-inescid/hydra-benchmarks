@@ -11,20 +11,33 @@ function run_hotspot {
 		com.classify.Classify
 }
 
+#function build_ni {
+#	cd build
+#	$JAVA_HOME/bin/native-image \
+#		--no-fallback \
+#		--enable-url-protocols=http \
+#		-Djava.awt.headless=true \
+#		-cp libs/classify-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+#		-DGraalVisorGuest=true \
+#		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
+#		--initialize-at-run-time=com.oracle.svm.graalvisor.utils.JsonUtils \
+#		-H:ConfigurationFileDirectories=../ni-agent-config,../config-dir \
+#		-H:+ReportExceptionStackTraces \
+#		$NI_BIN_OPTS \
+#		-H:Name=libclassify
+#}
+
 function build_ni {
-	cd build
-	$JAVA_HOME/bin/native-image \
-		--no-fallback \
-		--enable-url-protocols=http \
+        cd build
+        $JAVA_HOME/bin/native-image \
+                --no-fallback \
+                --enable-url-protocols=http \
 		-Djava.awt.headless=true \
-		-cp libs/classify-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
-		-DGraalVisorGuest=true \
-		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
-		--initialize-at-run-time=com.oracle.svm.graalvisor.utils.JsonUtils \
-		-H:ConfigurationFileDirectories=../ni-agent-config,../config-dir \
-		-H:+ReportExceptionStackTraces \
-		$NI_BIN_OPTS \
-		-H:Name=libclassify
+                -cp libs/classify-1.0-all.jar \
+                -H:ConfigurationFileDirectories=../ni-agent-config,../config-dir \
+                -H:+ReportExceptionStackTraces \
+                $NI_BIN_OPTS \
+                -H:Name=libclassify
 }
 
 function build_ni_standalone {
@@ -37,11 +50,11 @@ function build_ni_sharedlibrary {
 	build_ni
 }
 
-if [ -z "$ARGO_HOME" ]
-then
-        echo "Please set ARGO_HOME first. It should point to a checkout of github.com/graalvm/argo."
-        exit 1
-fi
+#if [ -z "$ARGO_HOME" ]
+#then
+#        echo "Please set ARGO_HOME first. It should point to a checkout of github.com/graalvm/argo."
+#        exit 1
+#fi
 
 if [ -z "$JAVA_HOME" ]
 then
@@ -50,7 +63,7 @@ then
 fi
 
 # Build graalvisor lib.
-bash $ARGO_HOME/graalvisor-lib/build.sh
+#bash $ARGO_HOME/graalvisor-lib/build.sh
 
 # Move into the script directory.
 cd $DIR &> /dev/null

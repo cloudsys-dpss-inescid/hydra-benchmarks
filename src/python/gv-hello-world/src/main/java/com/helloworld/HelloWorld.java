@@ -10,6 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+import org.graalvm.nativeimage.c.function.CEntryPoint;
+import org.graalvm.nativeimage.IsolateThread;
+import org.graalvm.nativeimage.c.type.CCharPointerPointer;
+import org.graalvm.nativeimage.c.type.CTypeConversion;
+
 public class HelloWorld extends PolyglotHostAccess {
 
     private static PolyglotEngine engine;
@@ -43,6 +48,13 @@ public class HelloWorld extends PolyglotHostAccess {
 
     public static void main(String[] args) {
         HashMap<String, Object> output = new HashMap<>();
+        output = main(output);
+        System.out.println(output);
+    }
+
+    @CEntryPoint(name = "entrypoint")
+    public static void entrypoint(IsolateThread thread) {
+	HashMap<String, Object> output = new HashMap<>();
         output = main(output);
         System.out.println(output);
     }

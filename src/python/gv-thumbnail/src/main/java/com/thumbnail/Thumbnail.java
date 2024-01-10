@@ -10,6 +10,11 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.HashMap;
 
+import org.graalvm.nativeimage.c.function.CEntryPoint;
+import org.graalvm.nativeimage.IsolateThread;
+import org.graalvm.nativeimage.c.type.CCharPointerPointer;
+import org.graalvm.nativeimage.c.type.CTypeConversion;
+
 public class Thumbnail extends PolyglotHostAccess {
 
     private static PolyglotEngine engine;
@@ -44,6 +49,14 @@ public class Thumbnail extends PolyglotHostAccess {
     public static void main(String[] args) {
         HashMap<String, Object> output = new HashMap<>();
         output.put("url", "http://127.0.0.1:8000/snap.png");
+        output = main(output);
+        System.out.println(output);
+    }
+
+    @CEntryPoint(name = "entrypoint")
+    public static void entrypoint(IsolateThread thread) {
+	HashMap<String, Object> output = new HashMap<>();
+        output.put("url", "http://146.193.41.54:8000/snap.png");
         output = main(output);
         System.out.println(output);
     }
