@@ -22,7 +22,7 @@ function run_hotspot {
 	$JAVA_HOME/bin/java \
 		-Djava.awt.headless=true \
 		-agentlib:native-image-agent=config-output-dir=config-dir/ \
-		-cp $CLASS_PATH:libs/native-hw-1.0-all.jar \
+		-cp $CLASS_PATH:libs/native-hw-1-1.0-all.jar \
                 -Djava.library.path=$LD_LIBRARY_PATH \
                 com.jni.HelloJNI
 }
@@ -34,7 +34,7 @@ function build_ni {
         export LD_LIBRARY_PATH=libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
 		--no-fallback \
-		-cp $CLASS_PATH:libs/native-hw-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+		-cp $CLASS_PATH:libs/native-hw-1-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
 		-DGraalVisorGuest=true \
                 -Djava.library.path=$LD_LIBRARY_PATH \
 		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
@@ -96,25 +96,6 @@ then
         $TARGET
 	exit 0
 else
-	read -p "Run benchmark on hotspot (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                run_hotspot
-                exit 0
-        fi
-	read -p "Build standalone Native Image (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                build_ni_standalone
-                exit 0
-        fi
-	read -p "Build shared library Native Image (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                build_ni_sharedlibrary
-                exit 0
-        fi
+        build_ni_sharedlibrary
+        exit 0
 fi

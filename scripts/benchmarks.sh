@@ -73,13 +73,13 @@ function gv_java_native_wrapper {
     echo '{"name":"nativewrapper","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
-function gv_java_native_hw {
+function gv_java_native_hw_1 {
     APP_LANG=java
-    APP_NAME=gv-native-hw
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativehw.so
+    APP_NAME=gv-native-hw-1
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativehw1.so
     APP_MAIN=com.jni.HelloJNI
-    curl -s -X POST $ip:8080/register?name=nativehw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativehw","async":"false","cached":"true","arguments":""}' > $APP_POST
+    curl -s -X POST $ip:8080/register?name=nativehw1\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativehw1","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
 function gv_java_hw {

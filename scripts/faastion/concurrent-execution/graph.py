@@ -1,14 +1,13 @@
-import argparse
 import matplotlib.pyplot as plt
+import numpy as np
 
-file_path_template = 'results/decimals-{ndomains}.txt'
+file_path_template = 'results/{approach}-{requests}.txt'
 
 def get_decimals_list(path):
     decimals = []
     try:
         with open(path, 'r') as file:
-            for line in file:
-                decimals.append(float(line))
+            decimals = [float(line) for line in file.readlines()[1:]]
     except FileNotFoundError:
         print(f"The file at {path} was not found.")
     except Exception as e:
@@ -17,21 +16,35 @@ def get_decimals_list(path):
     return decimals
 
 def main():
-    parser = argparse.ArgumentParser()
-    parser.add_argument("-d", "--ndomains", type=int, required=True)
-    args = parser.parse_args()
+    approaches = ["isolate", "process", "faastion"]
 
-    for i in range(2, args.ndomains + 1):
-        decimals = get_decimals_list(file_path_template.format(ndomains=i))
-        
-        plt.plot(list(range(1,len(decimals)+1)), decimals, label = f"{i} domains")
-        plt.scatter(list(range(1,len(decimals)+1)), decimals)
+    medians = {}
+    for approach in approaches:
+        times = []
+        for n in range(2, 16):
+            times.extend(get_decimals_list(file_path_template.format(approach=approach, requests=n)))
+        medians[approach] = round(np.median(times), 2)
+        print(f"{approach} mean: {np.mean(times)} (us)")
+    
+    x = np.arange(1)
+    width = 0.25
+    multiplier = 0
+    _, ax = plt.subplots(layout='constrained')
 
-    plt.legend()
-    plt.ylabel("Time of Execution (us)")
-    plt.xlabel("No. of Invocations")
-    plt.title("Execution on Graal Native Image (Hello World)")
-    plt.savefig(f'results/HelloWorld.png')
+    for approach, median in medians.items():
+        offset = width * multiplier
+        rects = ax.bar(x + offset, median, width, label=approach)
+        ax.bar_label(rects, padding=3)
+        multiplier += 1
+
+    ax.set_ylabel('Time (us)')
+    ax.set_title('Median time per approach')
+    ax.set_xticks(x + width, ["Approaches"])
+    ax.legend(loc='upper left', ncols=3)
+    ax.set_ylim(0, 175)
+
+    plt.savefig(f'results/Median.png')
+
 
 if __name__ == "__main__":
     main()

@@ -256,7 +256,7 @@ function start_svm {
     #strace -f ./app
     
     export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
-    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw/build/libs:$LD_LIBRARY_PATH
+    export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw-1/build/libs:$LD_LIBRARY_PATH
     export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw-2/build/libs:$LD_LIBRARY_PATH
 
     export LD_PRELOAD=$ARGO_HOME/graalvisor/build/libs/libtest.so

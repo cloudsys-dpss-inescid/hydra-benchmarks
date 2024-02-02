@@ -1,6 +1,5 @@
 #include <string.h>
 #include <openssl/evp.h>
-#include <openssl/aes.h>
 #include "com_jni_AESEncryption.h"
 
 int aes_encrypt(unsigned char *plaintext, int plaintext_len, unsigned char *key,
@@ -60,7 +59,7 @@ JNIEXPORT void JNICALL Java_com_jni_AESEncryption_cipher (JNIEnv * env, jobject 
   ciphertext_len = aes_encrypt (plaintext, strlen ((char *)plaintext), key,
                                 iv, ciphertext);
 
-  printf("Ciphertext is:\n");
+  fprintf(stderr, "Ciphertext is:\n");
   BIO_dump_fp (stdout, (const char *)ciphertext, ciphertext_len);
 
   decryptedtext_len = aes_decrypt(ciphertext, ciphertext_len, key,
@@ -68,8 +67,8 @@ JNIEXPORT void JNICALL Java_com_jni_AESEncryption_cipher (JNIEnv * env, jobject 
 
   decryptedtext[decryptedtext_len] = '\0';
 
-  printf("Decrypted text is:\n");
-  printf("%s\n", decryptedtext);
+  fprintf(stderr, "Decrypted text is:\n");
+  fprintf(stderr, "%s\n", decryptedtext);
   return;
 
 }

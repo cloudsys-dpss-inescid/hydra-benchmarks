@@ -8,12 +8,10 @@ JNI_INCLUDE="-I$DEF_JAVA_HOME/include -I$DEF_JAVA_HOME/include/linux"
 ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
-SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src -DSNI_DBG"
+SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src"
 
 BENCHMARK_NAME="nativeaes"
 SNIPPETS_DIR="$DIR/build/snippets"
-
-OPENSSL_DIR="/home/cidra/software/openssl-1.1.1q/bin/ssl/lib"
 
 function run_hotspot {
 	rm -rf config-dir
@@ -24,9 +22,9 @@ function run_hotspot {
 	$JAVA_HOME/bin/java \
 		-Djava.awt.headless=true \
 		-agentlib:native-image-agent=config-output-dir=config-dir/ \
-		-cp $CLASS_PATH:libs/native-hw-1.0-all.jar \
+		-cp $CLASS_PATH:libs/native-aes-1.0-all.jar \
                 -Djava.library.path=$LD_LIBRARY_PATH \
-                com.jni.HelloJNI
+                com.jni.AESEncryption
 }
 
 function build_ni {
@@ -36,7 +34,7 @@ function build_ni {
         export LD_LIBRARY_PATH=libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
 		--no-fallback \
-		-cp $CLASS_PATH:libs/native-hw-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+		-cp $CLASS_PATH:libs/native-aes-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
 		-DGraalVisorGuest=true \
                 -Djava.library.path=$LD_LIBRARY_PATH \
 		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
@@ -62,7 +60,7 @@ function build_java_agent {
 }
 
 function build_native_library {
-        musl-gcc -static $CFLAGS -I"~/include" -I"~/conf" -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/AESEncryption.c
+        musl-gcc -static $CFLAGS -I"$HOME/software/ssl/include" -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/AESEncryption.c -L"$HOME/software/ssl/lib" -lssl -lcrypto
         mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
 }
 
@@ -135,25 +133,6 @@ then
         $TARGET
 	exit 0
 else
-	read -p "Run benchmark on hotspot (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                run_hotspot
-                exit 0
-        fi
-	read -p "Build standalone Native Image (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                build_ni_standalone
-                exit 0
-        fi
-	read -p "Build shared library Native Image (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                build_ni_sharedlibrary
-                exit 0
-        fi
+        build_ni_sharedlibrary
+        exit 0
 fi

@@ -2,15 +2,14 @@ import argparse
 import matplotlib.pyplot as plt
 import numpy as np
 
-file_path_template = 'logs/ab{n}-{run}.log'
+file_path_template = 'logs/{approach}-{n}-{run}.log'
 
 def get_decimals(path):
     decimals = []
     try:
         with open(path, 'r') as file:
-            for line in file:
-                words = line.strip().split(":")
-                decimals.append(float(words[2][:-1]))
+            for line in file.readlines():
+                decimals.append(float(line))
     except FileNotFoundError:
         print(f"The file at {path} was not found.")
     except Exception as e:
@@ -19,11 +18,11 @@ def get_decimals(path):
     return decimals
 
 def calculate_avg_list(decimals_list):
-    return [np.sum(values) / len(values) for values in zip(*decimals_list)]
+    return [np.mean(values) for values in zip(*decimals_list)]
 
-def write_to_file(domains_avg, ndomains):
+def write_to_file(domains_avg, ndomains, approach):
     try:
-        with open(f"results/decimals-{ndomains}.txt", "w") as file:
+        with open(f"results/{approach}-{ndomains}.txt", "w") as file:
             for decimal in domains_avg:
                 file.write(str(decimal) + "\n")
     except Exception as e:
@@ -32,6 +31,17 @@ def write_to_file(domains_avg, ndomains):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("-d", "--ndomains", type=int, required=True)
+    parser.add_argument(
+        "-a",
+        "--approach",
+        type=str,
+        choices=[
+            "process",
+            "isolate",
+            "faastion",
+        ],
+        required=True,
+    )
     args = parser.parse_args()
 
     decimals_list = []
@@ -39,7 +49,7 @@ def main():
         decimals_avg = []
 
         for j in range(1, 6):
-            decimals_avg.append(get_decimals(file_path_template.format(n=i, run=j)))
+            decimals_avg.append(get_decimals(file_path_template.format(approach=args.approach, n=i, run=j)))
 
         decimals_list.append(calculate_avg_list(decimals_avg))
     
@@ -53,7 +63,7 @@ def main():
     plt.title("Execution on Graal Native Image (Hello World)")
     plt.savefig(f'results/HelloWorld-{args.ndomains}.png')
 
-    write_to_file(domains_avg, args.ndomains)
+    write_to_file(domains_avg, args.ndomains, args.approach)
 
 if __name__ == "__main__":
     main()
