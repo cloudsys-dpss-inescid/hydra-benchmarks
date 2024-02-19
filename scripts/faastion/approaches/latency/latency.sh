@@ -41,7 +41,7 @@ function run {
         gv_java_native_hw_n $i > /dev/null
     done
     
-    warmup 15
+    warmup 14
 
     capture
     #benchmark
@@ -74,10 +74,10 @@ mkdir -p results
 mkdir -p logs/$approach
 mkdir -p logs/graalvisor
 
-nrequests=(1 3 5 7 9 11 13 15)
+nrequests=(1 3 5 8 11 14)
 
 for n in "${nrequests[@]}"; do
-    for i in $(seq 10); do
+    for i in $(seq 50); do
         run $n $i
     done
 done

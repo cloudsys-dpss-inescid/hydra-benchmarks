@@ -23,12 +23,6 @@ do
     gv_java_native_hw_n $i
 done
 
-gv_java_native_aes
+#gv_java_native_aes
 
-for i in $(seq $1)
-do
-    # Send requests to Graalvisor for each application
-    curl -s -X POST 127.0.0.1:8081 -H 'Content-Type: application/json' -d $(cat /tmp/payload.post) &
-done
-
-wait
+wrk-cmm -t$1 -c$1 -d1s --breakout -s native.lua http://127.0.0.1:8081

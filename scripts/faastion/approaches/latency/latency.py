@@ -18,9 +18,9 @@ def get_mean_time(approach, metric, requests):
     
 
 def main() -> None:
-    approaches = ["isolate", "process", "faastion"]
+    approaches = ["isolate", "process", "faastion-eager", "faastion-lazy"]
     metrics = ["latency"]
-    workload = list(range(1, 16, 2))
+    workload = [1, 3, 5, 8, 11, 14]
 
     """
     measures = {
@@ -45,7 +45,7 @@ def main() -> None:
     
 
     x = np.arange(len(workload))
-    width = 0.25
+    width = 0.15
     multiplier = 0
 
     _, ax = plt.subplots(layout='constrained')
@@ -63,8 +63,8 @@ def main() -> None:
     ax.set_xlabel('Number of requests')
     ax.set_title('Latency for Different Approaches')
     ax.set_xticks(x + width, workload)
-    ax.legend(loc='upper left', ncols=3)
-    ax.set_ylim(0, 1100)
+    ax.legend(loc='upper left', ncols=len(approaches))
+    ax.set_ylim(0, 700)
 
     plt.savefig(f'results/Latency.png')
 
