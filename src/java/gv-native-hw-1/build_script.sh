@@ -12,6 +12,8 @@ SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c
 
 BENCHMARK_NAME="nativehw1"
 SNIPPETS_DIR="$DIR/build/snippets"
+SOURCE_CODE="$DIR/src/main/c/HelloJNI.c"
+CC="gcc"
 
 function run_hotspot {
 	rm -rf config-dir
@@ -60,8 +62,14 @@ function build_java_agent {
 }
 
 function build_native_library {
-        musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
+
+		musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $SOURCE_CODE
         mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
+}
+
+function build_native_exec {
+		$CC $CFLAGS -o build/libs/lib$BENCHMARK_NAME-proc $SOURCE_CODE
+        mv build/libs/lib$BENCHMARK_NAME-proc $ARGO_HOME/graalvisor/build/libs
 }
 
 function build_snippets {
@@ -120,6 +128,9 @@ cd $DIR &> /dev/null
 
 # Build native lib.
 build_native_library
+
+#Build native executable
+build_native_exec
 
 # Manipulate app's bytecode.
 manipulate_bytecode
