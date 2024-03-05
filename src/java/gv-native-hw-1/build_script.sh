@@ -8,7 +8,10 @@ JNI_INCLUDE="-I$DEF_JAVA_HOME/include -I$DEF_JAVA_HOME/include/linux"
 ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
+CFLAGS_PROC="-Wall -g -fPIC $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src"
+SFLAGS_PROC="$CFLAGS_PROC -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src"
+
 
 BENCHMARK_NAME="nativehw1"
 SNIPPETS_DIR="$DIR/build/snippets"
@@ -33,7 +36,7 @@ function build_ni {
         CLASS_PATH="classes/java/main"
 
 	cd build
-        export LD_LIBRARY_PATH=libs:$LD_LIBRARY_PATH
+        export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
 		--no-fallback \
 		-cp $CLASS_PATH:libs/native-hw-1-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
@@ -63,19 +66,22 @@ function build_java_agent {
 
 function build_native_library {
 
-		musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $SOURCE_CODE
-        mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
+		musl-gcc -static $CFLAGS -o $ARGO_HOME/graalvisor/build/libs/lib$BENCHMARK_NAME-jni.so $SOURCE_CODE
 }
 
 function build_native_exec {
-		$CC $CFLAGS -o build/libs/lib$BENCHMARK_NAME-proc $SOURCE_CODE
-        mv build/libs/lib$BENCHMARK_NAME-proc $ARGO_HOME/graalvisor/build/libs
+#		$CC $SFLAGS_PROC -o build/libs/lib$BENCHMARK_NAME-proc $SOURCE_CODE
+#        mv build/libs/lib$BENCHMARK_NAME-proc $ARGO_HOME/graalvisor/build/libs
+        for file in "$SNIPPETS_DIR"/*.c; do
+                name=$(basename "$file" .c)
+                gcc $SFLAGS_PROC -o $ARGO_HOME/graalvisor/build/libs/$name-proc $file -L$ARGO_HOME/graalvisor/build/libs -lpreload
+		done
 }
 
 function build_snippets {
         for file in "$SNIPPETS_DIR"/*.c; do
                 name=$(basename "$file" .c)
-                gcc $SFLAGS -o build/libs/lib$name.so $file -L$ARGO_HOME/graalvisor/build/libs -lpreload
+                gcc $SFLAGS -o $ARGO_HOME/graalvisor/build/libs/lib$name.so $file -L$ARGO_HOME/graalvisor/build/libs -lpreload
         done
 }
 
@@ -129,11 +135,12 @@ cd $DIR &> /dev/null
 # Build native lib.
 build_native_library
 
-#Build native executable
-build_native_exec
 
 # Manipulate app's bytecode.
 manipulate_bytecode
+
+#Build native executable
+build_native_exec
 
 # Build generated snippets.
 build_snippets
