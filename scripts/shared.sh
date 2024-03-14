@@ -62,6 +62,11 @@ function postime {
 }
 
 function log_resources {
+
+    if [ "$verbose_benchmark" != true ] ; then
+        return
+    fi
+
     PID=$1
     OFILE_CPU=$2/lambda.cpu
     OFILE_RSS=$2/lambda.rss
@@ -69,7 +74,21 @@ function log_resources {
     rm $OFILE_CPU &> /dev/null
     rm $OFILE_RSS &> /dev/null
         while sudo kill -0 $PID &> /dev/null; do
-                top -bn 1 | grep "Cpu(s)" >> $OFILE_CPU
+
+                #### Log CPU resource
+                # Get current milliseconds since epoch
+                ms_now=$(date +%s%3N)
+                # Calculate the difference in milliseconds from the reference time
+                ms_since_ref=$((ms_now - ms_ref))        
+
+                # Capture CPU usage
+                cpu_usage=$(top -bn 1 | grep "Cpu(s)")
+
+                # Write milliseconds since reference and CPU usage to file
+                echo "$ms_since_ref,$cpu_usage" >> $OFILE_CPU
+
+
+                #### Log RSS resource                
                 # The idea for memory is that we traverse the entire pid subprocess tree
                 # and memory memory utilization. We sum all individual memory and return.
                 s_mem=0
@@ -79,7 +98,7 @@ function log_resources {
                     s_mem=$((s_mem + p_mem))
                 done
                 echo $s_mem >> $OFILE_RSS
-                sleep .100
+                sleep .500
         done
 }
 
@@ -275,8 +294,44 @@ function start_svm {
     export lambda_port="$GRAALVISOR_PORT"
     #sudo perf stat -e cache-misses,context-switches,branch-misses,page-faults ./app
     #strace -o $TDIR/strace.log -f ./app
-    setarch -R ./app &
-    echo -n "$!" > "$TDIR/lambda.pid"
+    #setarch -R ./app &
+
+    ## magic claudio to get the timestamp when the app started
+    ms_ref=$(date -u -d "2020-01-01 00:00:00" +%s%3N)
+    # Get current milliseconds since epoch
+    ms_now=$(date +%s%3N)
+    # Calculate the difference in milliseconds from the reference time
+    ms_since_ref=$((ms_now - ms_ref))   
+
+    echo $ms_since_ref
+    #./app -XX:+PrintGC -XX:+PrintGCTimeStamps &
+    #sudo perf stat -e cache-misses,context-switches,branch-misses,page-faults ./app -XX:+PrintGC -XX:+PrintGCTimeStamps &
+    #echo -n "$!" > "$TDIR/lambda.pid"
+
+
+    if [ "$verbose_benchmark" = true ] ; then
+        echo 'Verbose Benchmark ON, for GC and perf!'
+        setarch -R  ./app -XX:+PrintGC & # -XX:+PrintGCTimeStamps &
+        #setarch -R ./app -XX:+PrintGC -Xlog:gc*  &
+        APP_PID=$!
+        #sudo perf record -e cache-misses,context-switches,branch-misses,page-faults -p $APP_PID &
+        
+        #### with  "perf record" youe need both  line is enough  
+        sudo perf record -e context-switches -p $APP_PID &
+        echo -n "$!" > "$TDIR/perf.pid"
+
+        #### with  "perf sched" this line is enough  
+        #sudo perf sched record -p $APP_PID &
+
+
+    else
+        #./app &
+        setarch -R ./app &
+        APP_PID=$!
+    fi
+
+    echo -n "$APP_PID" > "$TDIR/lambda.pid"
+
     wait
 }
 
@@ -347,5 +402,10 @@ function stop_container {
 
 function stop_svm {
     kill $(cat $TDIR/lambda.pid)
+
+    #when I run only with perf sched or witwhout verbose_benchmark, the file does not exists and there is no need to kill the perf    
+    if [ -f "$TDIR/perf.pid" ]; then
+        kill $(cat "$TDIR/perf.pid")
+    fi
 }
 

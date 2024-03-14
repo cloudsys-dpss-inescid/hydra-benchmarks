@@ -6,6 +6,8 @@ function DIR {
 
 source $(DIR)/shared.sh
 source $(DIR)/benchmarks.sh
+export REMOTE_BENCHMARK_FLAG=-1 #this avoids running any code of the following script
+source $(DIR)/benchmark-graalvisor-remote.sh
 
 if [ "$#" -ne 4 ]; then
     echo "Syntax: <svm|container|vm> <app> <mode> <# of tests or concurrency level>"
@@ -33,6 +35,41 @@ else
     mode=$3
     workload=$4
 fi
+
+
+function remote_Cclient_benchmark {
+    sleep 4 #this starts to fast, the GraalVM is still not running
+
+    if [ -z "$WMULTIPLIER" ]; then
+        WMULTIPLIER=256
+    fi
+
+    #ulimit -n 8192
+    ulimit -n 16384
+    
+    run_remote_client $workload $WMULTIPLIER $TDIR
+
+
+}
+
+function socket_benchmark {
+    sleep 4 #this starts to fast, the GraalVM is still not running
+
+    if [ -z "$WMULTIPLIER" ]; then
+        WMULTIPLIER=256
+    fi
+
+    ulimit -n 4096
+
+    make clean -C $BENCHMARKS_HOME/http-loader/
+    make -C $BENCHMARKS_HOME/http-loader/
+
+    $BENCHMARKS_HOME/http-loader/http_post $IP 8080 $APP_POST $workload $WMULTIPLIER $TDIR
+
+    #./http_post 146.193.41.248 8080 payload.post 2 200 /home/intelnuc2/Downloads/graal_test/tmp/
+
+
+}
 
 function benchmark {
     if [ -z "$WMULTIPLIER" ]; then
@@ -154,6 +191,11 @@ do
         results_dir=$results_prefix/$APP_LANG/$APP_NAME-$backend-$SANDBOX-$mode-$workload-$VM_CPU-$VM_MEM/$iter
     fi
     mkdir -p $results_dir &> /dev/null
-    cp $TDIR/{*.log,*.rss,*.cpu} $results_dir &> /dev/null
+    
+    if [ -f "$TDIR/perf.data" ]; then        
+        sudo chmod 666 $TDIR/*.data
+    fi
+
+    cp $TDIR/{*.log,*.rss,*.cpu,*.tsv,*.data} $results_dir &> /dev/null
     echo "Saved logs (iteration $iter): $results_dir/lambda.log"
 done
