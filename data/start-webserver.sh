@@ -27,4 +27,5 @@ then
 fi
 
 
-docker run -d -p 8000:80 --rm -v $DIR:/usr/share/nginx/html --name web nginx
+#docker run -d -p 8000:80 --rm -v $DIR:/usr/share/nginx/html --name web nginx
+docker run --log-opt max-size=100m --log-opt max-file=3 -d -p 8000:80 --rm -v $DIR:/usr/share/nginx/html --name web nginx 
