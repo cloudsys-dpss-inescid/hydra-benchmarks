@@ -11,7 +11,7 @@
 #include <netinet/tcp.h>
 #include <stdbool.h>
 #include <math.h>
-#include <stdlib.h> // Para abs()
+#include <stdlib.h> 
 #include <limits.h>
 
 #define BUFFER_SIZE 1024
@@ -19,16 +19,16 @@
 #define MAX_REQUESTS 10000
 #define DEBUG_MODE false
 
-// Variáveis globais
+
 char *host;
 int port;
 char *arquivo_payload;
 int threads_number;
 int workload;
-char global_payload[BUFFER_SIZE]; // Armazenar o conteúdo do payload
+char global_payload[BUFFER_SIZE]; 
 char request[BUFFER_SIZE];
 char *results_directory;
-size_t global_payload_size; // Tamanho do payload
+size_t global_payload_size; 
 
 char request_template[] = "POST / HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %lu\r\n\r\n%s";
 
@@ -41,12 +41,12 @@ typedef struct {
 
 
 int extract_content_length(const char *response) {
-    // Procurar o início do campo "Content-Length"
+    // Looking for the content  keyword "Content-Length"
     const char *content_length_start = strstr(response, "Content-length: ");
     if (content_length_start != NULL) {
         content_length_start += strlen("Content-length: ");
 
-        // Extrair o valor do "Content-Length" como uma string
+        // Extract the value of "Content-Length" as a string
         char *endptr;
         int content_length = strtol(content_length_start, &endptr, 10);
         if (endptr != content_length_start && *endptr == '\r') {
@@ -54,18 +54,18 @@ int extract_content_length(const char *response) {
         }
     }
 
-    // Se não encontrou o campo "Content-Length" ou o valor não é válido, retorna -1
+    // If didn't find the "Content-Length" field or the value is not valid, return -1
     return -1;
 }
 
 int character_counter(int valor) {
-    // Se o valor for 0, precisamos de 1 caractere
+    // If the value is 0, we need 1 character
     if (valor == 0) {
         return 1;
     }
-    // Se o valor for negativo, adicionar 1 para o sinal '-'
+    // If the value is negative, add 1 for the '-'
     int tamanho = (valor < 0) ? 1 : 0;
-    // Calcular o número de dígitos no valor absoluto do número
+    // Calculate the number of digits in the absolute value of the number
     tamanho += (int)log10(abs(valor)) + 1;
     return tamanho;
 }
@@ -83,7 +83,7 @@ void magic_socket(int local_socket) {
 // Function to establish connection to the server
 int connect_to_server(const char* host, int port) {
 
-    // Configurar estrutura de endereço
+    // Set up address structure
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
     server_addr.sin_family = AF_INET;
@@ -97,42 +97,27 @@ int connect_to_server(const char* host, int port) {
     hints.ai_socktype = SOCK_STREAM;
 
     if ((status = getaddrinfo(host, NULL, &hints, &res)) != 0) {
-        fprintf(stderr, "Erro ao obter informações do host: %s\n", gai_strerror(status));
+        fprintf(stderr, "Error getting host info: %s\n", gai_strerror(status));
         pthread_exit(NULL);
     }
 
-    // A estrutura res contém uma lista de endereços; você pode simplesmente usar o primeiro
+    // The res structure contains a list of addresses; you can simply use the first one
     server_addr.sin_addr = ((struct sockaddr_in*)res->ai_addr)->sin_addr;
-    server_addr.sin_port = htons(port); // Não esqueça de atribuir a porta
+    server_addr.sin_port = htons(port); // Don't forget to assign the port
 
     
     
-    // Criar e conectar sockets
+    // Create and connect sockets
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
-        perror("Erro ao criar socket");
+        perror("Error creating socket");
         pthread_exit(NULL);
     }
 
-
-    /*struct timeval tv;
-    tv.tv_sec = 10000000;  // Timeout de 10 segundos
-    tv.tv_usec = 0;  // 0 milissegundos
-
-    // Definir timeout de recebimento
-    if (setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, (const char*)&tv, sizeof tv) < 0) {
-        perror("setsockopt SO_RCVTIMEO failed");
-    }
-
-    // Definir timeout de envio
-    if (setsockopt(sockfd, SOL_SOCKET, SO_SNDTIMEO, (const char*)&tv, sizeof tv) < 0) {
-        perror("setsockopt SO_SNDTIMEO failed");
-    }*/
-
     
-    // Conectar ao servidor
+    // Connect to the server
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Erro ao conectar ao servidor");
+        perror("Error connecting to server");
         close(sockfd);
         pthread_exit(NULL);
     }
@@ -154,14 +139,14 @@ void *run_request(void *arg) {
     time_t ref_time_t = mktime(&ref);
     double ms_ref = ref_time_t * 1000.0;
 
-    // Alocação dinâmica baseada no workload
+    // Dynamic allocation based on workload
     double *elapsed_time = (double *)malloc(workload * sizeof(double));
     double *start_timestamp = (double *)malloc(workload * sizeof(double));
     
-    // Verifique se a alocação foi bem-sucedida
+    // Check if allocation was successful
     if (!elapsed_time || !start_timestamp) {
         perror("Memory allocation error");
-        free(elapsed_time); // Libere memória se uma das alocações falhar
+        free(elapsed_time); // Free memory if one of the allocations fail
         free(start_timestamp);
         pthread_exit(NULL);
     }
@@ -170,24 +155,24 @@ void *run_request(void *arg) {
     // Establish connection
     // int sockfd = connect_to_server(host, port);
 
-    // Construir requisição
+    // Construct request
     //char request[BUFFER_SIZE];
     //snprintf(request, BUFFER_SIZE, request_template, host, global_payload_size, global_payload);
 
-    // Buffer para armazenar os dados recebidos
+    // Buffer to store received data
     char response[BUFFER_SIZE];
 
     magic_socket(sockfd);
     
 
     // workload = 400;
-    // Executar a solicitação
+    // Execute the request
     for (int i = 0; i < workload; i++) {
         //usleep(1000);
 
         struct timespec start, end;        
 
-        // Medir o tempo de início
+        // Measure start time
         clock_gettime(CLOCK_REALTIME, &start);
 
         //printf(" - strlen(request) %ld msg:%s \n\n", strlen(request), request);           
@@ -199,14 +184,14 @@ void *run_request(void *arg) {
 
 
 
-        // Enviar requisição
+        // Send request
         if (send(sockfd, request, strlen(request), 0) < 0) {
-            perror("Erro ao enviar requisição");
+            perror("Error sending request");
             close(sockfd);
             pthread_exit(NULL);
         }
 
-        // Ler resposta HTTP uma vez
+        // Read HTTP response once
         magic_socket(sockfd);
 
 
@@ -223,7 +208,7 @@ void *run_request(void *arg) {
             }
 
             int digit_length = character_counter(content_length);        
-            if(total_bytes_recv >= content_length + HTTP_HEADER + digit_length){//tenho de confimrar se nao é =>
+            if(total_bytes_recv >= content_length + HTTP_HEADER + digit_length){ //I should duble check if it is =>
                 break;
             }
 
@@ -232,15 +217,15 @@ void *run_request(void *arg) {
 
         if(DEBUG_MODE){
             response[total_bytes_recv] = '\0';
-            printf(" - Resposta do servidor (recived %ld bytes and expected %d bytes, Thread %d):\n%s\n", total_bytes_recv, ( content_length + HTTP_HEADER + character_counter(content_length)), thread_id, response);           
+            printf("Server response (received %ld bytes and expected %d bytes, Thread %d):\n%s\n", total_bytes_recv, ( content_length + HTTP_HEADER + character_counter(content_length)), thread_id, response);           
         }
 
         if (bytes_recv < 0) {
-            perror("Erro ao receber resposta do servidor");
+            perror("Error receiving server response");
             close(sockfd);
             pthread_exit(NULL);
         } else if (bytes_recv == 0) {
-            fprintf(stderr, "Conexão encerrada pelo servidor, workload: %d, threadID: %d\n", i, thread_id );
+            fprintf(stderr, "Connection closed by server, workload: %d, threadID: %d\n", i, thread_id );
             close(sockfd);
             sockfd = connect_to_server(host, port); // Reconnect
             magic_socket(sockfd);
@@ -254,31 +239,31 @@ void *run_request(void *arg) {
 
 
 
-        // Medir o tempo de fim
+        // Measure end time
         clock_gettime(CLOCK_REALTIME, &end);
 
-        // Calcular o tempo decorrido em milissegundos
+        // Calculate elapsed time in milliseconds
         elapsed_time[i] = (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_nsec - start.tv_nsec) / 1000000.0; 
         double ms_start= start.tv_sec * 1000.0 + start.tv_nsec / 1000000.0;
         start_timestamp[i] = ms_start - ms_ref;
         // start_timestamp[i] =  (start.tv_sec) * 1000.0 + (start.tv_nsec) / 1000000.0; 
     }
 
-    // Fechar socket
+    // Close socket
     close(sockfd);
 
-    // Escrever latências em um arquivo
+    // Write latencies to a file
     char filename[PATH_MAX]; 
     //sprintf(filename, "/home/ccorreia/tmp/test-proxy/latencias_thread%d.log", thread_id);
     sprintf(filename, "%s/latencias_thread%d.log", results_directory, thread_id);
 
     FILE *latency_file = fopen(filename, "w");
     if (latency_file == NULL) {
-        perror("Erro ao abrir arquivo de latências");
+        perror("Error opening latency file");
         pthread_exit(NULL);
     }
 
-    fprintf(latency_file, "Timestamp before sending request (ms), elapsed time from sending to receiving the reposnse (ms)\n");
+    fprintf(latency_file, "Timestamp before sending request (ms), elapsed time from sending to receiving the response (ms)\n");
     for (int i = 0; i < workload; i++) {
         fprintf(latency_file, "%f,%f\n",start_timestamp[i],  elapsed_time[i]);
     }
@@ -293,7 +278,7 @@ void *run_request(void *arg) {
     pthread_exit(NULL);
 }
 
-//Para isto funcionar eu tive que mudar uma linha no SubstrateVMProxy.java para nao ter queue full : this.queue = new ArrayBlockingQueue<>(256);
+//To make this work I had to change a line in SubstrateVMProxy.java to not have queue full : this.queue = new ArrayBlockingQueue<>(256);
 // example: ./http_post 146.193.41.25 8080 payload.post 256 1000  /home/intelnuc2/Downloads/graal_test/tmp/
 // ./http_post 146.193.41.25 8080 /home/intelnuc2/Downloads/graal_test/toDelete/http-loader/payload.post 256 8192 /home/intelnuc2/Downloads/graal_test/toDelete/http-loader/results/
 
@@ -303,7 +288,7 @@ void *run_request(void *arg) {
 
 int main(int argc, char *argv[]) {
     if (argc != 7) {
-        fprintf(stderr, "Uso: %s <host> <porta> <arquivo_payload> <#threads> <workload> <results_directory>\n", argv[0]);
+        fprintf(stderr, "Usage: %s <host> <port> <payload_file> <#threads> <workload> <results_directory>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
@@ -317,7 +302,7 @@ int main(int argc, char *argv[]) {
 */
 
     
-    // Atribuir valores para as variáveis globais
+    // Assign values to global variables
     host = argv[1];
     port = atoi(argv[2]);
     arquivo_payload = argv[3];
@@ -328,10 +313,10 @@ int main(int argc, char *argv[]) {
 
 
     
-    // Abrir e ler o conteúdo do arquivo de payload uma única vez
+    // Open and read the content of the payload file once
     FILE *file = fopen(argv[3], "r");
     if (file == NULL) {
-        perror("Erro ao abrir arquivo de payload");
+        perror("Error opening payload file");
         exit(EXIT_FAILURE);
     }
     global_payload_size = fread(global_payload, 1, BUFFER_SIZE, file);
@@ -347,7 +332,7 @@ int main(int argc, char *argv[]) {
 
     ThreadParams *params_array = malloc(threads_number * sizeof(ThreadParams));
     if (params_array == NULL) {
-        perror("Erro ao alocar memória para os parâmetros das threads");
+        perror("Error allocating memory for thread parameters");
         exit(EXIT_FAILURE);
     }
 
@@ -370,28 +355,28 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < threads_number; i++) {
         if (pthread_join(threads[i], NULL) != 0) {
-            perror("Erro ao aguardar thread");
+            perror("Error waiting for thread");
             exit(EXIT_FAILURE);
         }
     }
 
-    // Medir o tempo de fim
+    // Measure end time
     clock_gettime(CLOCK_MONOTONIC, &global_end);
 
-    // Calcular o tempo decorrido em milissegundos
+    // Calculate elapsed time in milliseconds
     double experiment_duration = (global_end.tv_sec - global_start.tv_sec) * 1000.0 + (global_end.tv_nsec - global_start.tv_nsec) / 1000000.0;
     
     printf(" Finished in : %f ms\n", experiment_duration);
 
 
 
-    // Escrever latências em um arquivo
+    // Write latencies to a file
     char log_filename[PATH_MAX]; 
     sprintf(log_filename, "%s/CClient.log", results_directory);
     
     FILE *log_file = fopen(log_filename, "w");
     if (log_file == NULL) {
-        perror("Erro ao abrir CClient.log");
+        perror("Error opening CClient.log");
         pthread_exit(NULL);
     }
 
