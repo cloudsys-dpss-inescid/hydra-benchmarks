@@ -17,7 +17,7 @@
 #define BUFFER_SIZE 1024
 #define HTTP_HEADER 74 // it is the size of the header wihtou the length digit
 #define MAX_REQUESTS 10000
-#define DEBUG_MODE true
+#define DEBUG_MODE false
 
 
 char *host;
@@ -263,7 +263,6 @@ void *run_request(void *arg) {
 
 // To make this work I had to change a line in SubstrateVMProxy.java (In Argo repository), otherwise I will receive the error "queue full", I have changed the line : this.queue = new ArrayBlockingQueue<>(2048);
 // Usage example:  make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/ccorreia/graal_test/tmp/
-// Usage example:  make clean && make && ./http_post 146.193.41.24 8080 payload.post 2 100 /home/claudiocorreia/remoteClient
 
 int main(int argc, char *argv[]) {
     if (argc != 7) {
@@ -360,4 +359,3 @@ int main(int argc, char *argv[]) {
 
     return 0;
 }
-
