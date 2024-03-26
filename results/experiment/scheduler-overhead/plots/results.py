@@ -147,6 +147,35 @@ def arrays_split(input_array):
     return first_array, second_array
 
 
+def get_GC_G1_datapoints(file_path):
+
+    lambda_file = file_path + "/lambda.log"
+    
+    Pause_Young = []
+    Pause_duration = []
+
+
+    try:
+        with open(lambda_file ) as file:
+            first_timestamp = float(file.readline()) #to skip first line
+            for line in file:
+
+                if "Pause Young" in line:
+                    timestamp_string =  (line.split("]")[0]).split("[")[1]
+                    value_miliseconds = float(timestamp_string[:-1]) * 1000
+                    Pause_Young.append( first_timestamp + value_miliseconds)
+
+                    gc_duration_string = float( (line.split()[-1]).split("ms")[0] )
+                    Pause_duration.append(gc_duration_string)
+
+    except Exception as e:
+        print("Error processing " + lambda_file + ":")
+        raise e
+    
+    return Pause_Young, Pause_duration
+
+
+
 def get_GC_datapoints(file_path):
 
     lambda_file = file_path + "/lambda.log"

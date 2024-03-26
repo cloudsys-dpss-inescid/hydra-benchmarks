@@ -151,38 +151,21 @@ void *run_request(void *arg) {
         pthread_exit(NULL);
     }
 
-
-    // Establish connection
-    // int sockfd = connect_to_server(host, port);
-
-    // Construct request
-    //char request[BUFFER_SIZE];
-    //snprintf(request, BUFFER_SIZE, request_template, host, global_payload_size, global_payload);
-
     // Buffer to store received data
     char response[BUFFER_SIZE];
 
     magic_socket(sockfd);
     
 
-    // workload = 400;
     // Execute the request
     for (int i = 0; i < workload; i++) {
-        //usleep(1000);
 
         struct timespec start, end;        
 
         // Measure start time
         clock_gettime(CLOCK_REALTIME, &start);
 
-        //printf(" - strlen(request) %ld msg:%s \n\n", strlen(request), request);           
-
-        /*for(int i=0; i<=  strlen(request); i++){
-            printf(" i: %d and c: %c \n", i, request[i]);           
-
-        }*/
-
-
+ 
 
         // Send request
         if (send(sockfd, request, strlen(request), 0) < 0) {
@@ -229,7 +212,7 @@ void *run_request(void *arg) {
             close(sockfd);
             sockfd = connect_to_server(host, port); // Reconnect
             magic_socket(sockfd);
-            //pthread_exit(NULL);            
+
             i--; // Retry the same request
         }
         
@@ -246,7 +229,7 @@ void *run_request(void *arg) {
         elapsed_time[i] = (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_nsec - start.tv_nsec) / 1000000.0; 
         double ms_start= start.tv_sec * 1000.0 + start.tv_nsec / 1000000.0;
         start_timestamp[i] = ms_start - ms_ref;
-        // start_timestamp[i] =  (start.tv_sec) * 1000.0 + (start.tv_nsec) / 1000000.0; 
+
     }
 
     // Close socket
@@ -254,7 +237,7 @@ void *run_request(void *arg) {
 
     // Write latencies to a file
     char filename[PATH_MAX]; 
-    //sprintf(filename, "/home/ccorreia/tmp/test-proxy/latencias_thread%d.log", thread_id);
+
     sprintf(filename, "%s/latencias_thread%d.log", results_directory, thread_id);
 
     FILE *latency_file = fopen(filename, "w");
@@ -278,13 +261,8 @@ void *run_request(void *arg) {
     pthread_exit(NULL);
 }
 
-//To make this work I had to change a line in SubstrateVMProxy.java to not have queue full : this.queue = new ArrayBlockingQueue<>(256);
-// example: ./http_post 146.193.41.25 8080 payload.post 256 1000  /home/intelnuc2/Downloads/graal_test/tmp/
-// ./http_post 146.193.41.25 8080 /home/intelnuc2/Downloads/graal_test/toDelete/http-loader/payload.post 256 8192 /home/intelnuc2/Downloads/graal_test/toDelete/http-loader/results/
-
-// make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/ccorreia/work/argo/benchmarks/http-loader/results/
-// make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/intelnuc2/Downloads/graal_test/tmp/
-// make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/ccorreia/graal_test/tmp/
+// To make this work I had to change a line in SubstrateVMProxy.java (In Argo repository), otherwise I will receive the error "queue full", I have changed the line : this.queue = new ArrayBlockingQueue<>(2048);
+// Usage example:  make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/ccorreia/graal_test/tmp/
 
 int main(int argc, char *argv[]) {
     if (argc != 7) {
@@ -293,15 +271,6 @@ int main(int argc, char *argv[]) {
     }
 
 
-
-
-/*   fprintf(stderr, "\n\n\nRunning, tap enter to exit.\n");
-    getchar();
-    printf("Exit. ");
-    return 0;
-*/
-
-    
     // Assign values to global variables
     host = argv[1];
     port = atoi(argv[2]);
