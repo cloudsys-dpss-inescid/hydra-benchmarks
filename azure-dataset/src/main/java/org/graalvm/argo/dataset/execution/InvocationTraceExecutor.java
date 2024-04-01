@@ -5,21 +5,28 @@ import org.graalvm.argo.dataset.InvocationTraceGenerator;
 import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 
 public class InvocationTraceExecutor {
 
     private static final int MS_IN_HOUR = 3600000;
-    private static final int BYTES_IN_MB = 1048576;
+    protected static final int BYTES_IN_MB = 1048576;
     /**
      * Empirical value used to calculate request-specific memory consumption.
      */
-    private static final double MEMORY_COEFFICIENT = 0.05;
+    protected static final double MEMORY_COEFFICIENT = 0.05;
 
-    private final ExecutorConfiguration config;
+    protected final ExecutorConfiguration config;
 
+    final static List<String> latencies = new LinkedList<>();
 
     public InvocationTraceExecutor(ExecutorConfiguration config) {
         this.config = config;
@@ -46,6 +53,11 @@ public class InvocationTraceExecutor {
 
                 invokeFunction(owner, function, allocatedMemoryMb, duration, timestamp);
             }
+            // To let the last request complete.
+            waitForInvocation(0, 5000);
+            // Write the latencies to a file.
+            Path output = Paths.get("latencies" + config.getProxyAddress().replaceAll("\\.", "_") + ".txt");
+            Files.write(output, latencies, Charset.defaultCharset());
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -86,7 +98,7 @@ public class InvocationTraceExecutor {
         }
     }
 
-    private void uploadFunction(String owner, String function) {
+    protected void uploadFunction(String owner, String function) {
         String queryParameters = "username=" + owner + "&function_name=" + function +
                 "&function_language=" + config.functionLanguage + "&function_entry_point=" + config.functionEntryPoint +
                 "&function_memory=" + config.functionMemory + "&function_runtime=" + config.functionRuntime +
@@ -95,17 +107,17 @@ public class InvocationTraceExecutor {
             queryParameters = queryParameters + "&gv_sandbox=" + config.gvSandbox;
         }
         if (!config.isDebugMode()) {
-            NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/upload_function?" + queryParameters, "application/octet-stream", config.functionCode, false);
+            NetworkUtils.sendPost(config.getProxyAddress(), "/upload_function?" + queryParameters, "application/octet-stream", config.functionCode, -1, false);
         }
     }
 
-    private void invokeFunction(String owner, String function, int allocatedMemoryMb, int duration, int timestamp) {
+    protected void invokeFunction(String owner, String function, int allocatedMemoryMb, int duration, int timestamp) {
         int memoryToAllocate = (int) (allocatedMemoryMb * BYTES_IN_MB * MEMORY_COEFFICIENT);
         byte[] data = ("{\"memory\":\"" + memoryToAllocate + "\",\"duration\":\"" + duration + "\"}").getBytes(StandardCharsets.UTF_8);
         if (config.isDebugMode()) {
             System.out.println("Sending request with timestamp: " + timestamp);
         } else {
-            NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/" + owner + "/" + function, "application/json; charset=UTF-8", data, true);
+            NetworkUtils.sendPost(config.getProxyAddress(), "/" + owner + "/" + function, "application/json; charset=UTF-8", data, timestamp, true);
         }
     }
 
