@@ -68,10 +68,13 @@ function build_native_library {
 	musl-gcc -static $CFLAGS -o $GRAALVISOR_HOME/build/libs/lib$BENCHMARK_NAME-jni.so $SOURCE_CODE
 }
 
+
+
 function build_native_exec {
+	export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:libs:$LD_LIBRARY_PATH
 	for file in "$SNIPPETS_DIR"/*.c; do
 		name=$(basename "$file" .c)
-		gcc $SFLAGS_PROC -o $GRAALVISOR_HOME/build/libs/$name-proc $file -L$GRAALVISOR_HOME/build/libs -lmemiso
+		gcc $SFLAGS_PROC -o $GRAALVISOR_HOME/build/libs/$name-proc $file -L$GRAALVISOR_HOME/build/libs -lmemiso -Wl,-rpath,$GRAALVISOR_HOME/build/libs -DSNI_DBG
 	done
 }
 
