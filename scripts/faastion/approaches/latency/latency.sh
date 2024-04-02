@@ -8,7 +8,7 @@ source $(DIR)/../../shared.sh
 
 
 function benchmark {
-    wrk-cmm -t$requests -c$requests -d1s --breakout -s native.lua http://127.0.0.1:8081
+    wrk -t$requests -c$requests -d1s -s native.lua http://127.0.0.1:8081
 }
 
 function capture {
@@ -17,14 +17,8 @@ function capture {
 
     # Extract values using awk and redirect them to specific files
     latency=$(echo "$output" | awk '/Latency/{print $2}')
-    connect=$(echo "$output" | awk '/Connect/{print $2}')
-    TTFB=$(echo "$output" | awk '/TTFB/{print $2}')
-    TTLB=$(echo "$output" | awk '/TTLB/{print $2}')
 
     echo $latency >> logs/$approach/latency-$requests.log
-    echo $connect >> logs/$approach/connect-$requests.log
-    echo $TTFB >> logs/$approach/TTFB-$requests.log
-    echo $TTLB >> logs/$approach/TTLB-$requests.log
 }
 
 # Function to run the workload
@@ -33,15 +27,15 @@ function run {
     run=$2
 
     # Start Graalvisor and capture execution time information
-    start_svm 15 &> logs/graalvisor/lambda-$requests-$run.log &
+    start_svm &> logs/graalvisor/lambda-$requests-$run.log &
 
     # Register Java native applications in Graalvisor
-    for i in $(seq 15)
+    for i in $(seq 1)
     do
         gv_java_native_hw_n $i > /dev/null
     done
     
-    warmup 14
+    warmup 1
 
     capture
     #benchmark

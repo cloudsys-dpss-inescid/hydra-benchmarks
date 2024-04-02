@@ -18,7 +18,7 @@ def get_mean_time(approach, metric, requests):
     
 
 def main() -> None:
-    approaches = ["isolate", "process", "faastion-eager", "faastion-lazy"]
+    approaches = ["isolate", "process", "faastion-lazy"] # , "faastion-eager"
     metrics = ["latency"]
     workload = [1, 3, 5, 8, 11, 14]
 

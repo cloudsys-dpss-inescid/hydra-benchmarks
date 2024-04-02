@@ -10,7 +10,7 @@ for dir in "${base_dir}/${dir_prefix}"*; do
         
         cd "$dir" || exit
         
-        ./build_script_proc_iso.sh >/dev/null 2>&1
+        ./build_script_proc_iso.sh
 
         cd - || exit
 
