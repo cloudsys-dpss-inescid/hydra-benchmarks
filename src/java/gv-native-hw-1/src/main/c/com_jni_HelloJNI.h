@@ -4,7 +4,7 @@
 #ifndef _Included_com_jni_HelloJNI
 #define _Included_com_jni_HelloJNI
 
-JNIEXPORT void JNICALL Java_com_jni_HelloJNI_printHello1
+JNIEXPORT void JNICALL Java_com_jni_HelloJNI_printHello
   (JNIEnv *, jclass);
 
 #endif

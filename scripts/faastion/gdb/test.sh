@@ -25,4 +25,4 @@ done
 
 #gv_java_native_aes
 
-wrk -t$1 -c$1 -d1s -s native.lua http://127.0.0.1:8081
+wrk-cmm -t$1 -c$1 -d1s --breakout -s native.lua http://127.0.0.1:8081

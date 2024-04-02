@@ -7,14 +7,14 @@ import java.util.Map;
 
 public class HelloJNI {
     static {
-        System.loadLibrary("nativehw-jni");
+        System.loadLibrary("nativehw15-jni");
     }
 
-    public static native void printHello(String message);
+    public static native void printHello15();
 
     public static HashMap<String, Object> main(Map<String, Object> input) {
         HashMap<String, Object> output = new HashMap<>();
-        printHello("Hello from Java!");
+        printHello15();
         return output;
     }
 

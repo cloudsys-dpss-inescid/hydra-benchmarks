@@ -14,7 +14,7 @@ CFLAGS_PROC="-Wall -g -fPIC $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/main/c/memisolation/src"
 SFLAGS_PROC="$CFLAGS_PROC -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/main/c/memisolation/src"
 
-BENCHMARK_NAME="nativehw"
+BENCHMARK_NAME="nativemsg"
 SNIPPETS_DIR="$DIR/build/snippets"
 
 function run_hotspot {
@@ -26,9 +26,9 @@ function run_hotspot {
 	$JAVA_HOME/bin/java \
 			-Djava.awt.headless=true \
 			-agentlib:native-image-agent=config-output-dir=config-dir/ \
-			-cp $CLASS_PATH:libs/native-hw-1.0-all.jar \
+			-cp $CLASS_PATH:libs/native-msg-1.0-all.jar \
 			-Djava.library.path=$LD_LIBRARY_PATH \
-			com.jni.HelloJNI
+			com.jni.MessageJNI
 }
 
 function build_ni {
@@ -38,7 +38,7 @@ function build_ni {
 	export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
 			--no-fallback \
-			-cp $CLASS_PATH:libs/native-hw-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+			-cp $CLASS_PATH:libs/native-msg-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
 			-DGraalVisorGuest=true \
 			-Djava.library.path=$LD_LIBRARY_PATH \
 			-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
@@ -50,7 +50,7 @@ function build_ni {
 }
 
 function build_ni_standalone {
-	NI_BIN_OPTS="com.jni.HelloJNI"
+	NI_BIN_OPTS="com.jni.MessageJNI"
 	build_ni
 }
 
@@ -64,7 +64,7 @@ function build_java_agent {
 }
 
 function build_native_library {
-	musl-gcc -static $CFLAGS -o $GRAALVISOR_HOME/build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
+	musl-gcc -static $CFLAGS -o $GRAALVISOR_HOME/build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/MessageJNI.c
 }
 
 function build_native_exec {
@@ -77,13 +77,13 @@ function build_native_exec {
 function build_snippets {
 	for file in "$SNIPPETS_DIR"/*.c; do
 		name=$(basename "$file" .c)
-		gcc $SFLAGS -o $GRAALVISOR_HOME/build/libs/lib$name.so $file -L$GRAALVISOR_HOME/build/libs -lmemiso -ljniwrapper
+		gcc $SFLAGS -o $GRAALVISOR_HOME/build/libs/lib$name.so $file -L$GRAALVISOR_HOME/build/libs -lmemiso -ljniwrapper -DSNI_DBG -DEAGER_MPK
 	done
 }
 
 function manipulate_bytecode {
 	CLASS_PATH="build/classes/java/main"
-	ENTRYPOINT="com.jni.HelloJNI"
+	ENTRYPOINT="com.jni.MessageJNI"
 	TOOL="NativeRedirection"
 	
 	mkdir -p $DIR/build/snippets
