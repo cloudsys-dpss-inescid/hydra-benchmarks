@@ -1,43 +1,39 @@
+#include <limits.h>
+#include <math.h>
+#include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <netdb.h>
+#include <pthread.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <netinet/in.h>
-#include <netdb.h>
-#include <unistd.h>
-#include <pthread.h>
-#include <time.h>
 #include <sys/stat.h>
-#include <netinet/tcp.h>
-#include <stdbool.h>
-#include <math.h>
-#include <stdlib.h> 
-#include <limits.h>
+#include <time.h>
+#include <unistd.h>
 
-#define BUFFER_SIZE 1024
-#define HTTP_HEADER 74 // it is the size of the header wihtou the length digit
-#define MAX_REQUESTS 10000
-#define DEBUG_MODE false
+
+#define BUFFER_SIZE 1024    // Default size used to initialize arrays for sending and receiving messages with the server
+#define HTTP_HEADER 74      // This is the size of the header without the length digit
+#define DEBUG_MODE false    // If set to true, it will print debug information, such as the content of the messages from the server
 
 
 char *host;
 int port;
-char *arquivo_payload;
+char *payload_path;
 int threads_number;
 int workload;
 char global_payload[BUFFER_SIZE]; 
 char request[BUFFER_SIZE];
 char *results_directory;
 size_t global_payload_size; 
-
 char request_template[] = "POST / HTTP/1.1\r\nHost: %s\r\nContent-Type: application/json\r\nContent-Length: %lu\r\n\r\n%s";
 
 typedef struct {
     int thread_id;
     int socket_id; 
 } ThreadParams;
-
-
 
 
 int extract_content_length(const char *response) {
@@ -58,16 +54,16 @@ int extract_content_length(const char *response) {
     return -1;
 }
 
-int character_counter(int valor) {
+int character_counter(int value) {
     // If the value is 0, we need 1 character
-    if (valor == 0) {
+    if (value == 0) {
         return 1;
     }
     // If the value is negative, add 1 for the '-'
-    int tamanho = (valor < 0) ? 1 : 0;
+    int size= (value < 0) ? 1 : 0;
     // Calculate the number of digits in the absolute value of the number
-    tamanho += (int)log10(abs(valor)) + 1;
-    return tamanho;
+    size += (int)log10(abs(value)) + 1;
+    return size;
 }
 
 void magic_socket(int local_socket) {
@@ -75,14 +71,10 @@ void magic_socket(int local_socket) {
     int flag = 1;
     setsockopt(local_socket, IPPROTO_TCP, TCP_NODELAY, (char *)&flag, sizeof(int));
     setsockopt(local_socket, IPPROTO_TCP, TCP_QUICKACK, (char *) &flag, sizeof(int));
-
-
-
 }
 
 // Function to establish connection to the server
 int connect_to_server(const char* host, int port) {
-
     // Set up address structure
     struct sockaddr_in server_addr;
     memset(&server_addr, 0, sizeof(server_addr));
@@ -98,36 +90,32 @@ int connect_to_server(const char* host, int port) {
 
     if ((status = getaddrinfo(host, NULL, &hints, &res)) != 0) {
         fprintf(stderr, "Error getting host info: %s\n", gai_strerror(status));
-        pthread_exit(NULL);
+       return NULL; 
     }
 
     // The res structure contains a list of addresses; you can simply use the first one
     server_addr.sin_addr = ((struct sockaddr_in*)res->ai_addr)->sin_addr;
-    server_addr.sin_port = htons(port); // Don't forget to assign the port
-
-    
+    server_addr.sin_port = htons(port); 
     
     // Create and connect sockets
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         perror("Error creating socket");
-        pthread_exit(NULL);
+        return NULL;
     }
-
     
     // Connect to the server
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("Error connecting to server");
         close(sockfd);
-        pthread_exit(NULL);
+        return NULL;
     }
 
     return sockfd;
 }
 
-
-
 void *run_request(void *arg) {
+
     ThreadParams *params = (ThreadParams *)arg;
     int thread_id = params->thread_id; 
     int sockfd = params->socket_id;
@@ -153,31 +141,24 @@ void *run_request(void *arg) {
 
     // Buffer to store received data
     char response[BUFFER_SIZE];
-
     magic_socket(sockfd);
     
-
     // Execute the request
     for (int i = 0; i < workload; i++) {
 
         struct timespec start, end;        
-
         // Measure start time
         clock_gettime(CLOCK_REALTIME, &start);
 
- 
-
-        // Send request
+         // Send request
         if (send(sockfd, request, strlen(request), 0) < 0) {
             perror("Error sending request");
             close(sockfd);
             pthread_exit(NULL);
         }
 
-        // Read HTTP response once
+        // Receive HTTP response
         magic_socket(sockfd);
-
-
 
         ssize_t bytes_recv = 0;
         ssize_t total_bytes_recv = 0;
@@ -194,8 +175,6 @@ void *run_request(void *arg) {
             if(total_bytes_recv >= content_length + HTTP_HEADER + digit_length){ //I should duble check if it is =>
                 break;
             }
-
-
         }
 
         if(DEBUG_MODE){
@@ -212,16 +191,9 @@ void *run_request(void *arg) {
             close(sockfd);
             sockfd = connect_to_server(host, port); // Reconnect
             magic_socket(sockfd);
-
             i--; // Retry the same request
         }
         
-
-
-
-
-
-
         // Measure end time
         clock_gettime(CLOCK_REALTIME, &end);
 
@@ -234,11 +206,9 @@ void *run_request(void *arg) {
 
     // Close socket
     close(sockfd);
-
     // Write latencies to a file
     char filename[PATH_MAX]; 
-
-    sprintf(filename, "%s/latencias_thread%d.log", results_directory, thread_id);
+    sprintf(filename, "%s/latency_thread%d.log", results_directory, thread_id);
 
     FILE *latency_file = fopen(filename, "w");
     if (latency_file == NULL) {
@@ -263,27 +233,24 @@ void *run_request(void *arg) {
 
 // To make this work I had to change a line in SubstrateVMProxy.java (In Argo repository), otherwise I will receive the error "queue full", I have changed the line : this.queue = new ArrayBlockingQueue<>(2048);
 // Usage example:  make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/ccorreia/graal_test/tmp/
-
 int main(int argc, char *argv[]) {
+
     if (argc != 7) {
         fprintf(stderr, "Usage: %s <host> <port> <payload_file> <#threads> <workload> <results_directory>\n", argv[0]);
         exit(EXIT_FAILURE);
     }
 
-
     // Assign values to global variables
     host = argv[1];
     port = atoi(argv[2]);
-    arquivo_payload = argv[3];
+    payload_path = argv[3];
     threads_number = atoi(argv[4]);
     workload = atoi(argv[5]);
     results_directory = argv[6];
     struct timespec global_start, global_end;
-
-
     
     // Open and read the content of the payload file once
-    FILE *file = fopen(argv[3], "r");
+    FILE *file = fopen(payload_path, "r");
     if (file == NULL) {
         perror("Error opening payload file");
         exit(EXIT_FAILURE);
@@ -292,13 +259,8 @@ int main(int argc, char *argv[]) {
     fclose(file);
     snprintf(request, BUFFER_SIZE, request_template, host, global_payload_size-1, global_payload);
 
-
     printf(" Running with workload: %d\n", threads_number);
-
     pthread_t threads[threads_number];
-
-
-
     ThreadParams *params_array = malloc(threads_number * sizeof(ThreadParams));
     if (params_array == NULL) {
         perror("Error allocating memory for thread parameters");
@@ -310,17 +272,14 @@ int main(int argc, char *argv[]) {
         params_array[i].socket_id = connect_to_server(host, port);
     }
 
-
     printf("\nStrating threads\n");            
-    clock_gettime(CLOCK_MONOTONIC, &global_start);
-    
+    clock_gettime(CLOCK_MONOTONIC, &global_start);    
     for (int i = 0; i < threads_number; i++) {
         if (pthread_create(&threads[i], NULL, run_request, (void *)&params_array[i]) != 0) {
             perror("Error creating thread");
             exit(EXIT_FAILURE);
         }
     }
-
 
     for (int i = 0; i < threads_number; i++) {
         if (pthread_join(threads[i], NULL) != 0) {
@@ -336,9 +295,6 @@ int main(int argc, char *argv[]) {
     double experiment_duration = (global_end.tv_sec - global_start.tv_sec) * 1000.0 + (global_end.tv_nsec - global_start.tv_nsec) / 1000000.0;
     
     printf(" Finished in : %f ms\n", experiment_duration);
-
-
-
     // Write latencies to a file
     char log_filename[PATH_MAX]; 
     sprintf(log_filename, "%s/CClient.log", results_directory);
@@ -352,10 +308,8 @@ int main(int argc, char *argv[]) {
     fprintf(log_file, "%f\n", experiment_duration);
     fprintf(log_file, "%d\n", threads_number*workload);
 
-
     fclose(log_file);
     free(params_array);
-    
-
+ 
     return 0;
 }
