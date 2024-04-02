@@ -69,9 +69,10 @@ function build_native_library {
 }
 
 function build_native_exec {
+	export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:libs:$LD_LIBRARY_PATH
 	for file in "$SNIPPETS_DIR"/*.c; do
 		name=$(basename "$file" .c)
-		gcc $SFLAGS_PROC -o $GRAALVISOR_HOME/build/libs/$name-proc $file -L$GRAALVISOR_HOME/build/libs -lmemiso
+		gcc $SFLAGS_PROC -o $GRAALVISOR_HOME/build/libs/$name-proc $file -L$GRAALVISOR_HOME/build/libs -lmemiso -Wl,-rpath,$GRAALVISOR_HOME/build/libs -DSNI_DBG
 	done
 }
 
