@@ -22,6 +22,7 @@ public class DBReader {
     static String keyObject = "foo";
     static String serverIP = "127.0.0.1";
     static String serverPort = "11211";
+    static Socket socket = null;
 
     /* Read some key from Memcached */
     public static HashMap<String, Object> singleKeyRrequest(String key, String serverIP, int serverPort) {
@@ -30,8 +31,9 @@ public class DBReader {
         
         try {
             // Connect to Memcached server
-            Socket socket = new Socket(serverIP, serverPort);
-            socket.setSoTimeout(10000);
+            if(socket == null)
+                socket = new Socket(serverIP, serverPort);
+                socket.setSoTimeout(10000);
 
             // Send the "get" command for the "foo" key
             String request = "get " + key + "\r\n";
@@ -67,7 +69,7 @@ public class DBReader {
             }
 
             // Close the socket
-            socket.close();
+            // socket.close();
         } catch (Exception e) {
             e.printStackTrace();
         }

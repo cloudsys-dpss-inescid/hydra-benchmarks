@@ -45,7 +45,7 @@ function remote_Cclient_benchmark {
     fi
 
     #ulimit -n 8192
-    ulimit -n 16384
+    #ulimit -n 163840
     
     run_remote_client $workload $WMULTIPLIER $TDIR
 

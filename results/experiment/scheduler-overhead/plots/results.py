@@ -203,7 +203,7 @@ def get_GC_datapoints(file_path):
 
 def get_latency_datapoints(file_path, thread_id):
 
-    thread_file = file_path + "/latencias_thread" + str(thread_id) + ".log"
+    thread_file = file_path + "/latency_thread" + str(thread_id) + ".log"
     data_points = read_CClient_latency_lines(thread_file)
     timestamp_array, latency_array = arrays_split(data_points)
     

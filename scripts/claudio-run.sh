@@ -29,7 +29,6 @@ if [ -z "$SSH_PASSWORD" ]; then
 fi
 
 
-
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 1 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 2 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 4 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
@@ -41,6 +40,18 @@ fi
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 256 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 512 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 1024 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 1 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 2 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 4 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 8 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 16 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 32 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 64 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 128 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 256 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 512 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 1024 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 
 mv ~/work/argo/benchmarks/results/benchmark/java/* ~/work/argo/benchmarks/results/experiment/scheduler-overhead/results/java/CClientBenchmark/
 
@@ -59,5 +70,18 @@ export verbose_benchmark=false
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 256 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 512 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
 ./benchmark-graalvisor-remote.sh svm gv_java_httprequest 1024 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 1 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 2 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 4 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 8 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 16 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 32 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 64 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 128 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 256 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 512 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+./benchmark-graalvisor-remote.sh svm gv_java_dbreader 1024 $CLIENT_IP $CLIENT_USERNAME  $CLIENT_DIR
+
 
 mv ~/work/argo/benchmarks/results/benchmark/java/* ~/work/argo/benchmarks/results/experiment/scheduler-overhead/results/java/CClientClean/
