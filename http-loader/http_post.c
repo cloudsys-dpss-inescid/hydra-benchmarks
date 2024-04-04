@@ -17,7 +17,7 @@
 #define BUFFER_SIZE 1024
 #define HTTP_HEADER 74 // it is the size of the header wihtou the length digit
 #define MAX_REQUESTS 10000
-#define DEBUG_MODE false
+#define DEBUG_MODE true
 
 
 char *host;

@@ -1,4 +1,3 @@
-
 #!/usr/bin/env python
 
 import results
@@ -18,14 +17,12 @@ dir_plots = "all_runtimes/CClient/raw-cpu-"
 
 def process_context_switches_datapoints(array_datapoints, delta_interval):
 
-
     interval_deadline = array_datapoints[0] + delta_interval
-
     array_counter = []
     array_timestamp = []
     counter = 0
-
     array_timestamp.append(array_datapoints[0])
+
     for e in array_datapoints:
         
         if e < interval_deadline:
@@ -41,31 +38,54 @@ def process_context_switches_datapoints(array_datapoints, delta_interval):
     
     return array_counter, array_timestamp
 
+#I need a costum function, becasuse the ones from Python do an avarage when two middle values when even amount of elements are provided and I need existing value for indexing
+def median_index(lst):
+    
+    sortedLst = sorted(lst)
+    lstLen = len(lst)
+    index = (lstLen - 1) // 2
+    
+    return index
 
-def clean_GC_from_datapoints(Pause_Young_GC, Pause_duration, timestamp_array, latency_array):
+def get_index_GC_in_latencies(target_value, latency_array):
+
+    for indx, current_value in enumerate(latency_array):
+        if  current_value >= target_value:
+            return indx
+    return -1
+
+def clean_datapoints_from_GC(GC_timestamps, GC_pause_duration, timestamp_array, latency_array):
 
     idx_GC = 0
     latency_array_GC = []
+    cut_initial_points = 1000
+    cut_off_set = 400
 
-    for idx_latency, current_timestamp_latency in enumerate(timestamp_array):
+    #when theres no GC points, just cut the inicial points that usualy have some noise
+    if len(GC_timestamps) == 0:
+        latency_array = latency_array[cut_initial_points:]
+        timestamp_array = timestamp_array[cut_initial_points:]
+        return timestamp_array, latency_array
+
+    elif len(GC_timestamps) == 1:
+        latency_index = get_index_GC_in_latencies(GC_timestamps[0] + cut_off_set, timestamp_array) 
+        latency_array = latency_array[latency_index:]
+        timestamp_array = timestamp_array[latency_index:]        
+        return timestamp_array, latency_array
+
+    l_GC_median_idx = median_index(GC_timestamps) 
+    r_GC_median_idx = l_GC_median_idx + 1
         
+    l_GC_timestamp = GC_timestamps[l_GC_median_idx] + cut_off_set
+    r_GC_timestamp = GC_timestamps[r_GC_median_idx] - cut_off_set
 
-        GC_timestamp_start = Pause_Young_GC[idx_GC] - 200
-        GC_timestamp_end = GC_timestamp_start + Pause_duration[idx_GC] + 200
-        if current_timestamp_latency >= GC_timestamp_start and current_timestamp_latency <= GC_timestamp_end:
-            latency_array_GC.append(latency_array[idx_latency])
-            latency_array[idx_latency] = -5
-            #print("idx_latency: " + str(idx_latency) )
-            #print("current_timestamp_latency: " + str(current_timestamp_latency) )
-            #print("GC_timestamp_start:        " + str(GC_timestamp_start) )
-            #print("GC_timestamp_end:          " + str(GC_timestamp_end) )
-        
-        if current_timestamp_latency > GC_timestamp_end:
-            idx_GC = min(idx_GC+1, len(Pause_Young_GC) - 1)
+    l_latency_index = get_index_GC_in_latencies(l_GC_timestamp, timestamp_array) 
+    r_latency_index = get_index_GC_in_latencies(r_GC_timestamp, timestamp_array) 
 
- 
- 
-    return timestamp_array, latency_array, latency_array_GC
+    latency_array = latency_array[l_latency_index:r_latency_index]
+    timestamp_array = timestamp_array[l_latency_index:r_latency_index]
+
+    return timestamp_array, latency_array
 
 #this is similar to clustering the points to find GC points
 def get_index_GC_points(GC_array):
@@ -96,7 +116,7 @@ def makeFig(file_name, title, GC_type):
 
 
     experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
-    experiment_lines = [1024]
+    #experiment_lines = [1024]
     # Devia de fazer isto pelo results. mas meto isto bonito depois.
     for exp in experiment_lines:
         
@@ -166,11 +186,7 @@ def makeFig(file_name, title, GC_type):
         array_counter, array_timestamp = process_context_switches_datapoints(context_switches_timestamps, 1000) #delta_interval is in miliseconds
         #ctx_dictionary = Counter(context_switches_timestamps)
 
-
-
-     
-
-
+        #Latencies points
         first_timestamp = float('inf')
         timestamp_left = 0
         timestamp_rigth = float('inf')
@@ -178,16 +194,13 @@ def makeFig(file_name, title, GC_type):
 
         total_latency_sum = 0
         total_datapoints_count = 0
+        all_clean_latency_array = []
         
-        all_latency_array_GC= []
-
         for thread_id in range(exp):
             
             timestamp_array, latency_array = results.get_latency_datapoints(file_path, thread_id)
             
-            cut_initial_points = 1000
-            latency_array = latency_array[cut_initial_points:]
-            timestamp_array = timestamp_array[cut_initial_points:]
+
                         
             total_datapoints_count += len(latency_array)
             total_latency_sum += sum(latency_array)
@@ -201,13 +214,15 @@ def makeFig(file_name, title, GC_type):
 
             ### Plot clean data points
             if(GC_type == "G1"):
-                timestamp_array_clean, latency_array_clean, latency_array_GC = clean_GC_from_datapoints(Pause_Young_GC, Pause_duration, timestamp_array, latency_array)
-                all_latency_array_GC += latency_array_GC
-                cut_initial_points = 1000
-                latency_array_clean = latency_array_clean[cut_initial_points:]
-                timestamp_array_clean = timestamp_array_clean[cut_initial_points:]
-                ax[4].plot(timestamp_array_clean, latency_array_clean, alpha=0.2, zorder=-1)#, label= 'thread ' + str(thread_id) ) 
-            
+                timestamp_array_clean, latency_array_clean = clean_datapoints_from_GC(Pause_Young_GC, Pause_duration, timestamp_array, latency_array)                            
+                
+                ax[1].axvline(x=timestamp_array_clean[0], color='lime', linestyle='-', linewidth=1.5)
+                ax[1].axvline(x=timestamp_array_clean[-1], color='lime', linestyle='-', linewidth=1.5)
+
+                ax[3].scatter(timestamp_array_clean, latency_array_clean, alpha=0.2, zorder=-1)#, label= 'thread ' + str(thread_id) ) 
+
+                all_clean_latency_array += latency_array_clean
+
 
 
             first_timestamp = min(first_timestamp, timestamp_array[0])
@@ -219,13 +234,10 @@ def makeFig(file_name, title, GC_type):
         ax[1].axhline(y=mean_latency, color='red', linestyle='-', linewidth=1.5, label='Mean Latency: '+ str(mean_latency) )
         #ax[1].set_ylim(0, 2.5 * mean_latency)
         
-        x = np.sort(all_latency_array_GC) 
-        y = np.arange(len(all_latency_array_GC)) / float(len(all_latency_array_GC))        
-        
-        gc_index  = get_index_GC_points(all_latency_array_GC)
-        
-        ax[5].scatter(x, y, s=5, color ="red", label="Context switches")
-        ax[5].scatter(x[gc_index:], y[gc_index:], s=5, color ="green")
+        x = np.sort(all_clean_latency_array) 
+        y = np.arange(len(all_clean_latency_array)) / float(len(all_clean_latency_array))        
+                
+        ax[5].scatter(x, y, s=5, color ="red", label="CDF")
 
 
 
@@ -262,8 +274,8 @@ def makeFig(file_name, title, GC_type):
         index = next((i for i, ts in enumerate(array_timestamp) if ts > first_timestamp), len(array_timestamp))
         array_counter = array_counter[index:]
         array_timestamp = array_timestamp[index:]                
-        ax[3].scatter( array_timestamp, array_counter, s=5, color ="red", label="Context switches")
-        ax[3].set_ylabel("Number of occurrences\nin a 1s interval")
+        ax[4].scatter( array_timestamp, array_counter, s=5, color ="red", label="Context switches")
+        ax[4].set_ylabel("Number of occurrences\nin a 1s interval")
 
         
         ############# GC points

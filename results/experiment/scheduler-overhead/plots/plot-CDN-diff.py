@@ -82,6 +82,75 @@ def clean_GC_from_datapoints(Pause_Young_GC, Pause_duration, timestamp_array, la
  
     return timestamp_array, latency_array
 
+#I need a costum function, becasuse the ones from Python do an avarage when two middle values when even amount of elements are provided and I need existing value for indexing
+def median_index(lst):
+    
+    sortedLst = sorted(lst)
+    lstLen = len(lst)
+    index = (lstLen - 1) // 2
+    
+    return index
+
+#this is similar to clustering the points to find GC points
+def get_index_GC_points(GC_array):
+
+    GC_array = np.sort(GC_array) 
+    y = np.arange(len(GC_array)) / float(len(GC_array))        
+
+
+    largest_index = 0
+    largest_interval = 0
+
+    for current_index in  range(1,len(GC_array)):
+        
+        current_interval = GC_array[current_index] - GC_array[current_index-1]
+        
+        if(current_interval > largest_interval):
+            largest_interval = current_interval
+            largest_index = current_index        
+
+    return largest_index
+
+def get_index_GC_in_latencies(target_value, latency_array):
+
+    for indx, current_value in enumerate(latency_array):
+        if  current_value >= target_value:
+            return indx
+    return -1
+
+def clean_datapoints_from_GC(GC_timestamps, GC_pause_duration, timestamp_array, latency_array):
+
+    idx_GC = 0
+    latency_array_GC = []
+    cut_initial_points = 1000
+    cut_off_set = 400
+
+    #when theres no GC points, just cut the inicial points that usualy have some noise
+    if len(GC_timestamps) == 0:
+        latency_array = latency_array[cut_initial_points:]
+        timestamp_array = timestamp_array[cut_initial_points:]
+        return timestamp_array, latency_array
+
+    elif len(GC_timestamps) == 1:
+        latency_index = get_index_GC_in_latencies(GC_timestamps[0] + cut_off_set, timestamp_array) 
+        latency_array = latency_array[latency_index:]
+        timestamp_array = timestamp_array[latency_index:]        
+        return timestamp_array, latency_array
+
+    l_GC_median_idx = median_index(GC_timestamps) 
+    r_GC_median_idx = l_GC_median_idx + 1
+        
+    l_GC_timestamp = GC_timestamps[l_GC_median_idx] + cut_off_set
+    r_GC_timestamp = GC_timestamps[r_GC_median_idx] - cut_off_set
+
+    l_latency_index = get_index_GC_in_latencies(l_GC_timestamp, timestamp_array) 
+    r_latency_index = get_index_GC_in_latencies(r_GC_timestamp, timestamp_array) 
+
+    latency_array = latency_array[l_latency_index:r_latency_index]
+    timestamp_array = timestamp_array[l_latency_index:r_latency_index]
+
+    return timestamp_array, latency_array
+
 #this is similar to clustering the points to find GC points
 def get_index_GC_points(GC_array):
 
@@ -160,12 +229,16 @@ def makeFig(file_name, title, GC_type):
 
 
      
-
+        Pause_Young_GC, Pause_duration = results.get_GC_G1_datapoints(file_path)
         all_latencies_datapoints = []
+        all_latencies_datapoints_clean = []
 
         for thread_id in range(exp):
             
             timestamp_array, latency_array = results.get_latency_datapoints(file_path, thread_id)
+            _, latency_array_clean = clean_datapoints_from_GC(Pause_Young_GC, Pause_duration, timestamp_array, latency_array)                            
+            all_latencies_datapoints_clean = all_latencies_datapoints_clean + latency_array_clean
+
             latency_array = latency_array[cut_initial_points:] #remove iniical noise, it does not count for what we want
                         
             all_latencies_datapoints = all_latencies_datapoints + latency_array
@@ -178,11 +251,13 @@ def makeFig(file_name, title, GC_type):
 
         
 
-        gc_index= get_index_GC_points(all_latencies_datapoints)
-        #ax[4].plot(x[:gc_index], y[:gc_index] , color=dict_colors[exp], zorder=-1) 
-        #ax[4].plot(x[gc_index:], y[gc_index:], label= 'GC points ', color="lime",zorder=200) 
-        ax[4].scatter(x, y, color=dict_colors[exp], label= 'GC points ', marker='.', s=2) 
+        #gc_index= get_index_GC_points(all_latencies_datapoints)
 
+        x = np.sort(all_latencies_datapoints_clean) 
+        y = np.arange(len(all_latencies_datapoints_clean)) / float(len(all_latencies_datapoints_clean))
+        ax[4].scatter(x, y, color=dict_colors[exp], marker='.', s=2) 
+
+        ax[4].set_title("Datapoints clean from GC") 
 
 
    

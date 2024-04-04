@@ -6,11 +6,10 @@
 
 
 export WMULTIPLIER=131072  #8192
-export SSH_PASSWORD=4366
 export SERVER_IP=10.15.0.24 #vitamina04 10.15.0.24
 export CLIENT_IP=10.15.0.25  #vitamina05 10.15.0.25
 export CLIENT_USERNAME="claudiocorreia" #
-export CLIENT_DIR=" /home/claudiocorreia/remoteClient" #
+export CLIENT_DIR="/home/claudiocorreia/remoteClient" #
 
 #export WMULTIPLIER=2000
 
@@ -18,6 +17,16 @@ export CLIENT_DIR=" /home/claudiocorreia/remoteClient" #
 export verbose_benchmark=true
 
 export WMULTIPLIER=16384
+
+
+
+# Prompt the user for the SSH password
+if [ -z "$SSH_PASSWORD" ]; then
+    echo -n "SSH Password for $USERNAME@$CLIENT_IP: "
+    read -s SSH_PASSWORD
+    echo
+    export SSH_PASSWORD
+fi
 
 
 
