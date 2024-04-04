@@ -90,7 +90,7 @@ int connect_to_server(const char* host, int port) {
 
     if ((status = getaddrinfo(host, NULL, &hints, &res)) != 0) {
         fprintf(stderr, "Error getting host info: %s\n", gai_strerror(status));
-       return NULL; 
+       return -1; 
     }
 
     // The res structure contains a list of addresses; you can simply use the first one
@@ -101,14 +101,14 @@ int connect_to_server(const char* host, int port) {
     int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if (sockfd < 0) {
         perror("Error creating socket");
-        return NULL;
+        return -1;
     }
     
     // Connect to the server
     if (connect(sockfd, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
         perror("Error connecting to server");
         close(sockfd);
-        return NULL;
+        return -1;
     }
 
     return sockfd;
@@ -125,11 +125,11 @@ void *run_request(void *arg) {
     ref.tm_year = 120; // Year since 1900
     ref.tm_mday = 1;   // Day of the month
     time_t ref_time_t = mktime(&ref);
-    double ms_ref = ref_time_t * 1000.0;
+    long nano_ref = ref_time_t * 1000000000; // this is in nanoseconds
 
     // Dynamic allocation based on workload
-    double *elapsed_time = (double *)malloc(workload * sizeof(double));
-    double *start_timestamp = (double *)malloc(workload * sizeof(double));
+    long *elapsed_time = (long *)malloc(workload * sizeof(long));
+    long *start_timestamp = (long *)malloc(workload * sizeof(long));
     
     // Check if allocation was successful
     if (!elapsed_time || !start_timestamp) {
@@ -172,9 +172,17 @@ void *run_request(void *arg) {
             }
 
             int digit_length = character_counter(content_length);        
-            if(total_bytes_recv >= content_length + HTTP_HEADER + digit_length){ //I should duble check if it is =>
+            if(total_bytes_recv == content_length + HTTP_HEADER + digit_length){
                 break;
             }
+
+            if(total_bytes_recv > content_length + HTTP_HEADER + digit_length){ //This should not happen, if it does, it mean somethin in this math is wrong
+                fprintf(stderr, "The client received more bytes than it should have; something is wrong with the request processing.\n" );
+                response[total_bytes_recv] = '\0';
+                printf("Server response (received %ld bytes and expected %d bytes, Thread %d):\n%s\n", total_bytes_recv, ( content_length + HTTP_HEADER + character_counter(content_length)), thread_id, response);                     
+                break;
+            }
+
         }
 
         if(DEBUG_MODE){
@@ -189,18 +197,16 @@ void *run_request(void *arg) {
         } else if (bytes_recv == 0) {
             fprintf(stderr, "Connection closed by server, workload: %d, threadID: %d\n", i, thread_id );
             close(sockfd);
-            sockfd = connect_to_server(host, port); // Reconnect
-            magic_socket(sockfd);
-            i--; // Retry the same request
+            pthread_exit(NULL);
         }
         
         // Measure end time
         clock_gettime(CLOCK_REALTIME, &end);
 
-        // Calculate elapsed time in milliseconds
-        elapsed_time[i] = (end.tv_sec - start.tv_sec) * 1000.0 + (end.tv_nsec - start.tv_nsec) / 1000000.0; 
-        double ms_start= start.tv_sec * 1000.0 + start.tv_nsec / 1000000.0;
-        start_timestamp[i] = ms_start - ms_ref;
+        // Calculate elapsed time in nanoseconds
+        elapsed_time[i] = (end.tv_sec - start.tv_sec) * 1000000000 + (end.tv_nsec - start.tv_nsec); 
+        long nano_start = start.tv_sec * 1000000000 + start.tv_nsec;
+        start_timestamp[i] = nano_start - nano_ref;
 
     }
 
@@ -218,7 +224,7 @@ void *run_request(void *arg) {
 
     fprintf(latency_file, "Timestamp before sending request (ms), elapsed time from sending to receiving the response (ms)\n");
     for (int i = 0; i < workload; i++) {
-        fprintf(latency_file, "%f,%f\n",start_timestamp[i],  elapsed_time[i]);
+        fprintf(latency_file, "%f,%f\n", (start_timestamp[i] / 1000000.0),  (elapsed_time[i] / 1000000.0) );
     }
 
     free(elapsed_time);
@@ -257,7 +263,7 @@ int main(int argc, char *argv[]) {
     }
     global_payload_size = fread(global_payload, 1, BUFFER_SIZE, file);
     fclose(file);
-    snprintf(request, BUFFER_SIZE, request_template, host, global_payload_size-1, global_payload);
+    snprintf(request, BUFFER_SIZE, request_template, host, global_payload_size, global_payload);
 
     printf(" Running with workload: %d\n", threads_number);
     pthread_t threads[threads_number];
@@ -294,21 +300,8 @@ int main(int argc, char *argv[]) {
     // Calculate elapsed time in milliseconds
     double experiment_duration = (global_end.tv_sec - global_start.tv_sec) * 1000.0 + (global_end.tv_nsec - global_start.tv_nsec) / 1000000.0;
     
-    printf(" Finished in : %f ms\n", experiment_duration);
-    // Write latencies to a file
-    char log_filename[PATH_MAX]; 
-    sprintf(log_filename, "%s/CClient.log", results_directory);
-    
-    FILE *log_file = fopen(log_filename, "w");
-    if (log_file == NULL) {
-        perror("Error opening CClient.log");
-        pthread_exit(NULL);
-    }
+    printf("Experiment finished in %f ms, with %d threads, and each thread made %d requests/worload \n", experiment_duration, threads_number, workload);
 
-    fprintf(log_file, "%f\n", experiment_duration);
-    fprintf(log_file, "%d\n", threads_number*workload);
-
-    fclose(log_file);
     free(params_array);
  
     return 0;
