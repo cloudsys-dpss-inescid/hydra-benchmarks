@@ -311,7 +311,7 @@ function start_svm {
 
     if [ "$verbose_benchmark" = true ] ; then
         echo 'Verbose Benchmark ON, for GC and perf!'
-        setarch -R  ./app -XX:+PrintGC & #-XX:+PrintGCTimeStamps &
+        setarch -R  ./app -Xms31g -Xmx31g -XX:+PrintGC & #-XX:+PrintGCTimeStamps &
         #setarch -R ./app -XX:+PrintGC -Xlog:gc*  &
         APP_PID=$!
         #sudo perf record -e cache-misses,context-switches,branch-misses,page-faults -p $APP_PID &

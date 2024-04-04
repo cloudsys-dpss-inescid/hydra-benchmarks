@@ -52,6 +52,19 @@ function remote_Cclient_benchmark {
 
 }
 
+#example:  benchmark-graalvisor.sh svm gv_java_hw launch_and_wait 1
+function launch_and_wait {
+    sleep 4 #this starts to fast, the GraalVM is still not running
+
+    echo "Graalvisor was launched, press enter to terminate ..."
+    read
+
+    echo "Terminating Graalvisor..."
+
+}
+
+
+
 function socket_benchmark {
     sleep 4 #this starts to fast, the GraalVM is still not running
 
