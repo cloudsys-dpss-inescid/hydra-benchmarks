@@ -19,6 +19,7 @@ JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_hw"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_filehashing"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_classify"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_httprequest"
+JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_dbreader"
 JV_GV_BENCHMARKS="$JV_GV_BENCHMARKS gv_java_videoprocessing"
 
 JV_CR_BENCHMARKS=""
@@ -84,6 +85,7 @@ wmultiplier_table[gv_java_filehashing]=2000
 wmultiplier_table[cr_java_filehashing]=4000
 wmultiplier_table[gv_java_classify]=10
 wmultiplier_table[cr_java_classify]=10
+wmultiplier_table[gv_java_dbreader]=1000
 wmultiplier_table[gv_java_httprequest]=1000
 wmultiplier_table[cr_java_httprequest]=8000
 wmultiplier_table[gv_java_videoprocessing]=2
@@ -126,6 +128,7 @@ concurrency_table[gv_java_hw]=8
 concurrency_table[gv_java_filehashing]=8
 concurrency_table[gv_java_classify]=1
 concurrency_table[gv_java_httprequest]=8
+concurrency_table[gv_java_dbreader]=8
 concurrency_table[gv_java_videoprocessing]=1
 
 concurrency_table[gv_python_hw]=8
@@ -159,6 +162,8 @@ mem_table[gv_java_classify]=2048
 mem_table[cr_java_classify]=2048
 cpu_table[gv_java_classify]=100000
 cpu_table[cr_java_classify]=100000
+mem_table[gv_java_dbreader]=256
+cpu_table[gv_java_dbreader]=12500
 mem_table[gv_java_httprequest]=256
 mem_table[cr_java_httprequest]=256
 cpu_table[gv_java_httprequest]=12500
@@ -465,6 +470,19 @@ function gv_java_httprequest {
     APP_MAIN=com.httprequest.HttpRequest
     APP=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libhttprequest.so
     echo '{"name":"gv-httprequest","async":"false","arguments":"{\"url\":\"http://'$DATA_IP':'$DATA_PORT'/snap.png\"}"}' > $APP_POST
+    gv_upload_function
+}
+
+function gv_java_dbreader {
+    APP_LANG=java
+    APP_NAME=gv-dbreader
+    APP_MAIN=com.dbreader.DBReader
+    APP=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libdbreader.so
+    MEMCACHED_PORT=11211
+    MEMCACHED_KEY=foo
+
+    #echo '{"name":"gv-dbreader","async":"false","arguments":"{\"url\":\"http://'$DATA_IP':'$DATA_PORT'/snap.png\"}"}' > $APP_POST
+    echo '{"name":"gv-dbreader","async":"false","arguments":"{\"key\":\"'$MEMCACHED_KEY'\",\"serverIP\":\"'$DATA_IP'\",\"serverPort\":\"'$MEMCACHED_PORT'\"}"}' > $APP_POST
     gv_upload_function
 }
 
