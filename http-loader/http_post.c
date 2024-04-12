@@ -238,7 +238,7 @@ void *run_request(void *arg) {
 }
 
 // To make this work I had to change a line in SubstrateVMProxy.java (In Argo repository), otherwise I will receive the error "queue full", I have changed the line : this.queue = new ArrayBlockingQueue<>(2048);
-// Usage example:  make clean && make && ./http_post 146.193.41.25 8080 payload.post 256 8192  /home/ccorreia/graal_test/tmp/
+// Usage example:  make clean && make && ./http_post 10.15.0.24 8081 payload.post 2 100  /home/claudiocorreia/remoteClient/http-loader/results/
 int main(int argc, char *argv[]) {
 
     if (argc != 7) {

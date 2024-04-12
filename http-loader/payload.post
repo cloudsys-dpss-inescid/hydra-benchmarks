@@ -1,1 +1,1 @@
-{"name":"gv-httprequest","async":"false","arguments":"{\"url\":\"http://10.15.0.24:8000/snap.png\"}"}
+{"name":"gv-dbreader","async":"false","arguments":"{\"key\":\"foo\",\"serverIP\":\"10.15.0.24\",\"serverPort\":\"11211\"}"}

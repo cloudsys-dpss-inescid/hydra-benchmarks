@@ -180,7 +180,7 @@ def makeFig(file_name, title, GC_type):
     fig, ax = plt.subplots(5, figsize=(10, 20))
 
     experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
-    #experiment_lines = [1,2,4,8,16,32]
+    experiment_lines = [2,64]
     cut_initial_points = 1000
     # Devia de fazer isto pelo results. mas meto isto bonito depois.
     for exp in experiment_lines:
@@ -229,7 +229,7 @@ def makeFig(file_name, title, GC_type):
 
 
      
-        Pause_Young_GC, Pause_duration = results.get_GC_G1_datapoints(file_path)
+        Pause_Young_GC, Pause_duration, Isolate_GCs, number_of_reading_erros = results.get_GC_G1_datapoints(file_path)
         all_latencies_datapoints = []
         all_latencies_datapoints_clean = []
 
@@ -297,10 +297,9 @@ def makeFig(file_name, title, GC_type):
 
 
     
-                                                                                    #Y latency min , max, SLA
-makeFig( "httprequest", "HTTP request app", "G1")
-#makeFig( isolate_http_benchmark_path, "file-hashing", "File hashing app",  1, 4000, 100)
-#makeFig( isolate_http_benchmark_path, "sleep", "Sleep app",  1, 4000, 100)
+
+#makeFig( "httprequest", "HTTP request app", "G1")
+makeFig( "dbreader", "Memcached request app", "G1")
 
 
 

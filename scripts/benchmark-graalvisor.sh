@@ -56,7 +56,7 @@ function remote_Cclient_benchmark {
 function launch_and_wait {
     sleep 4 #this starts to fast, the GraalVM is still not running
 
-    echo "Graalvisor was launched, press enter to terminate ..."
+    echo "\n Graalvisor was launched, press enter to terminate ..."
     read
 
     echo "Terminating Graalvisor..."
@@ -205,10 +205,9 @@ do
     fi
     mkdir -p $results_dir &> /dev/null
     
-    if [ -f "$TDIR/perf.data" ]; then        
-        sudo chmod 666 $TDIR/*.data
-    fi
-
     cp $TDIR/{*.log,*.rss,*.cpu,*.tsv,*.data} $results_dir &> /dev/null
+    chmod -R 777 $results_prefix/$APP_LANG
+    
     echo "Saved logs (iteration $iter): $results_dir/lambda.log"
+
 done

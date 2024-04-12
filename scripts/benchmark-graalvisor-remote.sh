@@ -104,7 +104,7 @@ fi
 
 
 # Use sshpass and SSH to clear the remote directory
-sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$CLIENT_IP" "rm -rf $REMOTE_DIRECTORY/*" >> $TDIR/remote_client.log  2>&1
+sshpass -p "$SSH_PASSWORD" ssh -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$CLIENT_IP" "rm -r $REMOTE_DIRECTORY/*" >> $TDIR/remote_client.log  2>&1
 
 # Use sshpass and scp with -r option to recursively copy the directory to the remote directory
 sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r "$LOCAL_CLIENT_CODE_DIR" "$USERNAME@$CLIENT_IP:$REMOTE_DIRECTORY" >> $TDIR/remote_client.log  2>&1

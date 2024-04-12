@@ -47,7 +47,7 @@ def read_std_latency(path):
 
 
 
-def read_cpu_usage(path):
+def read_cpu_usage(path, experience_start_time = 0):
     lstd = []
     try:
         with open(path + '/lambda.cpu') as file:
@@ -57,7 +57,7 @@ def read_cpu_usage(path):
                 sys_value= float(  (line.split(",")[2]).split()[0]    )
                 idle_value= float(  (line.split(",")[4]).split()[0]    )
 
-                lstd.append( [ timestamp, us_value, sys_value, idle_value ] )
+                lstd.append( [ timestamp - experience_start_time, us_value, sys_value, idle_value ] )
     except Exception as e:
         print("Error processing " + path + ":")
         raise e
@@ -146,34 +146,78 @@ def arrays_split(input_array):
     
     return first_array, second_array
 
+def process_log_first_line(line):    
+    right_side = line.split("[")
 
-def get_GC_G1_datapoints(file_path):
+    since_reference = right_side[1].split("]")[0]
+    from_boot_to_reference = right_side[2].split("]")[0]
+
+    return float(since_reference), float(from_boot_to_reference)
+
+
+def get_GC_G1_datapoints(file_path, experience_start_time = 0):
 
     lambda_file = file_path + "/lambda.log"
     
     Pause_Young = []
     Pause_duration = []
-
+    Isolate_GCs = []    
+    Incremental_GC = []
+    Full_GC = []    
+    number_of_reading_erros = 0
 
     try:
         with open(lambda_file ) as file:
-            first_timestamp = float(file.readline()) #to skip first line
+            since_reference, from_boot_to_reference = process_log_first_line(file.readline()) #to skip first line
             for line in file:
 
                 if "Pause Young" in line:
                     timestamp_string =  (line.split("]")[0]).split("[")[1]
                     value_miliseconds = float(timestamp_string[:-1]) * 1000
-                    Pause_Young.append( first_timestamp + value_miliseconds)
+                    Pause_Young.append( since_reference + value_miliseconds - experience_start_time)
 
                     gc_duration_string = float( (line.split()[-1]).split("ms")[0] )
                     Pause_duration.append(gc_duration_string)
+                
+                elif "GC: before" in line and "[[" in line:
+                    try:
+                        timestamp_nanoseconds =  float( ( line.split("[[")[1] ).split(" GC: before")[0] )
+                        timestamp_miliseconds = timestamp_nanoseconds/1000000
+                        timestamp_ajusted = since_reference + timestamp_miliseconds - from_boot_to_reference
+                        Isolate_GCs.append(timestamp_ajusted - experience_start_time)
+                    except Exception as e:
+                        #print("Error line: " + line)
+                        number_of_reading_erros += 1
+                
+                #This is for the normal GC events 
+                elif "Incremental GC" in line:
+                    timestamp_string =  float( (line.split()[0]).split("[")[1] )
+                    Incremental_GC.append( since_reference + timestamp_string - experience_start_time )
+                
+                elif "Full GC" in line:
+                    timestamp_string =  float( (line.split()[0]).split("[")[1] )
+                    Full_GC.append( since_reference + timestamp_string - experience_start_time )
+                    
 
+    except Exception as e:
+        print("Error processing " + lambda_file + " and line: " + line)
+        raise e
+    
+    return Pause_Young, Pause_duration, Isolate_GCs, number_of_reading_erros, Incremental_GC, Full_GC
+
+def get_starting_time(file_path):
+    
+    lambda_file = file_path + "/lambda.log"
+
+    try:
+        with open(lambda_file ) as file:
+            since_reference, from_boot_to_reference = process_log_first_line(file.readline()) #to skip first line
+        
     except Exception as e:
         print("Error processing " + lambda_file + ":")
         raise e
     
-    return Pause_Young, Pause_duration
-
+    return since_reference, from_boot_to_reference
 
 
 def get_GC_datapoints(file_path):
@@ -201,16 +245,26 @@ def get_GC_datapoints(file_path):
 
 
 
-def get_latency_datapoints(file_path, thread_id):
+def get_latency_datapoints(file_path, thread_id, experience_start_time = 0):
 
     thread_file = file_path + "/latency_thread" + str(thread_id) + ".log"
-    data_points = read_CClient_latency_lines(thread_file)
-    timestamp_array, latency_array = arrays_split(data_points)
+    #data_points = read_CClient_latency_lines(thread_file)
+    timestamp_array = []
+    latency_array = []
+
+    try:
+        with open(thread_file) as file:
+            first_line = file.readline() #to skip first line
+            for line in file:
+                timestamp_array.append( float(line.split(",")[0]) - experience_start_time)
+                latency_array.append( float(line.split(",")[1]) )
+    except Exception as e:
+        print("Error processing " + thread_file + ":")
+        raise e
     
     return timestamp_array, latency_array
 
 def get_thread_throughput(timestamp_left, timestamp_rigth, timestamp_array):
-
     total_below = ( np.array(timestamp_array) < timestamp_left).sum()
     total_larger = ( np.array(timestamp_array) > timestamp_rigth).sum()
 
@@ -233,7 +287,7 @@ def process_perf_record_data(file_path):
     command = "perf script -F time,event > context_switches.txt"
     subprocess.run(command, shell=True, check=True, cwd=file_path)
 
-def get_context_switches_datapoints(file_path):
+def get_context_switches_datapoints(file_path, experience_start_time = 0):
 
     context_switches_file = file_path + "/context_switches.txt"
     lambda_file = file_path + "/lambda.log"
@@ -243,8 +297,8 @@ def get_context_switches_datapoints(file_path):
     try:
 
         with open(lambda_file ) as file:
-            benchmark_init = float(file.readline()) #get timestamp when benchmark started. This is a relative time from 2020 that I use in all values, is deifined in shared.sh
-            
+            benchmark_init, _ = process_log_first_line(file.readline()) #get timestamp when benchmark started. This is a relative time from 2020 that I use in all values, is deifined in shared.sh
+
         
         first_timestamp = -1
         with open(context_switches_file ) as file:
@@ -262,7 +316,7 @@ def get_context_switches_datapoints(file_path):
 
                 timestamp_relative = timestamp_value - first_timestamp + benchmark_init 
                 
-                context_switches_timestamps.append( timestamp_relative )
+                context_switches_timestamps.append( timestamp_relative - experience_start_time)
 
     except Exception as e:
         print("Error processing " + lambda_file + ":")

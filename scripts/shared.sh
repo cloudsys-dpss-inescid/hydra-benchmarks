@@ -73,6 +73,10 @@ function log_resources {
 
     rm $OFILE_CPU &> /dev/null
     rm $OFILE_RSS &> /dev/null
+    
+    ## magic claudio to get the timestamp when the app started
+    ms_ref=$(date -u -d "2020-01-01 00:00:00" +%s%3N)    
+
         while sudo kill -0 $PID &> /dev/null; do
 
                 #### Log CPU resource
@@ -98,7 +102,7 @@ function log_resources {
                     s_mem=$((s_mem + p_mem))
                 done
                 echo $s_mem >> $OFILE_RSS
-                sleep .500
+                sleep .200
         done
 }
 
@@ -287,6 +291,7 @@ function start_ow_container {
     docker run --rm --name=bcontainer --network host $IMG
 }
 
+#This only works if the script is call with sudo -E, beacause of the perf
 function start_svm {
     cp $GRAALVISOR_HOME/build/native-image/polyglot-proxy $TDIR/app
     cd $TDIR
@@ -302,8 +307,11 @@ function start_svm {
     ms_now=$(date +%s%3N)
     # Calculate the difference in milliseconds from the reference time
     ms_since_ref=$((ms_now - ms_ref))   
+    ms_since_boot=$(cat /proc/uptime | awk '{print $1 * 1000}')
 
-    echo $ms_since_ref
+
+    echo "Starting time (ms): since reference ["$ms_since_ref"], and from boot to reference ["$ms_since_boot"]"
+
     #./app -XX:+PrintGC -XX:+PrintGCTimeStamps &
     #sudo perf stat -e cache-misses,context-switches,branch-misses,page-faults ./app -XX:+PrintGC -XX:+PrintGCTimeStamps &
     #echo -n "$!" > "$TDIR/lambda.pid"
@@ -311,13 +319,23 @@ function start_svm {
 
     if [ "$verbose_benchmark" = true ] ; then
         echo 'Verbose Benchmark ON, for GC and perf!'
-        setarch -R  ./app -Xms31g -Xmx31g -XX:+PrintGC & #-XX:+PrintGCTimeStamps &
         #setarch -R ./app -XX:+PrintGC -Xlog:gc*  &
-        APP_PID=$!
         #sudo perf record -e cache-misses,context-switches,branch-misses,page-faults -p $APP_PID &
         
+        # This works for the normal GC
+        #./app -XX:+PrintGC -XX:+PrintGCTimeStamps  &
+
+        ./app -Xms31g -Xmx31g -XX:+PrintGC  &
+
+
+        # this works for G1
+        #./app -Xms31g -Xmx31g -XX:+PrintGC & 
+
+        APP_PID=$!
+
+
         #### with  "perf record" youe need both  line is enough  
-        sudo perf record -e context-switches -p $APP_PID &
+        perf record -e context-switches -p $APP_PID &
         echo -n "$!" > "$TDIR/perf.pid"
 
         #### with  "perf sched" this line is enough  
@@ -401,6 +419,7 @@ function stop_container {
 }
 
 function stop_svm {
+
     kill $(cat $TDIR/lambda.pid)
 
     #when I run only with perf sched or witwhout verbose_benchmark, the file does not exists and there is no need to kill the perf    
