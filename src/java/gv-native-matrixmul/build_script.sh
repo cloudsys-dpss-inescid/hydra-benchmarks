@@ -8,9 +8,9 @@ JNI_INCLUDE="-I$DEF_JAVA_HOME/include -I$DEF_JAVA_HOME/include/linux"
 ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
-SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src -DSNI_DBG"
+SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src"
 
-BENCHMARK_NAME="nativehw15"
+BENCHMARK_NAME="nativehw14"
 SNIPPETS_DIR="$DIR/build/snippets"
 
 function run_hotspot {
@@ -22,7 +22,7 @@ function run_hotspot {
 	$JAVA_HOME/bin/java \
 		-Djava.awt.headless=true \
 		-agentlib:native-image-agent=config-output-dir=config-dir/ \
-		-cp $CLASS_PATH:libs/native-hw-15-1.0-all.jar \
+		-cp $CLASS_PATH:libs/native-hw-14-1.0-all.jar \
                 -Djava.library.path=$LD_LIBRARY_PATH \
                 com.jni.HelloJNI
 }
@@ -34,7 +34,7 @@ function build_ni {
         export LD_LIBRARY_PATH=libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
 		--no-fallback \
-		-cp $CLASS_PATH:libs/native-hw-15-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+		-cp $CLASS_PATH:libs/native-hw-14-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
 		-DGraalVisorGuest=true \
                 -Djava.library.path=$LD_LIBRARY_PATH \
 		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
@@ -55,10 +55,38 @@ function build_ni_sharedlibrary {
 	build_ni
 }
 
+function build_java_agent {
+        bash $JAVASSIST_HOME/build.sh
+}
+
 function build_native_library {
-        gcc $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
+        musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
         mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
 }
+
+function build_snippets {
+        for file in "$SNIPPETS_DIR"/*.c; do
+                name=$(basename "$file" .c)
+                gcc $SFLAGS -o build/libs/lib$name.so $file -L$ARGO_HOME/graalvisor/build/libs -lpreload
+        done
+}
+
+function manipulate_bytecode {
+        CLASS_PATH="build/classes/java/main"
+        ENTRYPOINT="com.jni.HelloJNI"
+        TOOL="NativeRedirection"
+        
+        mkdir -p $DIR/build/snippets
+        
+        export BENCHMARK_NAME="$BENCHMARK_NAME"
+        export SNIPPETS_DIR="$SNIPPETS_DIR"
+        export ENV="memisolation"
+        $DEF_JAVA_HOME/bin/java \
+                -cp $CLASS_PATH \
+                -javaagent:$JAVA_AGENT=$TOOL::$CLASS_PATH \
+                $ENTRYPOINT
+}
+
 
 if [ -z "$ARGO_HOME" ]
 then
@@ -81,6 +109,9 @@ fi
 # Build graalvisor lib.
 bash $ARGO_HOME/graalvisor-lib/build.sh
 
+# Build java agent.
+build_java_agent
+
 # Move into the script directory.
 cd $DIR &> /dev/null
 
@@ -89,6 +120,12 @@ cd $DIR &> /dev/null
 
 # Build native lib.
 build_native_library
+
+# Manipulate app's bytecode.
+manipulate_bytecode
+
+# Build generated snippets.
+build_snippets
 
 TARGET=$1
 if [ ! -z "$TARGET" ]

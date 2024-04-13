@@ -16,7 +16,6 @@ SFLAGS_PROC="$CFLAGS_PROC -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/m
 
 BENCHMARK_NAME="nativehw1"
 SNIPPETS_DIR="$DIR/build/snippets"
-SOURCE_CODE="$DIR/src/main/c/HelloJNI.c"
 
 function run_hotspot {
 	rm -rf config-dir
@@ -65,7 +64,7 @@ function build_java_agent {
 }
 
 function build_native_library {
-	musl-gcc -static $CFLAGS -o $GRAALVISOR_HOME/build/libs/lib$BENCHMARK_NAME-jni.so $SOURCE_CODE
+	musl-gcc -static $CFLAGS -o $GRAALVISOR_HOME/build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
 }
 
 function build_native_exec {

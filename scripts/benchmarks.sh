@@ -65,6 +65,15 @@ PH_BENCHMARKS="$PH_BENCHMARKS gv_java_httprequest"        # 256 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_videoprocessing"    # 1024 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_classify"           # 1024 MB
 
+function gv_java_native_test {
+    APP_LANG=java
+    APP_NAME=gv-native-hw-test
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativetest.so
+    APP_MAIN=com.jni.MessageJNI
+    curl -s -X POST $ip:8080/register?name=nativetest\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativetest","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
+
 function gv_java_native_msg {
     APP_LANG=java
     APP_NAME=gv-native-msg
@@ -72,15 +81,6 @@ function gv_java_native_msg {
     APP_MAIN=com.jni.MessageJNI
     curl -s -X POST $ip:8080/register?name=nativemsg\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
     echo '{"name":"nativemsg","async":"false","cached":"true","arguments":""}' > $APP_POST
-}
-
-function gv_java_native_test {
-    APP_LANG=java
-    APP_NAME=gv-native-test
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativetest.so
-    APP_MAIN=com.jni.HelloJNI
-    curl -s -X POST $ip:8080/register?name=nativetest\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativetest","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
 function gv_java_native_hw_1 {

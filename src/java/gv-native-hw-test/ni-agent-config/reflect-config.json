@@ -1,6 +1,6 @@
 [
 {
-  "name":"com.jni.HelloJNI",
+  "name":"com.jni.MessageJNI",
   "methods":[{"name":"main","parameterTypes":["java.util.Map"] }]
 }
 ]

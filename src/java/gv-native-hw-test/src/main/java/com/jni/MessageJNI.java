@@ -5,16 +5,16 @@ import java.util.HashMap;
 import java.util.Map;
 
 
-public class HelloJNI {
+public class MessageJNI {
     static {
-        System.loadLibrary("nativehw15-jni");
+        System.loadLibrary("nativetest-jni");
     }
 
-    public static native void printHello15();
+    public static native void printMessageCallGate(String message);
 
     public static HashMap<String, Object> main(Map<String, Object> input) {
         HashMap<String, Object> output = new HashMap<>();
-        printHello15();
+        printMessageCallGate("Hello from Java!");
         return output;
     }
 

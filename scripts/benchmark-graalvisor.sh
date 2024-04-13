@@ -131,7 +131,7 @@ echo "Running environment=$backend; sandbox=$SANDBOX; app=$app; mode=$mode; work
 echo "Logs available at $tmpdir..."
 
 # Writing post file to disk
-APP_POST=$tmpdir/payload.post
+APP_POST=$tmpdir/payload-rodrigo.post
 
 # Preparing working directory
 rm -r $tmpdir/ &> /dev/null
