@@ -1,0 +1,36 @@
+ERROR: ld.so: object '/home/skondlap/git/argo/graalvisor/build/libs/libtest.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
+Graalvisor boot time: 7 ms.
+Graalvisor listening on port 8081.
+INIT erim with shmemSize 8192 flags a
+pkru: 0
+Domain 1: 0x57ffffffc000
+Domain 2: 0x2bffffffc000
+Domain 3: 0x15ffffffc000
+Domain 4: 0xaffffffc000
+Domain 5: 0x57fffffc000
+Domain 6: 0x2bfffffc000
+Domain 7: 0x15fffffc000
+Domain 8: 0xafffffc000
+Domain 9: 0x57ffffc000
+Domain 10: 0x2bffffc000
+Domain 11: 0x15ffffc000
+Domain 12: 0xaffffc000
+Domain 13: 0x57fffc000
+Domain 14: 0x2bfffc000
+Domain 15: 0x15fffc000
+allocate shmem pool at 0x200000000000 size 8192
+Allocated shared memory at 0x200000000000 of size 8192
+Warning: graalvisor compiled with no truffle language support.
+Exception in thread "main" java.net.BindException: Address already in use
+	at java.base@17.0.7/sun.nio.ch.Net.bind0(Native Method)
+	at java.base@17.0.7/sun.nio.ch.Net.bind(Net.java:555)
+	at java.base@17.0.7/sun.nio.ch.ServerSocketChannelImpl.netBind(ServerSocketChannelImpl.java:337)
+	at java.base@17.0.7/sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:294)
+	at java.base@17.0.7/sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:89)
+	at jdk.httpserver@17.0.7/sun.net.httpserver.ServerImpl.<init>(ServerImpl.java:142)
+	at jdk.httpserver@17.0.7/sun.net.httpserver.HttpServerImpl.<init>(HttpServerImpl.java:50)
+	at jdk.httpserver@17.0.7/sun.net.httpserver.DefaultHttpServerProvider.createHttpServer(DefaultHttpServerProvider.java:35)
+	at jdk.httpserver@17.0.7/com.sun.net.httpserver.HttpServer.create(HttpServer.java:150)
+	at org.graalvm.argo.graalvisor.RuntimeProxy.<init>(RuntimeProxy.java:82)
+	at org.graalvm.argo.graalvisor.SubstrateVMProxy.<init>(SubstrateVMProxy.java:151)
+	at org.graalvm.argo.graalvisor.Main.main(Main.java:66)
