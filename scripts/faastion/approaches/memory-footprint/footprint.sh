@@ -16,6 +16,25 @@ function log_rss {
         done
 }
 
+function log_resources {
+    PID=$1
+    OFILE_RSS=$2/lambda-$3.rss
+
+    rm $OFILE_RSS &> /dev/null
+        while kill -0 $PID &> /dev/null; do
+                # The idea for memory is that we traverse the entire pid subprocess tree
+                # and memory memory utilization. We sum all individual memory and return.
+                s_mem=0
+                for p in $(pstree -p $PID | grep -o '([0-9]\+)' | grep -o '[0-9]\+')
+                do
+                    p_mem=$(ps -q $p -o rss=)
+                    s_mem=$((s_mem + p_mem))
+                done
+                echo $s_mem >> $OFILE_RSS
+                sleep .100
+        done
+}
+
 # Function to run the workload
 function run {
     run=$1
@@ -24,13 +43,16 @@ function run {
     start_svm &> logs/$approach/lambda-$run.log &
     PID=$(echo -n "$!")
 
-    # Log memory.
-    log_rss $PID results/$approach/lambda-$run.rss &
+    # Log Resources (memory and CPU)
+    log_resources $PID results/$approach $run &
 
-    # Register Java native application in Graalvisor
-    gv_java_native_hw_n 1 > /dev/null
-
-    wrk -t1 -c1 -d1s -s native.lua http://127.0.0.1:8081
+    # Register Java native applications in Graalvisor
+    for i in $(seq 14)
+    do
+        gv_java_native_hw_n $i > /dev/null
+    done
+    
+    wrk -t14 -c14 -d1s -s native.lua http://127.0.0.1:8081
 
     # Kill Graalvisor
     pid=$(pgrep -f "$ARGO_HOME/graalvisor/build/native-image/polyglot-proxy")
