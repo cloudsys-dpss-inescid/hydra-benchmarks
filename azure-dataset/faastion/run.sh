@@ -4,52 +4,63 @@ function DIR {
     echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 }
 
+function build_azure {
+    cd $AZURE_DATASET_HOME
+    ./build.sh
+    ./download_dataset.sh
+    cd -
+}
+
 function generate_dataset {
-    $AZURE_DATASET_HOME/trace-generator.sh -m 100 -d d01 -t $TRACES_HOME/result.csv
+    # Uncomment if azure-dataset is not built
+    # build_azure
+    $AZURE_DATASET_HOME/trace-generator.sh -m 100 -d d01 -t $TRACES_HOME/gen-trace.csv
 }
 
 function extract_functions {
-    python3 benchmark_assignment.py -f $NUM_FUNCTIONS -o $TRACES_HOME/trace.csv
+    python3 benchmark_assignment.py -f $NUM_FUNCTIONS -i $TRACES_HOME/gen-trace.csv -o $TRACES_HOME/trace.csv
 }
 
 function start_svm {
     export lambda_timestamp="$(date +%s%N | cut -b1-13)"
     export lambda_port="8081"
+    
     export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:$LD_LIBRARY_PATH
-    export LD_PRELOAD=$GRAALVISOR_HOME/build/libs/libtest.so
-
+    export LD_PRELOAD=$GRAALVISOR_HOME/build/libs/libpreload.so
     # Start Graalvisor
     $GRAALVISOR_HOME/build/native-image/polyglot-proxy &
     wait
+    unset LD_PRELOAD
 }
 
 function compile_java_classes {
-    javac -cp $CLASSPATH/lib/commons-cli-1.6.0/commons-cli-1.6.0.jar $CLASSPATH/*.java
+    ./gradlew clean shadowJar
 }
 
 function compile_benchmarks {
-    dir_prefix="gv-native-hw-"
+    prefix="gv-native-hw-"
 
     # Iterate over directories
-    for dir in "${BENCHMARKS}/${dir_prefix}"*; do
+    for dir in "${BENCHMARKS}/${prefix}"*; do
         if [ -d "$dir" ]; then            
-            cd "$dir" || exit
-            
+            cd "$dir"
             ./build_script.sh
-
-            cd - || exit
+            cd -
         fi
     done
 }
 
 function execute {
     start_svm &> logs/lambda.log &
-
-    java -cp $CLASSPATH ExecutorEntryPoint \
+    JAR=$(DIR)/build/libs/trace-executor-1.0-all.jar
+    MAIN=ExecutorEntryPoint
+    
+    java -cp $JAR $MAIN \
         -i      $TRACES_HOME/trace.csv  \
         -fc     $JAVA_BENCHMARKS/gv-native-hw-1/build/libnativehw1.so   \
         -fep    com.jni.HelloJNI \
-        -nf     $NUM_FUNCTIONS
+        -nf     $NUM_FUNCTIONS \
+        -d
 }
 
 # Preparing global paths.
@@ -74,7 +85,8 @@ NUM_FUNCTIONS=1
 mkdir -p $TRACES_HOME
 mkdir -p $LOGS_HOME
 
-generate_dataset
-extract_functions
+#generate_dataset
+#extract_functions
+#compile_benchmarks
 compile_java_classes
 execute
