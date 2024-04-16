@@ -6,16 +6,6 @@ function DIR {
 
 source $(DIR)/../../shared.sh
 
-function log_rss {
-    PID=$1
-    OFILE=$2
-    rm $OFILE &> /dev/null
-        while kill -0 $PID &> /dev/null; do
-                ps -q $PID -o rss= >> $OFILE
-                sleep .5
-        done
-}
-
 function log_resources {
     PID=$1
     OFILE_RSS=$2/lambda-$3.rss

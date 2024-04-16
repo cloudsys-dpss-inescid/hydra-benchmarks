@@ -8,7 +8,7 @@ function gv_java_native_hw_n {
     APP_MAIN=com.jni.HelloJNI
     # Register the native application in GraalVM
     curl -s -X POST 127.0.0.1:8081/register?name=nativehw$1\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativehw'$1'","async":"false","cached":"true","arguments":""}' > /tmp/payload-$1.post
+    echo '{"name":"nativehw'$1'","async":"false","cached":"true","arguments":""}' > /tmp/payload$1.post
 }
 
 # Function to start the Graalvisor
@@ -16,8 +16,14 @@ function start_svm {
     export lambda_timestamp="$(date +%s%N | cut -b1-13)"
     export lambda_port="8081"
     export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:$LD_LIBRARY_PATH
-    export LD_PRELOAD=$ARGO_HOME/graalvisor/build/libs/libpreload.so
-    
+
+    # Add native library paths for each application
+    for i in $(seq $1)
+    do
+        export LD_LIBRARY_PATH=$ARGO_HOME/benchmarks/src/java/gv-native-hw-$i/build/libs:$LD_LIBRARY_PATH
+    done
+    export LD_PRELOAD=$ARGO_HOME/graalvisor/build/libs/libtest.so
+
     # Start Graalvisor
     $ARGO_HOME/graalvisor/build/native-image/polyglot-proxy &
     wait
@@ -27,14 +33,14 @@ function warmup {
     # Sequential
     for j in $(seq $1)
     do
-        curl -s -X POST 127.0.0.1:8081 -H 'Content-Type: application/json' -d $(cat /tmp/payload-$j.post) >/dev/null
+        curl -s -X POST 127.0.0.1:8081 -H 'Content-Type: application/json' -d $(cat /tmp/payload$j.post) >/dev/null
     done
 
     # Concurrent
     (
         for j in $(seq 3)
         do
-            curl -s -X POST 127.0.0.1:8081 -H 'Content-Type: application/json' -d $(cat /tmp/payload-$j.post) &>/dev/null &
+            curl -s -X POST 127.0.0.1:8081 -H 'Content-Type: application/json' -d $(cat /tmp/payload$j.post) &>/dev/null &
         done
         wait
     )
