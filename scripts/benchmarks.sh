@@ -74,6 +74,15 @@ function gv_java_native_test {
     echo '{"name":"nativetest","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
+function gv_java_native_simple {
+    APP_LANG=java
+    APP_NAME=gv-native-simple
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativetest.so
+    APP_MAIN=com.jni.MessageJNI
+    curl -s -X POST $ip:8080/register?name=nativesimple\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativesimple","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
+
 function gv_java_native_msg {
     APP_LANG=java
     APP_NAME=gv-native-msg
