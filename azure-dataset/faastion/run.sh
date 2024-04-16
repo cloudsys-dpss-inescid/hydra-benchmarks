@@ -12,7 +12,7 @@ function build_azure {
 }
 
 function generate_dataset {
-    # Uncomment if azure-dataset is not built
+    # Uncomment if azure-dataset is first time running
     # build_azure
     $AZURE_DATASET_HOME/trace-generator.sh -m 100 -d d01 -t $TRACES_HOME/gen-trace.csv
 }
@@ -55,7 +55,7 @@ function execute {
     JAR=$(DIR)/build/libs/trace-executor-1.0-all.jar
     MAIN=ExecutorEntryPoint
     
-    java -cp $JAR $MAIN \
+    $JAVA_HOME/bin/java -cp $JAR $MAIN \
         -i      $TRACES_HOME/trace.csv  \
         -fc     $JAVA_BENCHMARKS/gv-native-hw-1/build/libnativehw1.so   \
         -fep    com.jni.HelloJNI \
@@ -85,8 +85,8 @@ NUM_FUNCTIONS=1
 mkdir -p $TRACES_HOME
 mkdir -p $LOGS_HOME
 
-#generate_dataset
-#extract_functions
+generate_dataset
+extract_functions
 #compile_benchmarks
 compile_java_classes
 execute
