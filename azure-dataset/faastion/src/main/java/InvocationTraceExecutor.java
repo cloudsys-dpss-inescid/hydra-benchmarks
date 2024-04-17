@@ -12,8 +12,19 @@ public class InvocationTraceExecutor {
 
     public static Map<Integer, String> hashMap = Map.of(
         0, "nativehw1",
-        1, "nativehw2"
+        1, "nativehw2",
     );
+
+    public static Map<Integer,byte[]> fcMap = Map.of(
+        "nativehw1", Files.readAllBytes(Paths.get(System.getenv("ARGO_HOME") + "benchmarks/src/java/gv-native-hw-1"));
+        "nativehw2", Files.readAllBytes(Paths.get(System.getenv("ARGO_HOME") + "benchmarks/src/java/gv-native-hw-2"));
+    );
+
+    public static Map<Integer, String> entryMap = Map.of(
+        "nativehw1", "com.jni.HelloJNI"
+        "nativehw2", "com.jni.HelloJNI"
+    );
+
 
     public InvocationTraceExecutor(ExecutorConfiguration config) {
         this.config = config;
@@ -77,9 +88,9 @@ public class InvocationTraceExecutor {
     }
 
     private void uploadFunction(String function) {
-        String queryParameters = "name=" + function + "&language=java&entryPoint=" + config.functionEntryPoint;
+        String queryParameters = "name=" + function + "&language=java&entryPoint=" + entryMap.get(function);
         NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/register?" + queryParameters,
-                "application/octet-stream", config.functionCode, false);
+                "application/octet-stream", fcMap.get(function), false);
     }
 
     private void invokeFunction(String function, int timestamp) {

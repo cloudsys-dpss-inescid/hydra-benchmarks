@@ -57,8 +57,6 @@ function execute {
     
     $JAVA_HOME/bin/java -cp $JAR $MAIN \
         -i      $TRACES_HOME/trace.csv  \
-        -fc     $JAVA_BENCHMARKS/gv-native-hw-1/build/libnativehw1.so   \
-        -fep    com.jni.HelloJNI \
         -nf     $NUM_FUNCTIONS \
         -d
 }

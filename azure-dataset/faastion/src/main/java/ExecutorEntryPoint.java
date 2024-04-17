@@ -18,14 +18,10 @@ public class ExecutorEntryPoint {
             CommandLine cmd = new DefaultParser().parse(options, args);
             
             String inputFilePath = cmd.getOptionValue("input");
-            String functionCodeFilePath = cmd.getOptionValue("functionCode");
-            String functionEntryPoint = cmd.getOptionValue("functionEntryPoint");
             int numFunctions = Integer.valueOf(cmd.getOptionValue("numFunctions", "5"));
             boolean debug = cmd.hasOption("debug");
-            byte[] functionCode = Files.readAllBytes(Paths.get(functionCodeFilePath));
             String lambdaManagerAddress = cmd.getOptionValue("lambdaManagerAddress", "localhost:8081");
-            
-            ExecutorConfiguration config = new ExecutorConfiguration(functionCode,functionEntryPoint, numFunctions, debug, lambdaManagerAddress);
+            ExecutorConfiguration config = new ExecutorConfiguration(numFunctions, debug, lambdaManagerAddress);
             InvocationTraceExecutor executor = new InvocationTraceExecutor(config);
             executor.execute(inputFilePath);
         } catch (ParseException e) {
@@ -41,12 +37,6 @@ public class ExecutorEntryPoint {
         Option input = new Option("i", "input", true, "Input invocation trace file path.");
         input.setRequired(true);
         options.addOption(input);
-        Option functionCode = new Option("fc", "functionCode", true, "Path of the function code.");
-        functionCode.setRequired(true);
-        options.addOption(functionCode);
-        Option functionEntryPoint = new Option("fep", "functionEntryPoint", true, "Function Entry Point");
-        functionEntryPoint.setRequired(true);
-        options.addOption(functionEntryPoint);
         Option numFunctions = new Option("nf", "numFunctions", true, "Number of functions for executions");
         numFunctions.setRequired(false);
         options.addOption(numFunctions);
