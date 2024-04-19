@@ -47,7 +47,7 @@ def median_index(lst):
     lstLen = len(lst)
     index = (lstLen - 1) // 2
     
-    return index
+    return index + 6
 
 def get_index_GC_in_latencies(target_value, latency_array):
 
@@ -119,7 +119,7 @@ def get_index_GC_points(GC_array):
 
 def makeFig(file_name, title, GC_type, experiment_lines):
 
-    plt.rcParams.update({'font.size': 12})
+    plt.rcParams.update({'font.size': 18})
     
     # Devia de fazer isto pelo results. mas meto isto bonito depois.
     for exp in experiment_lines:
@@ -193,11 +193,18 @@ def makeFig(file_name, title, GC_type, experiment_lines):
         Pause_Young_GC, Pause_duration, Isolate_GCs, number_of_reading_erros, Incremental_GC, Full_GC = results.get_GC_G1_datapoints(file_path, experience_start_time)
 
         #CPerf and context swricth points
-        results.process_perf_record_data(file_path)
-        context_switches_timestamps = results.get_context_switches_datapoints(file_path, experience_start_time)
-        array_counter, array_timestamp = process_context_switches_datapoints(context_switches_timestamps, 1000) #delta_interval is in miliseconds
+        array_counter = []
+        array_timestamp = []
+        try:
+            #results.process_perf_record_data(file_path)
+            results.process_perf_sched_data(file_path)            
+            context_switches_timestamps = results.get_context_switches_datapoints(file_path, experience_start_time)
+            array_counter, array_timestamp = process_context_switches_datapoints(context_switches_timestamps, 100) #delta_interval is in miliseconds
         #ctx_dictionary = Counter(context_switches_timestamps)
+        except Exception as e:
+            print("Error processing perf ")
 
+        
         #Latencies points
         first_timestamp = float('inf')
         last_timestamp = 0
@@ -235,6 +242,7 @@ def makeFig(file_name, title, GC_type, experiment_lines):
             ax[1].axvline(x=timestamp_array_clean[0], color='lime', linestyle='-', linewidth=1.5)
             ax[1].axvline(x=timestamp_array_clean[-1], color='lime', linestyle='-', linewidth=1.5)
 
+
             ax[4].scatter(timestamp_array_clean, latency_array_clean, alpha=0.2, zorder=-1)#, label= 'thread ' + str(thread_id) ) 
 
             ax[6].scatter(timestamp_array[:first_values_cut], latency_array[:first_values_cut], alpha=0.2, zorder=-1)#, label= 'thread ' + str(thread_id) ) 
@@ -262,9 +270,15 @@ def makeFig(file_name, title, GC_type, experiment_lines):
                 
         ax[5].scatter(x, y, s=5, color ="red", label="CDF")
         ax[5].set_title("Latency CDF for time window without Hydra GC")
+        ax[5].set_ylabel('%')
+        ax[5].set_xlabel('Latency (ms)')
 
-
-
+        ### Try to calculate the percenty of this free GC data
+        possible_limite = 20 #miliseconds
+        arr = np.array(x)
+        split_arr = np.where(arr > possible_limite)[0]
+        data_perentage = ( 100 * len(split_arr) ) / len(x)
+        print(" Percentage of the data cut in " + str(possible_limite) + "ms is " + str(data_perentage) )
 
 
         #print("timestamp_left: " + str(timestamp_left) + " timestamp_rigth: " + str(timestamp_rigth))
@@ -298,14 +312,17 @@ def makeFig(file_name, title, GC_type, experiment_lines):
         #clean the perf array for scheduler readings before the threads where running
         #index = next((i for i, ts in enumerate(array_timestamp) if ts > first_timestamp), len(array_timestamp))
         #array_counter = array_counter[index:]
-        #array_timestamp = array_timestamp[index:]                 
-        ax[3].scatter( array_timestamp, array_counter, s=5, color ="red", label="Context switches")
-        #ax[3].scatter( context_switches_timestamps, np.arange(len(context_switches_timestamps)), s=5, color ="red", label="Context switches")
-        ax[3].set_ylabel("Number of occurrences\nin a 1s interval")
-        ax[3].set_title("Perf measuring context switches")
-        #ax[3].set_xlim(first_timestamp - X_axis_offset, last_timestamp + X_axis_offset)
-        ax[3].set_xlim(0, last_timestamp + X_axis_offset)
-
+        #array_timestamp = array_timestamp[index:]
+        if( len(array_timestamp) > 0):                 
+            ax[3].scatter( array_timestamp, array_counter, s=5, color ="red", label="Context switches")
+            #ax[3].scatter( context_switches_timestamps, np.arange(len(context_switches_timestamps)), s=5, color ="red", label="Context switches")
+            ax[3].set_ylabel("Number of occurrences\nin a 0.1s interval")
+            #ax[3].set_title("Perf measuring context switches")
+            ax[3].set_title("Perf measuring all sched events")
+            #ax[3].set_xlim(first_timestamp - X_axis_offset, last_timestamp + X_axis_offset)
+            ax[3].set_xlim(0, last_timestamp + X_axis_offset)
+            ax[3].set_yscale('log')
+        
         ############# GC points  G1
         if(len(Pause_Young_GC) > 0):
             ax[1].scatter( Pause_Young_GC, np.full(len(Pause_Young_GC), max_latency*0.6), s=10, color ="red" , zorder=200, label="G1 Evacuation Pause event")
@@ -321,11 +338,20 @@ def makeFig(file_name, title, GC_type, experiment_lines):
             ax[1].scatter( Full_GC, np.full(len(Full_GC), max_latency*0.6), s=5, color ="green" , zorder=200, label="Full GC event", marker="v")
  
         ax[1].set_xlim(0, last_timestamp + X_axis_offset)
-
+        
+        ##this is failing when I use perf because of the overhead
+        remove_above_limit = 50
+        all_clean_latency_array = np.array(all_clean_latency_array)
+        below_limit_values = all_clean_latency_array[all_clean_latency_array < remove_above_limit]        
+        top_y = max(below_limit_values)
         
         ax[4].scatter( Isolate_GCs, np.full(len(Isolate_GCs), max_latency_clean*0.6), s=10, color ="blue" , zorder=200, label="Isolate GC")
         ax[4].set_xlim(timestamp_left_clean, timestamp_rigth_clean)
+        ax[4].set_ylim(0, top_y)
         ax[4].set_title("Latency and Isolate GCs in time window without Hydra GC")
+        ax[4].set_ylabel('Latency (ms)')
+        ax[4].set_xlabel('Linux timestamp over time (ms)')
+
 
 
         ax[6].set_title("Just the first values")
@@ -341,8 +367,8 @@ def makeFig(file_name, title, GC_type, experiment_lines):
         ax[1].set_xlabel('Linux timestamp over time (ms)')
         #ax[1].set_ylim([-1, 25])
 
-        ax[1].legend(ncol=5, loc='upper right', bbox_to_anchor=(0.75, 1.28) )
-        ax[1].set_title(title+ ", "+ str(exp)+ " threads/CS (throughput = " + str(round(exp_throughput)) + " op/s , duration = " + str(elipsed_time_ms) + " ms, work = " + str( len(timestamp_array) ) + ")" ,  y=1.24)
+        ax[1].legend(ncol=5, loc='upper right', bbox_to_anchor=(0.95, 1.38) )
+        ax[1].set_title(title+ ", "+ str(exp)+ " threads/CS (throughput = " + str(round(exp_throughput)) + " op/s , duration = " + str(elipsed_time_ms) + " ms, work = " + str( len(timestamp_array) ) + ")" ,  y=1.28)
         
 
         fig.tight_layout()
@@ -361,8 +387,9 @@ def makeFig(file_name, title, GC_type, experiment_lines):
 
 
 
-experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
-experiment_lines = [1,2,4,8,16,32,64,128,256,512]    
+experiment_lines = [1,2,4,8,16,32,64,128,256,512]
+experiment_lines = [512]
+
 
 
 #makeFig( "httprequest", "HTTP request app", "G1", experiment_lines)
