@@ -26,6 +26,7 @@ if [ "$#" -ne 4 ]; then
     echo "- VM_CPU=<number> - number of cores that the VM will create internally (only used in vm mode). Defaults to 1;"
     echo "- VM_MEM=<number> - memory given to the VM (only used in vm mode). Defaults to 2048;"
     echo "- PIN_CORE=<boolean> - if true, will pin the process to core 0. Defaults to false;"
+    echo "- PIN_SOCKET=<boolean> - if true, will pin the process to socket 1. Defaults to false;"
     echo "- DISABLE_TURBO=<boolean> - if true, will disable turbo boost. Defaults to false;"
     echo "- EXPERIMENT=<tag> - if set, will copy result logs into a dedicated experiment directory. Defaults to unset;"
     exit 1

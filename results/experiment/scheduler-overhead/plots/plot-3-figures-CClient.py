@@ -1,16 +1,12 @@
 #!/usr/bin/env python
 
-declarations = __import__("declarations")
 import results
 import matplotlib.pyplot as plt
 import numpy as np
 import matplotlib.gridspec as gridspec
 import matplotlib.pylab as pl
 
-benchmark_labels = declarations.benchmark_labels
-isolate_http_benchmark_path = declarations.isolate_http_socket_benchmark_path
-isolate_filehashing_benchmark_path = declarations.isolate_filehashing_benchmark_path
-isolate_sleep_benchmark_path = declarations.isolate_sleep_benchmark_path
+
 
 _markersize = 8
 
@@ -22,7 +18,7 @@ def printMyLines(text, firstPoints, secondPoints):
         
 
 
-def makeFig( current_dataset, file_name, title):
+def makeFig( file_name, title, experiment_lines):
 
     #plt.rcParams.update({'font.size': 12})
 
@@ -37,11 +33,10 @@ def makeFig( current_dataset, file_name, title):
     lat_p99999_holder = []
     lat_p100_holder = []
     
-    experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
     # Devia de fazer isto pelo results. mas meto isto bonito depois.
     for exp in experiment_lines:
         
-        file_path = "../results/java/CClient/gv-" + file_name + "-svm-isolate-remote_Cclient_benchmark-"+ str(exp) + "-1-2048/1"
+        file_path = "../results/java/CClientBenchmark/gv-" + file_name + "-svm-isolate-remote_Cclient_benchmark-"+ str(exp) + "-1-2048/1"
         CPU_reading_timestamp, CPU_usage = results.processCpuUsage( results.read_cpu_usage(file_path) )
 
         
@@ -143,11 +138,10 @@ def makeFig( current_dataset, file_name, title):
 
 
     
+experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
+experiment_lines = [128]
                                                                                  
-makeFig( isolate_http_benchmark_path, "httprequest", "HTTP request app")
-#makeFig( isolate_http_benchmark_path, "file-hashing", "File hashing app",  1, 4000, 100)
-#makeFig( isolate_http_benchmark_path, "sleep", "Sleep app")
-
+makeFig( "dbreader", "HTTP request app", experiment_lines)
 
 
 

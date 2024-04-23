@@ -1,1 +1,7 @@
 fetch-results.sh
+*.log
+*.cpu
+*.rss
+*context_switches.txt
+perf.data
+*.png

@@ -172,15 +172,14 @@ def get_index_GC_points(GC_array):
     return largest_index
 
 
-def makeFig(file_name, title, GC_type):
+def makeFig(file_name, title, GC_type, experiment_lines):
 
-    plt.rcParams.update({'font.size': 12})
+    plt.rcParams.update({'font.size': 18})
 
 
-    fig, ax = plt.subplots(5, figsize=(10, 20))
+    fig, ax = plt.subplots(5, figsize=(20, 20))
 
-    experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
-    experiment_lines = [2,64]
+
     cut_initial_points = 1000
     # Devia de fazer isto pelo results. mas meto isto bonito depois.
     for exp in experiment_lines:
@@ -229,15 +228,15 @@ def makeFig(file_name, title, GC_type):
 
 
      
-        Pause_Young_GC, Pause_duration, Isolate_GCs, number_of_reading_erros = results.get_GC_G1_datapoints(file_path)
+        #Pause_Young_GC, Pause_duration, Isolate_GCs, number_of_reading_erros = results.get_GC_G1_datapoints(file_path)
         all_latencies_datapoints = []
         all_latencies_datapoints_clean = []
 
         for thread_id in range(exp):
             
             timestamp_array, latency_array = results.get_latency_datapoints(file_path, thread_id)
-            _, latency_array_clean = clean_datapoints_from_GC(Pause_Young_GC, Pause_duration, timestamp_array, latency_array)                            
-            all_latencies_datapoints_clean = all_latencies_datapoints_clean + latency_array_clean
+            #_, latency_array_clean = clean_datapoints_from_GC(Pause_Young_GC, Pause_duration, timestamp_array, latency_array)                            
+            #all_latencies_datapoints_clean = all_latencies_datapoints_clean + latency_array_clean
 
             latency_array = latency_array[cut_initial_points:] #remove iniical noise, it does not count for what we want
                         
@@ -253,11 +252,11 @@ def makeFig(file_name, title, GC_type):
 
         #gc_index= get_index_GC_points(all_latencies_datapoints)
 
-        x = np.sort(all_latencies_datapoints_clean) 
-        y = np.arange(len(all_latencies_datapoints_clean)) / float(len(all_latencies_datapoints_clean))
-        ax[4].scatter(x, y, color=dict_colors[exp], marker='.', s=2) 
+        #x = np.sort(all_latencies_datapoints_clean) 
+        #y = np.arange(len(all_latencies_datapoints_clean)) / float(len(all_latencies_datapoints_clean))
+        #ax[4].scatter(x, y, color=dict_colors[exp], marker='.', s=2) 
 
-        ax[4].set_title("Datapoints clean from GC") 
+        #ax[4].set_title("Datapoints clean from GC") 
 
 
    
@@ -269,11 +268,17 @@ def makeFig(file_name, title, GC_type):
     ax[0].set_title("Clean run") 
 
             
-    ax[1].set_ylabel('CDF of requests')
+    ax[1].set_ylabel('CDF of requests (%)')
+    ax[2].set_ylabel('CDF of requests (%)')
+    ax[3].set_ylabel('%')
+
     ax[1].set_xlabel('Request duration (ms)')
+    ax[2].set_xlabel('Request duration (ms)')
     ax[1].set_xlim([0, 15])
 
-    ax[1].legend(ncol=4, loc='lower right')
+    ax[1].legend(ncol=5, loc='lower right')
+    #ax[1].legend(ncol=5, loc='upper right', bbox_to_anchor=(0.95, 1.38) )
+
     ax[1].set_title(title+ ",  52 threads CPU ( work = " + str( len(timestamp_array) ) + ")" ) 
     
     #ax[0].set_xscale('log')
@@ -297,9 +302,11 @@ def makeFig(file_name, title, GC_type):
 
 
     
+experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
+experiment_lines = [1,2,4,8,16,32,64,128,256,512]
 
 #makeFig( "httprequest", "HTTP request app", "G1")
-makeFig( "dbreader", "Memcached request app", "G1")
+makeFig( "dbreader", "Memcached request app", "G1", experiment_lines)
 
 
 

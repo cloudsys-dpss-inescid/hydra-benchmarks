@@ -47,7 +47,7 @@ def median_index(lst):
     lstLen = len(lst)
     index = (lstLen - 1) // 2
     
-    return index + 6
+    return index
 
 def get_index_GC_in_latencies(target_value, latency_array):
 
@@ -55,6 +55,16 @@ def get_index_GC_in_latencies(target_value, latency_array):
         if  current_value >= target_value:
             return indx
     return -1
+
+def get_index_by_latency(target, latency_index, latency_array):
+
+
+    for idx, value in enumerate(latency_array):
+
+        if( value == target ):
+            return idx + latency_index
+
+    return latency_index
 
 def clean_datapoints_from_GC(GC_timestamps, GC_pause_duration, timestamp_array, latency_array):
 
@@ -75,22 +85,34 @@ def clean_datapoints_from_GC(GC_timestamps, GC_pause_duration, timestamp_array, 
         timestamp_array_clean = timestamp_array[latency_index:]        
         return timestamp_array_clean, latency_array_clean
     
-    l_GC_median_idx = median_index(GC_timestamps)
-    r_GC_median_idx = l_GC_median_idx + 1
+    elif len(GC_timestamps) >= 3:
 
-    for cut_off_set in range(cut_off_set_max, 0, -100):#sometimes the range is to big
+        GC_median_idx = median_index(GC_timestamps)
+        l_GC_median_idx = GC_median_idx - 1
+        r_GC_median_idx = GC_median_idx  + 1
 
-        l_GC_timestamp = GC_timestamps[l_GC_median_idx] + cut_off_set
-        r_GC_timestamp = GC_timestamps[r_GC_median_idx] - cut_off_set
 
-        l_latency_index = get_index_GC_in_latencies(l_GC_timestamp, timestamp_array) 
-        r_latency_index = get_index_GC_in_latencies(r_GC_timestamp, timestamp_array) 
 
-        latency_array_clean = latency_array[l_latency_index:r_latency_index]
-        timestamp_array_clean = timestamp_array[l_latency_index:r_latency_index]
+        median_latency_index = get_index_GC_in_latencies(GC_timestamps[GC_median_idx], timestamp_array) 
+        l_latency_index = get_index_GC_in_latencies(GC_timestamps[l_GC_median_idx], timestamp_array) 
+        r_latency_index = get_index_GC_in_latencies(GC_timestamps[r_GC_median_idx], timestamp_array) 
 
-        if len(timestamp_array_clean) != 0:          
-            return timestamp_array_clean, latency_array_clean
+
+        l_latency_array_clean = latency_array[l_latency_index:median_latency_index]
+        r_latency_array_clean = latency_array[median_latency_index:r_latency_index]
+
+        l_max = max(l_latency_array_clean)
+        r_max = max(r_latency_array_clean)
+
+
+        l_index = get_index_by_latency(l_max, l_latency_index, l_latency_array_clean) + 30
+        r_index = get_index_by_latency(r_max, median_latency_index, r_latency_array_clean) - 30
+
+
+        latency_array_clean = latency_array[l_index:r_index]
+        timestamp_array_clean = timestamp_array[l_index:r_index]
+
+        return timestamp_array_clean, latency_array_clean
 
 
     return timestamp_array, latency_array
@@ -388,7 +410,7 @@ def makeFig(file_name, title, GC_type, experiment_lines):
 
 
 experiment_lines = [1,2,4,8,16,32,64,128,256,512]
-experiment_lines = [512]
+#experiment_lines = [512]
 
 
 

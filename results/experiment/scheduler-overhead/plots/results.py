@@ -244,6 +244,42 @@ def get_GC_datapoints(file_path):
     return Incremental_GC, Full_GC
 
 
+    idle_timestamp, idle_wait, idle_delay, idle_run = results.get_timehist_datapoints(file_path,"idle")
+
+def get_timehist_datapoints(file_path, task, experience_start_time = 0):
+
+    thread_file = file_path + "/perf_timehist.log"
+    #data_points = read_CClient_latency_lines(thread_file)
+    timestamp_array = []
+    wait_time = []
+    sch_delay = []
+    run_time = []
+
+    try:
+        with open(thread_file) as file:
+            first_line = file.readline() #to skip the first three lines
+            first_line = file.readline() 
+            first_line = file.readline() 
+            benchmark_init = float(file.readline().split()[0])*1000 
+            for line in file:
+
+                if task in line:
+                    timestamp = float(line.split()[0])*1000
+                    wait = float(line.split()[-3])
+                    delay = float(line.split()[-2])
+                    run = float(line.split()[-1])
+
+                    timestamp_array.append(timestamp - experience_start_time - benchmark_init)
+                    wait_time.append(wait)
+                    sch_delay.append(delay)
+                    run_time.append(run)
+
+    except Exception as e:
+        print("Error processing " + thread_file + ":")
+        raise e
+    
+    return timestamp_array, wait_time, sch_delay, run_time
+
 
 def get_latency_datapoints(file_path, thread_id, experience_start_time = 0):
 
@@ -283,9 +319,12 @@ def process_perf_sched_data(file_path):
     subprocess.run(command, shell=True, check=True, cwd=file_path)
 
 def process_perf_record_data(file_path):
-
-    command = "perf script -F time,event > context_switches.txt"
-    subprocess.run(command, shell=True, check=True, cwd=file_path)
+    try:
+        command = "perf script -F time,event > context_switches.txt"
+        subprocess.run(command, shell=True, check=True, cwd=file_path)
+    except Exception as e:
+        print("Error processing  perf" + e + ":")
+                
 
 def get_context_switches_datapoints(file_path, experience_start_time = 0):
 
@@ -307,9 +346,9 @@ def get_context_switches_datapoints(file_path, experience_start_time = 0):
             for line in file:
 
                 #This only works for perf sched record 
-                #timestamp_value = float( (line.split("]")[1]).split(":")[0] ) * 1000 #from seconds to miliseconds
+                timestamp_value = float( (line.split("]")[1]).split(":")[0] ) * 1000 #from seconds to miliseconds
                 #This qorks for perf record -e context-switches
-                timestamp_value = float( line.split(":")[0] ) * 1000 #from seconds to miliseconds
+                #timestamp_value = float( line.split(":")[0] ) * 1000 #from seconds to miliseconds
 
                 if( first_timestamp < 0): #get first timestamp
                     first_timestamp = timestamp_value
