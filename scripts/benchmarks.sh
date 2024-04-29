@@ -74,6 +74,24 @@ function gv_java_native_test {
     echo '{"name":"nativetest","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
+function gv_java_native_factors {
+    APP_LANG=java
+    APP_NAME=gv-native-factorization
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libfactors.so
+    APP_MAIN=com.jni.Factorization
+    curl -s -X POST $ip:8080/register?name=factors\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"factors","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
+
+function gv_java_native_matrix {
+    APP_LANG=java
+    APP_NAME=gv-native-matrixmul
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libmatrixmul.so
+    APP_MAIN=com.jni.MatrixMultiplication
+    curl -s -X POST $ip:8080/register?name=matrixmul\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"matrixmul","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
+
 function gv_java_native_simple {
     APP_LANG=java
     APP_NAME=gv-native-simple
@@ -99,6 +117,15 @@ function gv_java_native_hw_1 {
     APP_MAIN=com.jni.HelloJNI
     curl -s -X POST $ip:8080/register?name=nativehw1\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
     echo '{"name":"nativehw1","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
+
+function gv_java_native_hw_2 {
+    APP_LANG=java
+    APP_NAME=gv-native-hw-2
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativehw2.so
+    APP_MAIN=com.jni.HelloJNI
+    curl -s -X POST $ip:8080/register?name=nativehw2\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativehw2","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
 function gv_java_hw {
