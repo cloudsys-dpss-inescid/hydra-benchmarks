@@ -203,7 +203,7 @@ def makeFig(file_name, title, GC_type, experiment_lines):
 
         x = np.sort(all_latencies_datapoints) 
         y = np.arange(len(all_latencies_datapoints)) / float(len(all_latencies_datapoints))
-        ax[0].plot(x, y, label= 'thread ' + str(exp)  , color=dict_colors[exp]) 
+        ax[0].scatter(x, y, label= 'thread ' + str(exp)  , color=dict_colors[exp]) 
 
         ax[0].set_xlim([0, 15])
 
@@ -219,15 +219,12 @@ def makeFig(file_name, title, GC_type, experiment_lines):
 
         file_path = dir_benchmark + file_name + "-svm-isolate-remote_Cclient_benchmark-"+ str(exp) + "-1-2048/1"
 
-        #CPU usage points
-        CPU_reading_timestamp, CPU_usage = results.processCpuUsage( results.read_cpu_usage(file_path) )
-        
-        x = np.sort(CPU_usage) 
-        y = np.arange(len(CPU_usage)) / float(len(CPU_usage))
-        ax[3].plot(x, y, label= 'thread ' + str(exp) , color=dict_colors[exp]) 
 
 
-     
+
+        #Latencies points
+        first_timestamp = float('inf')     
+        last_timestamp = 0
         #Pause_Young_GC, Pause_duration, Isolate_GCs, number_of_reading_erros = results.get_GC_G1_datapoints(file_path)
         all_latencies_datapoints = []
         all_latencies_datapoints_clean = []
@@ -241,22 +238,27 @@ def makeFig(file_name, title, GC_type, experiment_lines):
             latency_array = latency_array[cut_initial_points:] #remove iniical noise, it does not count for what we want
                         
             all_latencies_datapoints = all_latencies_datapoints + latency_array
+            first_timestamp = min(first_timestamp, timestamp_array[0])
+            last_timestamp = max(last_timestamp, timestamp_array[-1])
 
 
         x = np.sort(all_latencies_datapoints) 
         y = np.arange(len(all_latencies_datapoints)) / float(len(all_latencies_datapoints))
-        ax[1].plot(x, y, label= 'thread ' + str(exp) , color=dict_colors[exp]) 
-        ax[2].plot(x, y, label= 'thread ' + str(exp) , color=dict_colors[exp]) 
+        ax[1].scatter(x, y, label= 'thread ' + str(exp) , color=dict_colors[exp]) 
+        ax[2].scatter(x, y, label= 'thread ' + str(exp) , color=dict_colors[exp]) 
 
         
+        #CPU usage points
+        CPU_reading_timestamp, CPU_usage = results.processCpuUsage( results.read_cpu_usage(file_path) )
+        index_init = next((i for i, ts in enumerate(CPU_reading_timestamp) if ts > first_timestamp), len(CPU_reading_timestamp))
+        index_end = next((i for i, ts in enumerate(CPU_reading_timestamp) if ts > last_timestamp), len(CPU_reading_timestamp))
+        CPU_usage = CPU_usage[index_init:index_end]
+                
+        x = np.sort(CPU_usage) 
 
-        #gc_index= get_index_GC_points(all_latencies_datapoints)
+        y = np.arange(len(CPU_usage)) / float(len(CPU_usage))
+        ax[3].scatter(x, y, label= 'thread ' + str(exp) , color=dict_colors[exp]) 
 
-        #x = np.sort(all_latencies_datapoints_clean) 
-        #y = np.arange(len(all_latencies_datapoints_clean)) / float(len(all_latencies_datapoints_clean))
-        #ax[4].scatter(x, y, color=dict_colors[exp], marker='.', s=2) 
-
-        #ax[4].set_title("Datapoints clean from GC") 
 
 
    
@@ -302,8 +304,8 @@ def makeFig(file_name, title, GC_type, experiment_lines):
 
 
     
-experiment_lines = [1,2,4,8,16,32,64,128,256,512,1024]
 experiment_lines = [1,2,4,8,16,32,64,128,256,512]
+#experiment_lines = [64]
 
 #makeFig( "httprequest", "HTTP request app", "G1")
 makeFig( "dbreader", "Memcached request app", "G1", experiment_lines)

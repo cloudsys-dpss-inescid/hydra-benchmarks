@@ -85,24 +85,27 @@ function log_resources {
                 # Calculate the difference in milliseconds from the reference time
                 ms_since_ref=$((ms_now - ms_ref))        
 
-                # Capture CPU usage
-                cpu_usage=$(top -bn 1 | grep "Cpu(s)")
+                # Capture CPU usage of each core
+                #cpu_usage=$(top -bn 1 | grep "Cpu(s)")
+                #cpu_usage=$(mpstat -P ALL 1 | awk '$5 == "_x86_64_" {next} $1 == "Average:" {next} {print $2, $3, $5, $6, $12}')
+                cpu_usage=$( top -1 -bn 1 -w 79 | grep '^%Cpu' )
 
                 # Write milliseconds since reference and CPU usage to file
-                echo "$ms_since_ref,$cpu_usage" >> $OFILE_CPU
+                echo "timestamp(ms): $ms_since_ref" >> $OFILE_CPU
+                echo "$cpu_usage" >> $OFILE_CPU
 
 
                 #### Log RSS resource                
                 # The idea for memory is that we traverse the entire pid subprocess tree
                 # and memory memory utilization. We sum all individual memory and return.
-                s_mem=0
-                for p in $(pstree -p $PID | grep -o '([0-9]\+)' | grep -o '[0-9]\+')
-                do
-                    p_mem=$(ps -q $p -o rss=)
-                    s_mem=$((s_mem + p_mem))
-                done
-                echo $s_mem >> $OFILE_RSS
-                sleep .200
+                #s_mem=0
+                #for p in $(pstree -p $PID | grep -o '([0-9]\+)' | grep -o '[0-9]\+')
+                #do
+                #    p_mem=$(ps -q $p -o rss=)
+                #    s_mem=$((s_mem + p_mem))
+                #done
+                #echo $s_mem >> $OFILE_RSS
+                sleep 0.05
         done
 }
 
@@ -129,10 +132,10 @@ function pin_core {
     echo "Pinned process $PID to core 0."
 }
 
-# I was able to disable the multithreading by using: "echo off | sudo tee /sys/devices/system/cpu/smt/control". Options are: on, off, forceoff
+# I was able to disable the hyperthreading by using: "echo off | sudo tee /sys/devices/system/cpu/smt/control". Options are: on, off, forceoff
 function pin_sokcet {
-    #sudo taskset -a -cp 26-51,78-103 $PID
-    sudo taskset -a -cp 26-51 $PID
+    sudo taskset -a -cp 26-51,78-103 $PID
+    #sudo taskset -a -cp 26-51 $PID
     echo "Pinned process $PID to sokcet 1."
 }
 
@@ -342,8 +345,8 @@ function start_svm {
         #perf sched record ./app &
         #APP_PID=$!
         
-        #./app -Xms31g -Xmx31g &
-        perf sched record ./app -Xms31g -Xmx31g  -XX:+PrintGC&
+        #I used this for Oracle meeting
+        perf sched record ./app -Xms31g -Xmx31g  -XX:+PrintGC &
         APP_PID=$!
 
         # this works for G1

@@ -48,20 +48,53 @@ def read_std_latency(path):
 
 
 def read_cpu_usage(path, experience_start_time = 0):
-    lstd = []
+
+    cpu_points = {"avg":[],"0":[]}
+    counter = 0
+    us_value_sum = 0
+    sys_value_sum = 0
+    idle_value_sum = 0
+    io_value_sum = 0
+
     try:
         with open(path + '/lambda.cpu') as file:
             for line in file:
-                timestamp = float(line.split(",")[0])
-                us_value = float(  ((line.split(",")[1]).split(":")[1]).split()[0]    )
-                sys_value= float(  (line.split(",")[2]).split()[0]    )
-                idle_value= float(  (line.split(",")[4]).split()[0]    )
 
-                lstd.append( [ timestamp - experience_start_time, us_value, sys_value, idle_value ] )
+                if "timestamp" in line:
+                    
+                    if counter > 0:
+                        cpu_points["avg"].append( [ timestamp, us_value_sum/counter, sys_value_sum/counter, idle_value_sum/counter, io_value_sum/counter ] )
+                        counter = 0
+                        us_value_sum = 0
+                        sys_value_sum = 0
+                        idle_value_sum = 0
+                        io_value_sum = 0
+                    
+                    timestamp = float(line.split(":")[1]) - experience_start_time
+                else:
+                    data_splited = line.split(":")
+
+                    points_key = data_splited[0].strip("%").strip()
+                    us_value = float( data_splited[1].split(",")[0].split()[0] )
+                    sys_value=  float( data_splited[1].split(",")[1].split()[0] )
+                    idle_value= float( data_splited[1].split(",")[3].split()[0] )
+                    io_value= float( data_splited[1].split(",")[4].split()[0] )
+
+                    us_value_sum += us_value
+                    sys_value_sum += sys_value
+                    idle_value_sum += idle_value
+                    io_value_sum += io_value
+                    counter += 1
+                                        
+                    if( not cpu_points.get(points_key) ):
+                        cpu_points[points_key] = []
+
+                    cpu_points[points_key].append( [ timestamp, us_value, sys_value, idle_value, io_value ] )
+
     except Exception as e:
         print("Error processing " + path + ":")
         raise e
-    return lstd
+    return cpu_points
 
 
 def read_tpr_latency(path):

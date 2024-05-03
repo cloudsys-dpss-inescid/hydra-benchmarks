@@ -209,7 +209,8 @@ def makeFig(file_name, title, GC_type, experiment_lines):
         
         experience_start_time, from_boot_to_reference = results.get_starting_time(file_path)
         #CPU usage points
-        CPU_reading_timestamp, CPU_usage = results.processCpuUsage( results.read_cpu_usage(file_path, experience_start_time) )
+        all_cpu_datapoints = results.read_cpu_usage(file_path, experience_start_time)
+        CPU_reading_timestamp, CPU_usage = results.processCpuUsage( all_cpu_datapoints["avg"] )
 
         ### GC points
         Pause_Young_GC, Pause_duration, Isolate_GCs, number_of_reading_erros, Incremental_GC, Full_GC = results.get_GC_G1_datapoints(file_path, experience_start_time)
@@ -322,13 +323,23 @@ def makeFig(file_name, title, GC_type, experiment_lines):
         #CPU_reading_timestamp = CPU_reading_timestamp[index:]
         elipsed_time_ms = round(timestamp_rigth - timestamp_left)
 
-        ax[2].plot( CPU_reading_timestamp, CPU_usage , marker=".", markersize=5) 
-        ax[2].set_ylabel('CPU usage (%),\n $\\Delta$ 0.2s each')
+
+        for key, value in all_cpu_datapoints.items():
+            if "all" in key:
+                next
+
+            core_CPU_reading_timestamp, core_CPU_usage = results.processCpuUsage( value )
+            ax[2].plot( core_CPU_reading_timestamp, core_CPU_usage , marker=".", markersize=5)
+
+        ax[2].plot( CPU_reading_timestamp, CPU_usage , marker=".", markersize=5, color ="black", label="avarage CPU usage")
+
+        ax[2].set_ylabel('CPU usage (%),\n $\\Delta$ .05s each')
         ax[2].set_ylim([0, 100])
         #ax[2].set_xlim(first_timestamp - X_axis_offset, last_timestamp + X_axis_offset )
         ax[2].set_xlim(0, last_timestamp + X_axis_offset )
         ax[2].set_title("CPU usage")
         ax[2].set_xlabel('Linux timestamp over time (ms)')
+        ax[2].legend(ncol=5, loc='upper center')
 
         ############# Perf points
         #clean the perf array for scheduler readings before the threads where running
@@ -410,7 +421,7 @@ def makeFig(file_name, title, GC_type, experiment_lines):
 
 
 experiment_lines = [1,2,4,8,16,32,64,128,256,512]
-#experiment_lines = [512]
+experiment_lines = [256]
 
 
 
