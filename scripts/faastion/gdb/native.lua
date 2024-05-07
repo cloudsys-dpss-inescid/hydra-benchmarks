@@ -14,8 +14,8 @@ request = function()
         wrk.thread:set("counter", counter + 1)
         wrk.headers["Content-Type"] = "application/json"
         -- wrk.body = '{"name":"nativehw' .. index .. '","async":"false","cached":"true","arguments":""}'
-        -- wrk.body = '{"name":"matrixmul","async":"false","cached":"true","arguments":""}'
-        wrk.body = '{"name":"factors","async":"false","cached":"true","arguments":""}'
+        wrk.body = '{"name":"matrixmul","async":"false","cached":"true","arguments":""}'
+        -- wrk.body = '{"name":"factors","async":"false","cached":"true","arguments":""}'
         return wrk.format("POST", nil)
     end
 

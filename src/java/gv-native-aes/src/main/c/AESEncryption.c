@@ -49,11 +49,18 @@ int aes_decrypt(unsigned char *ciphertext, int ciphertext_len, unsigned char *ke
 }
 
 JNIEXPORT void JNICALL Java_com_jni_AESEncryption_cipher (JNIEnv * env, jobject obj) {
-  unsigned char plaintext[] = "This is a secret message!";
-  unsigned char key[] = "01234567890123456789012345678901";
-  unsigned char iv[] = "0123456789012345";
-  unsigned char ciphertext[128];
-  unsigned char decryptedtext[128];
+  unsigned char *plaintext = (unsigned char *)malloc(strlen("This is a secret message!") + 1);
+  strcpy(plaintext, "This is a secret message!");
+
+  unsigned char *key = (unsigned char *)malloc(strlen("01234567890123456789012345678901") + 1);
+  strcpy(key, "01234567890123456789012345678901");
+
+  unsigned char *iv = (unsigned char *)malloc(strlen("0123456789012345") + 1);
+  strcpy(iv, "0123456789012345");
+
+  unsigned char *ciphertext = (unsigned char *)malloc(128 * sizeof(unsigned char));
+  unsigned char *decryptedtext = (unsigned char *)malloc(128 * sizeof(unsigned char));
+
   int decryptedtext_len, ciphertext_len;
 
   ciphertext_len = aes_encrypt (plaintext, strlen ((char *)plaintext), key,

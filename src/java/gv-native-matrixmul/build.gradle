@@ -3,6 +3,9 @@ plugins {
     id "com.github.johnrengelman.shadow" version "7.1.0"
 }
 
+group 'com.jni'
+version '1.0'
+
 repositories {
     mavenCentral()
 }
@@ -15,12 +18,8 @@ shadowJar() {
 jar {
     manifest {
         attributes(
-                'Main-Class': 'MatrixMultiplication',
+                'Main-Class': 'com.jni.MatrixMultiplication',
                 'Class-Path': configurations.runtimeClasspath.files.collect { it.getName() }.join(' ')
         )
     }
-}
-
-test {
-    useJUnitPlatform()
 }

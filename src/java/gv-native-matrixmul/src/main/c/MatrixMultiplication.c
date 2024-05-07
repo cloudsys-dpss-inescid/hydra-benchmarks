@@ -1,30 +1,34 @@
 #include "MatrixMultiplication.h"
 #include <stdio.h>
 #include <stdlib.h>
-#include <time.h>
 
-#define ROWS 100
-#define COLS 100
+#define ROWS 5
+#define COLS 5
 
-void matrixGenerator(int matrix[ROWS][COLS]){
-	srand(time(NULL));
+void matrixGenerator(int **matrix){
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            matrix[i][j] = rand() % 1000; 
+            matrix[i][j] = 10000; 
         }
     }
 }
 
-JNIEXPORT void JNICALL Java_MatrixMultiplication_multiply
-  (JNIEnv *, jobject){
+int** allocateMatrix() {
+    int **matrix = (int **)malloc(ROWS * sizeof(int *));
+    for (int i = 0; i < ROWS; i++) {
+        matrix[i] = (int *)malloc(COLS * sizeof(int));
+    }
+    return matrix;
+}
 
-	int matrix1[ROWS][COLS];
-	int matrix2[ROWS][COLS];
+
+JNIEXPORT void JNICALL Java_com_jni_MatrixMultiplication_multiply(JNIEnv *env, jobject object) {
+	int** matrix1 = allocateMatrix();
+	int** matrix2 = allocateMatrix();
+    int** result = allocateMatrix();
 	
 	matrixGenerator(matrix1);
 	matrixGenerator(matrix2);
-
-    int result[ROWS][COLS];
 
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
@@ -37,8 +41,8 @@ JNIEXPORT void JNICALL Java_MatrixMultiplication_multiply
 
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            printf("%d ", result[i][j]);
+            fprintf(stderr, "%d ", result[i][j]);
         }
-        printf("\n");
+        fprintf(stderr, "\n");
     }
 }

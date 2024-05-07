@@ -43,7 +43,7 @@ function gv_java_native_aes {
 #done
 
 #gv_java_native_aes
-#gv_java_native_matrix
-gv_java_native_factors
+gv_java_native_matrix
+#gv_java_native_factors
 
 wrk -t$1 -c$1 -d1s -s native.lua http://127.0.0.1:8081

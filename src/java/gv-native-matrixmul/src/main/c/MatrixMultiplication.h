@@ -12,7 +12,7 @@ extern "C" {
  * Method:    multiply
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_MatrixMultiplication_multiply
+JNIEXPORT void JNICALL Java_com_jni_MatrixMultiplication_multiply
   (JNIEnv *, jobject);
 
 #ifdef __cplusplus

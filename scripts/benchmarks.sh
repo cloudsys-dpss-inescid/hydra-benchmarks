@@ -83,6 +83,15 @@ function gv_java_native_factors {
     echo '{"name":"factors","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
+function gv_java_native_aes {
+    APP_LANG=java
+    APP_NAME=gv-native-aes
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativeaes.so
+    APP_MAIN=com.jni.AESEncryption
+    curl -s -X POST $ip:8080/register?name=nativeaes\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativeaes","async":"false","cached":"true","arguments":""}' > $APP_POST
+}
+
 function gv_java_native_matrix {
     APP_LANG=java
     APP_NAME=gv-native-matrixmul

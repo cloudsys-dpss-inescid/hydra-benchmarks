@@ -61,6 +61,7 @@ function parallel {
     do
         curl -s -X POST $ip:8080 -H 'Content-Type: application/json' -d $(cat $APP_POST) &
     done
+    wait
 }
 
 function run {

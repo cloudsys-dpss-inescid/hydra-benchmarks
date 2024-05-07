@@ -13,7 +13,9 @@ request = function()
     if counter < 1 or (counter == 1 and index == 1) then
         wrk.thread:set("counter", counter + 1)
         wrk.headers["Content-Type"] = "application/json"
-        wrk.body = '{"name":"nativehw' .. index .. '","async":"false","cached":"true","arguments":""}'
+        -- wrk.body = '{"name":"nativehw' .. index .. '","async":"false","cached":"true","arguments":""}'
+        wrk.body = '{"name":"matrixmul","async":"false","cached":"true","arguments":""}'
+        -- wrk.body = '{"name":"factors","async":"false","cached":"true","arguments":""}'
         return wrk.format("POST", nil)
     end
 

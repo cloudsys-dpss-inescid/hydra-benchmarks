@@ -8,7 +8,7 @@ source $(DIR)/../../shared.sh
 
 function log_resources {
     PID=$1
-    OFILE_RSS=$2/lambda-$3.rss
+    OFILE_RSS=$2/lambda-$3-$4.rss
 
     rm $OFILE_RSS &> /dev/null
         while kill -0 $PID &> /dev/null; do
@@ -21,28 +21,26 @@ function log_resources {
                     s_mem=$((s_mem + p_mem))
                 done
                 echo $s_mem >> $OFILE_RSS
-                sleep .100
+                sleep .050
         done
 }
 
 # Function to run the workload
 function run {
-    run=$1
+    requests=$1
+    run=$2
 
     # Start Graalvisor and capture execution time information
-    start_svm &> logs/$approach/lambda-$run.log &
+    start_svm &> logs/$app/$approach/lambda-$requests-$run.log &
     PID=$(echo -n "$!")
 
     # Log Resources (memory and CPU)
-    log_resources $PID results/$approach $run &
+    log_resources $PID results/$app/$approach $requests $run &
 
-    # Register Java native applications in Graalvisor
-    for i in $(seq 14)
-    do
-        gv_java_native_hw_n $i > /dev/null
-    done
+    # Register application
+    $app
     
-    wrk -t14 -c14 -d1s -s native.lua http://127.0.0.1:8081
+    wrk -t$requests -c$requests -d1s -s native.lua http://127.0.0.1:8081
 
     # Kill Graalvisor
     pid=$(pgrep -f "$ARGO_HOME/graalvisor/build/native-image/polyglot-proxy")
@@ -50,12 +48,14 @@ function run {
 }
 
 # Start
-if [ "$#" -ne 1 ]; then
-    echo "Syntax: <approach>"
+if [ "$#" -ne 2 ]; then
+    echo "Syntax: <approach> <app>"
     echo "- approach=<isolate|process|faastion>"
+    echo "- app=<gv_java_native_matrix|gv_java_native_factors|...>"
     exit 1
 else
     approach=$1
+    app=$2
 fi
 
 # Setting a sandbox if not already set.
@@ -65,9 +65,13 @@ else
     export SANDBOX=$approach
 fi
 
-mkdir -p results/$approach
-mkdir -p logs/$approach
+mkdir -p results/$app/$approach
+mkdir -p logs/$app/$approach
 
-for i in $(seq 100); do
-    run $i
+nrequests=(1 3 5 8 11 14)
+
+for n in "${nrequests[@]}"; do
+    for i in $(seq 50); do
+        run $n $i
+    done
 done

@@ -7,7 +7,7 @@ JAVA_AGENT="$JAVASSIST_HOME/target/JavassistWrapper-1.0-jar-with-dependencies.ja
 JNI_INCLUDE="-I$DEF_JAVA_HOME/include -I$DEF_JAVA_HOME/include/linux"
 ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 
-CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
+CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE -I/usr/include/"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src"
 
 BENCHMARK_NAME="nativeaes"
@@ -60,14 +60,13 @@ function build_java_agent {
 }
 
 function build_native_library {
-        musl-gcc -static $CFLAGS -I"$HOME/software/ssl/include" -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/AESEncryption.c -L"$HOME/software/ssl/lib" -lssl -lcrypto
-        mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
+        musl-gcc -static $CFLAGS -o $ARGO_HOME/graalvisor/build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/AESEncryption.c -L"$HOME/software/openssl/" -lssl -lcrypto
 }
 
 function build_snippets {
         for file in "$SNIPPETS_DIR"/*.c; do
                 name=$(basename "$file" .c)
-                gcc $SFLAGS -o build/libs/lib$name.so $file -L$ARGO_HOME/graalvisor/build/libs -lpreload
+                gcc $SFLAGS -o build/libs/lib$name.so $file -L$ARGO_HOME/graalvisor/build/libs -lmemiso
         done
 }
 

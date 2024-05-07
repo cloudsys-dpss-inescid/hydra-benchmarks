@@ -2,51 +2,55 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
+GRAALVISOR_HOME=$ARGO_HOME/graalvisor
+
 JAVA_AGENT="$JAVASSIST_HOME/target/JavassistWrapper-1.0-jar-with-dependencies.jar"
 
 JNI_INCLUDE="-I$DEF_JAVA_HOME/include -I$DEF_JAVA_HOME/include/linux"
 ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 
-CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
-SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src"
+CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE -I/usr/include/"
+CFLAGS_PROC="-Wall -g -fPIC $JNI_INCLUDE"
+SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/main/c/memisolation/src"
+SFLAGS_PROC="$CFLAGS_PROC -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/main/c/memisolation/src"
 
-BENCHMARK_NAME="nativehw14"
+BENCHMARK_NAME="matrixmul"
 SNIPPETS_DIR="$DIR/build/snippets"
 
 function run_hotspot {
 	rm -rf config-dir
-        CLASS_PATH="classes/java/main"
+	CLASS_PATH="classes/java/main"
 
-        cd build
-        export LD_LIBRARY_PATH=$ARGO_HOME/graalvisor/build/libs:libs:$LD_LIBRARY_PATH
+	cd build
+	export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/java \
-		-Djava.awt.headless=true \
-		-agentlib:native-image-agent=config-output-dir=config-dir/ \
-		-cp $CLASS_PATH:libs/native-hw-14-1.0-all.jar \
-                -Djava.library.path=$LD_LIBRARY_PATH \
-                com.jni.HelloJNI
+			-Djava.awt.headless=true \
+			-agentlib:native-image-agent=config-output-dir=config-dir/ \
+			-cp $CLASS_PATH:libs/matrixmul-1.0-all.jar \
+			-Djava.library.path=$LD_LIBRARY_PATH \
+			com.jni.MatrixMultiplication
 }
 
 function build_ni {
-        CLASS_PATH="classes/java/main"
+	CLASS_PATH="classes/java/main"
 
 	cd build
-        export LD_LIBRARY_PATH=libs:$LD_LIBRARY_PATH
+	export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
-		--no-fallback \
-		-cp $CLASS_PATH:libs/native-hw-14-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
-		-DGraalVisorGuest=true \
-                -Djava.library.path=$LD_LIBRARY_PATH \
-		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
-		--initialize-at-run-time=com.oracle.svm.graalvisor.utils.JsonUtils \
-		-H:ConfigurationFileDirectories=../ni-agent-config \
-		-H:+ReportExceptionStackTraces \
-		$NI_BIN_OPTS \
-		-H:Name=lib$BENCHMARK_NAME
+			--no-fallback \
+			-cp $CLASS_PATH:libs/matrixmul-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+			-DGraalVisorGuest=true \
+			-Djava.library.path=$LD_LIBRARY_PATH \
+			-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
+			--initialize-at-run-time=com.oracle.svm.graalvisor.utils.JsonUtils \
+			-H:ConfigurationFileDirectories=../ni-agent-config \
+			-H:+ReportExceptionStackTraces \
+			$NI_BIN_OPTS \
+			-H:Name=lib$BENCHMARK_NAME
 }
 
 function build_ni_standalone {
-	NI_BIN_OPTS="com.jni.HelloJNI"
+	NI_BIN_OPTS="com.jni.MatrixMultiplication"
 	build_ni
 }
 
@@ -56,54 +60,61 @@ function build_ni_sharedlibrary {
 }
 
 function build_java_agent {
-        bash $JAVASSIST_HOME/build.sh
+	bash $JAVASSIST_HOME/build.sh
 }
 
 function build_native_library {
-        musl-gcc -static $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
-        mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
+	musl-gcc -static $CFLAGS -o $GRAALVISOR_HOME/build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/MatrixMultiplication.c
+}
+
+function build_native_exec {
+	export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:libs:$LD_LIBRARY_PATH
+	for file in "$SNIPPETS_DIR"/*.c; do
+		name=$(basename "$file" .c)
+		gcc $SFLAGS_PROC -o $GRAALVISOR_HOME/build/libs/$name-proc $file -L$GRAALVISOR_HOME/build/libs -lmemiso -Wl,-rpath,$GRAALVISOR_HOME/build/libs -DSNI_DBG
+	done
 }
 
 function build_snippets {
-        for file in "$SNIPPETS_DIR"/*.c; do
-                name=$(basename "$file" .c)
-                gcc $SFLAGS -o build/libs/lib$name.so $file -L$ARGO_HOME/graalvisor/build/libs -lpreload
-        done
+	for file in "$SNIPPETS_DIR"/*.c; do
+		name=$(basename "$file" .c)
+		gcc $SFLAGS -o $GRAALVISOR_HOME/build/libs/lib$name.so $file -L$GRAALVISOR_HOME/build/libs -lmemiso -DSNI_DBG
+	done
 }
 
 function manipulate_bytecode {
-        CLASS_PATH="build/classes/java/main"
-        ENTRYPOINT="com.jni.HelloJNI"
-        TOOL="NativeRedirection"
-        
-        mkdir -p $DIR/build/snippets
-        
-        export BENCHMARK_NAME="$BENCHMARK_NAME"
-        export SNIPPETS_DIR="$SNIPPETS_DIR"
-        export ENV="memisolation"
-        $DEF_JAVA_HOME/bin/java \
-                -cp $CLASS_PATH \
-                -javaagent:$JAVA_AGENT=$TOOL::$CLASS_PATH \
-                $ENTRYPOINT
+	CLASS_PATH="build/classes/java/main"
+	ENTRYPOINT="com.jni.MatrixMultiplication"
+	TOOL="NativeRedirection"
+	
+	mkdir -p $DIR/build/snippets
+	
+	export BENCHMARK_NAME="$BENCHMARK_NAME"
+	export SNIPPETS_DIR="$SNIPPETS_DIR"
+	export ENV="memisolation"
+	$DEF_JAVA_HOME/bin/java \
+			-cp $CLASS_PATH \
+			-javaagent:$JAVA_AGENT=$TOOL::$CLASS_PATH \
+			$ENTRYPOINT
 }
 
 
 if [ -z "$ARGO_HOME" ]
 then
-        echo "Please set ARGO_HOME first. It should point to a checkout of github.com/graalvm/argo."
-        exit 1
+	echo "Please set ARGO_HOME first. It should point to a checkout of github.com/graalvm/argo."
+	exit 1
 fi
 
 if [ -z "$JAVA_HOME" ]
 then
-        echo "Please set JAVA_HOME first. It should be a GraalVM with native-image available."
-        exit 1
+	echo "Please set JAVA_HOME first. It should be a GraalVM with native-image available."
+	exit 1
 fi
 
 if [ -z "$JAVASSIST_HOME" ]
 then
-        echo "Please set JAVASSIST_HOME first."
-        exit 1
+	echo "Please set JAVASSIST_HOME first."
+	exit 1
 fi
 
 # Build graalvisor lib.
@@ -124,15 +135,18 @@ build_native_library
 # Manipulate app's bytecode.
 manipulate_bytecode
 
+# Build native executable
+build_native_exec
+
 # Build generated snippets.
 build_snippets
 
 TARGET=$1
 if [ ! -z "$TARGET" ]
 then
-        $TARGET
-	exit 0
+	$TARGET
+exit 0
 else
-        build_ni_sharedlibrary
-        exit 0
+	build_ni_sharedlibrary
+	exit 0
 fi

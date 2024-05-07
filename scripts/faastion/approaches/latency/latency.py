@@ -1,24 +1,25 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
+APP = "gv_java_native_factors"
 
 def get_mean_time(approach, metric, requests):
     times = []
     
-    with open(f"logs/{approach}/{metric}-{requests}.log") as file:
+    with open(f"logs/{APP}/{approach}/{metric}-{requests}.log") as file:
         for line in file.readlines():
             if "ms" in line:
                 ms = float(line.split("ms")[0])
-                times.append(ms*1000) # Change to us
+                times.append(ms)
             else:
                 us = float(line.split("us")[0])
-                times.append(us)
+                times.append(us/1000) # Change to ms
 
     return np.mean(times)
     
 
 def main() -> None:
-    approaches = ["isolate", "process", "faastion-eager", "faastion-lazy"]
+    approaches = ["isolate", "process", "faastion-lazy", "faastlane"]
     metrics = ["latency"]
     workload = [1, 3, 5, 8, 11, 14]
 
@@ -26,9 +27,6 @@ def main() -> None:
     measures = {
         "isolates": {
             "latency": [***, ***],
-            "connect": [***, ***],
-            "TTFB": [***, ***],
-            "TTLB": [***, ***],
         },
         ...
     }
@@ -42,32 +40,22 @@ def main() -> None:
             metric_times[metric] = np.array(times)
         
         measures[approach] = metric_times
+       
+    x = np.array(workload)
+    _, ax = plt.subplots()
     
-
-    x = np.arange(len(workload))
-    width = 0.15
-    multiplier = 0
-
-    _, ax = plt.subplots(layout='constrained')
-
     for approach, metrics in measures.items():
-        bottom = np.zeros(len(workload))
-        offset = width * multiplier
-        for metric, times in metrics.items():
-            ax.bar(x + offset, times, width, label=approach, bottom=bottom)
-            bottom += times
-        multiplier += 1
-    
+        for _, times in metrics.items():
+            ax.plot(x, times, label=approach)
+
     # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Latency (us)')
-    ax.set_xlabel('Number of requests')
+    ax.set_ylabel('Average Latency (ms)')
+    ax.set_xlabel('Number of concurrent requests')
     ax.set_title('Latency for Different Approaches')
-    ax.set_xticks(x + width, workload)
-    ax.legend(loc='upper left', ncols=len(approaches))
-    ax.set_ylim(0, 700)
+    ax.legend(loc='upper left')
+    ax.set_ylim(0, 25)
 
-    plt.savefig(f'results/Latency.png')
-
+    plt.savefig(f'results/{APP}/Latency.png')
 
 if __name__ == "__main__":
     main()
