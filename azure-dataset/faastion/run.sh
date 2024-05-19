@@ -18,7 +18,7 @@ function generate_dataset {
 }
 
 function extract_functions {
-    python3 benchmark_assignment.py -f $NUM_FUNCTIONS -i $TRACES_HOME/gen-trace.csv -o $TRACES_HOME/trace.csv
+    python3 benchmark_assignment.py -f $num_functions -i $TRACES_HOME/gen-trace.csv -o $TRACES_HOME/trace.csv
 }
 
 function log_resources {
@@ -82,7 +82,7 @@ function execute {
     
     $JAVA_HOME/bin/java -cp $JAR $MAIN \
         -i      $TRACES_HOME/trace.csv  \
-        -nf     $NUM_FUNCTIONS \
+        -nf     $num_functions \
         -a      $approach \
         -d
     
@@ -101,6 +101,12 @@ if [ -z "${ARGO_HOME}" ]; then
     echo "ARGO_HOME is not defined. Existing..."
     exit 1
 fi
+if [ "$#" -ne 1 ]; then
+    echo "Syntax: <# of applications>"
+    exit 1
+else
+    num_functions=$1
+fi
 
 GRAALVISOR_HOME=$ARGO_HOME/graalvisor
 BENCHMARKS_HOME=$ARGO_HOME/benchmarks
@@ -109,9 +115,6 @@ JAVA_BENCHMARKS=$BENCHMARKS_HOME/src/java
 
 LOGS_HOME=$(DIR)/logs
 TRACES_HOME=$(DIR)/traces
-
-# Change if needed
-NUM_FUNCTIONS=1
 
 ### SCRIPT STARTS HERE ###
 mkdir -p $TRACES_HOME
