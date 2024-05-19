@@ -21,9 +21,32 @@ function extract_functions {
     python3 benchmark_assignment.py -f $NUM_FUNCTIONS -i $TRACES_HOME/gen-trace.csv -o $TRACES_HOME/trace.csv
 }
 
+function log_resources {
+    PID=$1
+    OFILE_RSS=/tmp/$approach/footprint.csv
+
+    rm $OFILE_RSS &> /dev/null
+        while kill -0 $PID &> /dev/null; do
+                # The idea for memory is that we traverse the entire pid subprocess tree
+                # and memory memory utilization. We sum all individual memory and return.
+                s_mem=0
+                timestamp=$(date -u +"%s")
+                for p in $(pstree -p $PID | grep -o '([0-9]\+)' | grep -o '[0-9]\+')
+                do
+                    p_mem=$(ps -q $p -o rss=)
+                    s_mem=$((s_mem + p_mem))
+                done
+                echo "$s_mem,$timestamp" >> $OFILE_RSS
+                sleep .100
+        done
+}
+
 function start_svm {
     export lambda_timestamp="$(date +%s%N | cut -b1-13)"
     export lambda_port="8081"
+    
+    # Faastion process pool requirement
+    mkdir -p /tmp/fifo
     
     export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:$LD_LIBRARY_PATH
     export LD_PRELOAD=$GRAALVISOR_HOME/build/libs/libpreload.so
@@ -38,27 +61,39 @@ function compile_java_classes {
 }
 
 function compile_benchmarks {
-    prefix="gv-native-hw-"
-
-    # Iterate over directories
-    for dir in "${BENCHMARKS}/${prefix}"*; do
-        if [ -d "$dir" ]; then            
-            cd "$dir"
-            ./build_script.sh
-            cd -
-        fi
+    for benchmark in gv-file-hashing gv-genericapp gv-httprequest gv-native-factorization gv-native-hw-1 gv-native-matrixmul gv-sleep #gv-classify gv-video-processing
+    do
+        cd "$JAVA_BENCHMARKS/$benchmark"
+        ./build_script.sh
+        cd -
     done
 }
 
 function execute {
+    # Start Graalvisor
     start_svm &> logs/lambda.log &
+    PID=$(echo -n "$!")
+
+    # Log Resources (memory and CPU)
+    log_resources $PID &
+
     JAR=$(DIR)/build/libs/trace-executor-1.0-all.jar
     MAIN=ExecutorEntryPoint
     
     $JAVA_HOME/bin/java -cp $JAR $MAIN \
         -i      $TRACES_HOME/trace.csv  \
         -nf     $NUM_FUNCTIONS \
+        -a      $approach \
         -d
+    
+    # Kill Graalvisor
+    pkill -9 -f polyglot-proxy
+}
+
+function cleanup_resources {
+    echo "Received signal, cleaning up resources..."
+    pkill -9 -f polyglot-proxy
+    exit
 }
 
 # Preparing global paths.
@@ -73,7 +108,6 @@ AZURE_DATASET_HOME=$BENCHMARKS_HOME/azure-dataset
 JAVA_BENCHMARKS=$BENCHMARKS_HOME/src/java
 
 LOGS_HOME=$(DIR)/logs
-CLASSPATH=$(DIR)/java
 TRACES_HOME=$(DIR)/traces
 
 # Change if needed
@@ -83,8 +117,16 @@ NUM_FUNCTIONS=1
 mkdir -p $TRACES_HOME
 mkdir -p $LOGS_HOME
 
+# Clean resources if killed with signal
+trap 'cleanup_resources' SIGINT
+
 generate_dataset
 extract_functions
-#compile_benchmarks
 compile_java_classes
-execute
+
+for approach in faastion #faastlane isolates process
+do
+    mkdir -p /tmp/$approach
+    compile_benchmarks
+    execute
+done

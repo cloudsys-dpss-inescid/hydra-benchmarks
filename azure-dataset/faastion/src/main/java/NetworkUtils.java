@@ -4,14 +4,25 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.io.FileWriter;
+import java.time.Instant;
+
 
 public class NetworkUtils {
 
-    private static final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
+    private final String outputFile;
+    private final String address;
+
+    public NetworkUtils(ExecutorConfiguration config) {
+        this.outputFile = "/tmp/" + config.approach + "/latency.csv";
+        this.address = config.getLambdaManagerAddress();
+    }
+
+    private final HttpClient HTTP_CLIENT = HttpClient.newBuilder()
             .version(HttpClient.Version.HTTP_1_1)
             .connectTimeout(Duration.ofSeconds(30)).build();
 
-    public static void sendPost(String address, String path, String contentType, byte[] content, boolean async) {
+    public void sendPost(String path, String contentType, byte[] content, boolean async) {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://" + address + path))
                 .timeout(Duration.ofMinutes(3))
                 .header("Content-Type", contentType)
@@ -19,9 +30,19 @@ public class NetworkUtils {
                 .POST(HttpRequest.BodyPublishers.ofByteArray(content)).build();
 
         if (async) {
+            final long startTime = System.nanoTime();
+            final long timestamp = Instant.now().toEpochMilli();
             HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
-                    .thenApply(HttpResponse::body)
-                    .thenAccept(System.out::println);
+                    .thenApply(response -> {
+                        long endTime = System.nanoTime();
+                        long elapsedTime = endTime - startTime;
+                        String data = elapsedTime + "," + timestamp + "\n";
+                        writeToFile(data);
+                        return response;
+                    })
+                    .thenAccept(response -> {
+                        System.out.println(response.body());
+                    });
         } else {
             try {
                 HttpResponse<String> response = HTTP_CLIENT.send(request, HttpResponse.BodyHandlers.ofString());
@@ -32,4 +53,11 @@ public class NetworkUtils {
         }
     }
 
+    private void writeToFile(String data) {
+        try (FileWriter writer = new FileWriter(outputFile, true)) { // Append mode
+            writer.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

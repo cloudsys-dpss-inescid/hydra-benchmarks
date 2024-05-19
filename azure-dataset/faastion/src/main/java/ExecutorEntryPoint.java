@@ -20,8 +20,9 @@ public class ExecutorEntryPoint {
             String inputFilePath = cmd.getOptionValue("input");
             int numFunctions = Integer.valueOf(cmd.getOptionValue("numFunctions", "5"));
             boolean debug = cmd.hasOption("debug");
+            String approach = cmd.getOptionValue("approach");
             String lambdaManagerAddress = cmd.getOptionValue("lambdaManagerAddress", "localhost:8081");
-            ExecutorConfiguration config = new ExecutorConfiguration(numFunctions, debug, lambdaManagerAddress);
+            ExecutorConfiguration config = new ExecutorConfiguration(numFunctions, approach, debug, lambdaManagerAddress);
             InvocationTraceExecutor executor = new InvocationTraceExecutor(config);
             executor.execute(inputFilePath);
         } catch (ParseException e) {
@@ -37,9 +38,12 @@ public class ExecutorEntryPoint {
         Option input = new Option("i", "input", true, "Input invocation trace file path.");
         input.setRequired(true);
         options.addOption(input);
-        Option numFunctions = new Option("nf", "numFunctions", true, "Number of functions for executions");
+        Option numFunctions = new Option("nf", "numFunctions", true, "Number of functions for executions.");
         numFunctions.setRequired(false);
         options.addOption(numFunctions);
+        Option approach = new Option("a", "approach", true, "Approach to use.");
+        approach.setRequired(true);
+        options.addOption(approach);
         Option debug = new Option("d", "debug", false, "Just print requests instead of sending them.");
         debug.setRequired(false);
         options.addOption(debug);

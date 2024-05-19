@@ -1,7 +1,7 @@
-ERROR: ld.so: object '/home/skondlap/git/argo/graalvisor/build/libs/libtest.so' from LD_PRELOAD cannot be preloaded (cannot open shared object file): ignored.
-Graalvisor boot time: 7 ms.
+Graalvisor boot time: 17 ms.
 Graalvisor listening on port 8081.
-INIT erim with shmemSize 8192 flags a
+Executing in Lazy permissions mode (default)
+INIT erim with shmemSize 65536 flags a
 pkru: 0
 Domain 1: 0x57ffffffc000
 Domain 2: 0x2bffffffc000
@@ -18,19 +18,428 @@ Domain 12: 0xaffffc000
 Domain 13: 0x57fffc000
 Domain 14: 0x2bfffc000
 Domain 15: 0x15fffc000
-allocate shmem pool at 0x200000000000 size 8192
-Allocated shared memory at 0x200000000000 of size 8192
+allocate shmem pool at 0x200000000000 size 65536
+Allocated shared memory at 0x200000000000 of size 65536
+	[S2]: up and running...
+	[S3]: up and running...
+	[S4]: up and running...
+	[S2]: Wait sem.
+	[S5]: up and running...
+	[S6]: up and running...
+	[S7]: up and running...
+	[S4]: Wait sem.
+	[S7]: Wait sem.	[S8]: up and running...
+	[S6]: Wait sem.
+	[S10]: up and running...
+	[S8]: Wait sem.
+	[S5]: Wait sem.
+
+	[S3]: Wait sem.
+	[S10]: Wait sem.
+	[S12]: up and running...
+	[S13]: up and running...	[S14]: up and running...	[S15]: up and running...
+	[S12]: Wait sem.
+	[S9]: up and running...
+	[S11]: up and running...
+
+	[S15]: Wait sem.
+
+	[S9]: Wait sem.	[S14]: Wait sem.
+
+	[S11]: Wait sem.
+	[S13]: Wait sem.
 Warning: graalvisor compiled with no truffle language support.
-Exception in thread "main" java.net.BindException: Address already in use
-	at java.base@17.0.7/sun.nio.ch.Net.bind0(Native Method)
-	at java.base@17.0.7/sun.nio.ch.Net.bind(Net.java:555)
-	at java.base@17.0.7/sun.nio.ch.ServerSocketChannelImpl.netBind(ServerSocketChannelImpl.java:337)
-	at java.base@17.0.7/sun.nio.ch.ServerSocketChannelImpl.bind(ServerSocketChannelImpl.java:294)
-	at java.base@17.0.7/sun.nio.ch.ServerSocketAdaptor.bind(ServerSocketAdaptor.java:89)
-	at jdk.httpserver@17.0.7/sun.net.httpserver.ServerImpl.<init>(ServerImpl.java:142)
-	at jdk.httpserver@17.0.7/sun.net.httpserver.HttpServerImpl.<init>(HttpServerImpl.java:50)
-	at jdk.httpserver@17.0.7/sun.net.httpserver.DefaultHttpServerProvider.createHttpServer(DefaultHttpServerProvider.java:35)
-	at jdk.httpserver@17.0.7/com.sun.net.httpserver.HttpServer.create(HttpServer.java:150)
-	at org.graalvm.argo.graalvisor.RuntimeProxy.<init>(RuntimeProxy.java:82)
-	at org.graalvm.argo.graalvisor.SubstrateVMProxy.<init>(SubstrateVMProxy.java:151)
-	at org.graalvm.argo.graalvisor.Main.main(Main.java:66)
+Function nativehw1 registered with isolate sandboxing in 79 ms
+[thread 49] New isolate sandbox 140517772886016 in 3133 us
+[s]: Getting available domain...
+	[S2]: application assigned: nativehw1.
+	[S2]: Installing filter.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...	[S2]: Handling notifications...
+
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+	[S2]: Handling notifications...Hello World 1!
+
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+	[S2]: Handling notifications...
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+	[S2]: Handling notifications...
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+	[S2]: Handling notifications...
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+	[S2]: Handling notifications...
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...
+	[S2]: Handling notifications...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+	[S2]: Handling notifications...
+[s]: switching to new stack...
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.
+[s]: Getting available domain...
+	[S2]: App is cached
+	[S2]: application assigned: nativehw1.
+	[S2]: Signal sem.
+	[S2]: preparing environment.
+[s]: switching to new stack...	[S2]: Handling notifications...
+
+[s]: handler's ready, changing domain...
+Hello World 1!
+[s]: application terminated!
+	[S2]: application finished.
+	[S2]: terminating **********
+
+	[S2]: Wait sem.

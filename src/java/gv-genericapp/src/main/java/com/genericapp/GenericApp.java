@@ -34,9 +34,9 @@ public class GenericApp {
     public static void main(String[] args) throws Exception {
         Map<String, Object> input = new HashMap<>();
         // Memory in bytes.
-        input.put("memory", args[0]);
+        input.put("memory", "4000000");
         // Duration in milliseconds.
-        input.put("duration", args[1]);
+        input.put("duration", "1000");
         main(input);
     }
 }

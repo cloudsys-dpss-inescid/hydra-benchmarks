@@ -3,35 +3,52 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 
 public class InvocationTraceExecutor {
 
     private static final int MS_IN_HOUR = 3600000;
 
-    private final ExecutorConfiguration config;
+    private final NetworkUtils network;
 
     public static Map<Integer, String> hashMap = Map.of(
         0, "nativehw1",
-        1, "nativehw2",
+        1, "factors",
+        2, "matrixmul",
+        3, "filehashing",
+        4, "genericapp",
+        5, "httprequest",
+        6, "sleep"
     );
 
-    public static Map<Integer,byte[]> fcMap = Map.of(
-        "nativehw1", Files.readAllBytes(Paths.get(System.getenv("ARGO_HOME") + "benchmarks/src/java/gv-native-hw-1"));
-        "nativehw2", Files.readAllBytes(Paths.get(System.getenv("ARGO_HOME") + "benchmarks/src/java/gv-native-hw-2"));
+    public static Map<String, String> fcMap = Map.of(
+        "nativehw1",    System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-hw-1/build/libnativehw1.so",
+        "factors",      System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-factorization/build/libfactors.so",
+        "matrixmul",    System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-matrixmul/build/libmatrixmul.so",
+        "filehashing",  System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-file-hashing/build/libfilehashing.so",
+        "genericapp",   System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-genericapp/build/libgenericapp.so",
+        "httprequest",  System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-httprequest/build/libhttprequest.so",
+        "sleep",        System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-sleep/build/libsleep.so"
     );
 
-    public static Map<Integer, String> entryMap = Map.of(
-        "nativehw1", "com.jni.HelloJNI"
-        "nativehw2", "com.jni.HelloJNI"
+    public static Map<String, String> entryMap = Map.of(
+        "nativehw1",    "com.jni.HelloJNI",
+        "factors",      "com.jni.Factorization",
+        "matrixmul",    "com.jni.MatrixMultiplication",
+        "filehashing",  "com.filehashing.FileHashing",
+        "genericapp",   "com.genericapp.GenericApp",
+        "httprequest",  "com.httprequest.HttpRequest",
+        "sleep",        "com.sleep.Sleep"
     );
 
 
     public InvocationTraceExecutor(ExecutorConfiguration config) {
-        this.config = config;
+        this.network = new NetworkUtils(config);
     }
 
     // HashOwner,HashFunction,AverageAllocatedMb,AverageDuration,Timestamp
-    public void execute(String invocationsFilePath) {
+    public void execute(String invocationsFilePath) throws IOException {
         uploadFunctions(invocationsFilePath);
         try (BufferedReader br = new BufferedReader(new FileReader(invocationsFilePath))) {
             String line;
@@ -53,7 +70,7 @@ public class InvocationTraceExecutor {
         }
     }
 
-    private void uploadFunctions(String invocationsFilePath) {
+    private void uploadFunctions(String invocationsFilePath) throws IOException {
         Set<String> uploadedFunctions = new HashSet<>();
         try (BufferedReader br = new BufferedReader(new FileReader(invocationsFilePath))) {
             String line;
@@ -69,7 +86,7 @@ public class InvocationTraceExecutor {
         }
     }
 
-    private void ensureUploaded(Set<String> uploadedFunctions, String function) {
+    private void ensureUploaded(Set<String> uploadedFunctions, String function) throws IOException {
         if (!uploadedFunctions.contains(function)) {
             uploadFunction(function);
             uploadedFunctions.add(function);
@@ -87,17 +104,14 @@ public class InvocationTraceExecutor {
         }
     }
 
-    private void uploadFunction(String function) {
+    private void uploadFunction(String function) throws IOException {
         String queryParameters = "name=" + function + "&language=java&entryPoint=" + entryMap.get(function);
-        NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/register?" + queryParameters,
-                "application/octet-stream", fcMap.get(function), false);
+        byte[] content = Files.readAllBytes(Paths.get(fcMap.get(function)));
+        network.sendPost("/register?" + queryParameters, "application/octet-stream", content, false);
     }
 
     private void invokeFunction(String function, int timestamp) {
         byte[] data = ("{\"name\":\"" + function + "\",\"async\":\"false\",\"cached\":\"true\",\"arguments\":\"\"}").getBytes(StandardCharsets.UTF_8);
-        if (config.isDebugMode()) {
-            System.out.println("Sending request with timestamp: " + timestamp);
-        }
-        NetworkUtils.sendPost(config.getLambdaManagerAddress(), "/" + function, "application/json; charset=UTF-8", data, true);
+        network.sendPost("/" + function, "application/json; charset=UTF-8", data, true);
      }
 }
