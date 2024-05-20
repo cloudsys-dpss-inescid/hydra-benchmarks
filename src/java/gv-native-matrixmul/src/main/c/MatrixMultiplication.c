@@ -2,8 +2,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ROWS 5
-#define COLS 5
+#define ROWS 3
+#define COLS 3
 
 void matrixGenerator(int **matrix){
     for (int i = 0; i < ROWS; i++) {
@@ -37,12 +37,5 @@ JNIEXPORT void JNICALL Java_com_jni_MatrixMultiplication_multiply(JNIEnv *env, j
                 result[i][j] += matrix1[i][k] * matrix2[k][j];
             }
         }
-    }
-
-    for (int i = 0; i < ROWS; i++) {
-        for (int j = 0; j < COLS; j++) {
-            fprintf(stderr, "%d ", result[i][j]);
-        }
-        fprintf(stderr, "\n");
     }
 }

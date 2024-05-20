@@ -65,13 +65,13 @@ PH_BENCHMARKS="$PH_BENCHMARKS gv_java_httprequest"        # 256 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_videoprocessing"    # 1024 MB
 PH_BENCHMARKS="$PH_BENCHMARKS gv_java_classify"           # 1024 MB
 
-function gv_java_native_test {
+function gv_java_native_aes {
     APP_LANG=java
-    APP_NAME=gv-native-hw-test
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativetest.so
-    APP_MAIN=com.jni.MessageJNI
-    curl -s -X POST $ip:8080/register?name=nativetest\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativetest","async":"false","cached":"true","arguments":""}' > $APP_POST
+    APP_NAME=gv-native-aes
+    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libaes.so
+    APP_MAIN=com.jni.AESEncryption
+    curl -s -X POST $ip:8080/register?name=aes\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"aes","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
 function gv_java_native_factors {
@@ -83,15 +83,6 @@ function gv_java_native_factors {
     echo '{"name":"factors","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
-function gv_java_native_aes {
-    APP_LANG=java
-    APP_NAME=gv-native-aes
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativeaes.so
-    APP_MAIN=com.jni.AESEncryption
-    curl -s -X POST $ip:8080/register?name=nativeaes\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativeaes","async":"false","cached":"true","arguments":""}' > $APP_POST
-}
-
 function gv_java_native_matrix {
     APP_LANG=java
     APP_NAME=gv-native-matrixmul
@@ -99,24 +90,6 @@ function gv_java_native_matrix {
     APP_MAIN=com.jni.MatrixMultiplication
     curl -s -X POST $ip:8080/register?name=matrixmul\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
     echo '{"name":"matrixmul","async":"false","cached":"true","arguments":""}' > $APP_POST
-}
-
-function gv_java_native_simple {
-    APP_LANG=java
-    APP_NAME=gv-native-simple
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativetest.so
-    APP_MAIN=com.jni.MessageJNI
-    curl -s -X POST $ip:8080/register?name=nativesimple\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativesimple","async":"false","cached":"true","arguments":""}' > $APP_POST
-}
-
-function gv_java_native_msg {
-    APP_LANG=java
-    APP_NAME=gv-native-msg
-    APP_SO=$BENCHMARKS_HOME/src/$APP_LANG/$APP_NAME/build/libnativemsg.so
-    APP_MAIN=com.jni.MessageJNI
-    curl -s -X POST $ip:8080/register?name=nativemsg\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"nativemsg","async":"false","cached":"true","arguments":""}' > $APP_POST
 }
 
 function gv_java_native_hw_1 {

@@ -10,7 +10,7 @@ ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$ARGO_HOME/graalvisor/src/main/c/memisolation/src -DSNI_DBG"
 
-BENCHMARK_NAME="nativehw14"
+BENCHMARK_NAME="matrixmul"
 SNIPPETS_DIR="$DIR/build/snippets"
 
 function run_hotspot {
@@ -22,9 +22,9 @@ function run_hotspot {
 	$JAVA_HOME/bin/java \
 		-Djava.awt.headless=true \
 		-agentlib:native-image-agent=config-output-dir=config-dir/ \
-		-cp $CLASS_PATH:libs/native-hw-14-1.0-all.jar \
+		-cp $CLASS_PATH:libs/matrixmul-1.0-all.jar \
                 -Djava.library.path=$LD_LIBRARY_PATH \
-                com.jni.HelloJNI
+                com.jni.MatrixMultiplication
 }
 
 function build_ni {
@@ -34,7 +34,7 @@ function build_ni {
         export LD_LIBRARY_PATH=libs:$LD_LIBRARY_PATH
 	$JAVA_HOME/bin/native-image \
 		--no-fallback \
-		-cp $CLASS_PATH:libs/native-hw-14-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
+		-cp $CLASS_PATH:libs/matrixmul-1.0-all.jar:$ARGO_HOME/graalvisor-lib/build/libs/graalvisor-lib-1.0-guest.jar \
 		-DGraalVisorGuest=true \
                 -Djava.library.path=$LD_LIBRARY_PATH \
 		-Dcom.oracle.svm.graalvisor.libraryPath=$ARGO_HOME/graalvisor-lib/build/resources/main/com.oracle.svm.graalvisor.headers \
@@ -46,7 +46,7 @@ function build_ni {
 }
 
 function build_ni_standalone {
-	NI_BIN_OPTS="com.jni.HelloJNI"
+	NI_BIN_OPTS="com.jni.MatrixMultiplication"
 	build_ni
 }
 
@@ -56,7 +56,7 @@ function build_ni_sharedlibrary {
 }
 
 function build_native_library {
-        gcc $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/HelloJNI.c
+        gcc $CFLAGS -o build/libs/lib$BENCHMARK_NAME-jni.so $DIR/src/main/c/MatrixMultiplication.c
         mv build/libs/lib$BENCHMARK_NAME-jni.so $ARGO_HOME/graalvisor/build/libs
 }
 

@@ -37,13 +37,13 @@ function gv_java_native_aes {
     echo '{"name":"nativeaes","async":"false","cached":"true","arguments":""}' > /tmp/payload-rodrigo.post
 }
 
-#for i in $(seq $1)
-#do
-#    gv_java_native_hw_n $i
-#done
+for i in $(seq $1)
+do
+    gv_java_native_hw_n $i
+done
 
 #gv_java_native_aes
-gv_java_native_matrix
+#gv_java_native_matrix
 #gv_java_native_factors
 
 wrk -t$1 -c$1 -d1s -s native.lua http://127.0.0.1:8081

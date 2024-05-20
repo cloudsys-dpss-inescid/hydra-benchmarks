@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class AESEncryption {
     static {
-        System.loadLibrary("nativeaes-jni");
+        System.loadLibrary("aes-jni");
     }
 
     public static native void cipher();

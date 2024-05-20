@@ -30,7 +30,7 @@ function log_resources {
                 # The idea for memory is that we traverse the entire pid subprocess tree
                 # and memory memory utilization. We sum all individual memory and return.
                 s_mem=0
-                timestamp=$(date -u +"%s")
+                timestamp=$(date -u +"%s%3N")
                 for p in $(pstree -p $PID | grep -o '([0-9]\+)' | grep -o '[0-9]\+')
                 do
                     p_mem=$(ps -q $p -o rss=)
@@ -41,9 +41,15 @@ function log_resources {
         done
 }
 
+function start_webserver {
+    cd $(DIR)/webserver
+    nohup ./webserver.sh > $LOGS_HOME/webserver.log 2>&1 &
+    cd -
+}
+
 function start_svm {
     export lambda_timestamp="$(date +%s%N | cut -b1-13)"
-    export lambda_port="8081"
+    export lambda_port="8080"
     
     # Faastion process pool requirement
     mkdir -p /tmp/fifo
@@ -60,11 +66,20 @@ function compile_java_classes {
     ./gradlew clean shadowJar
 }
 
-function compile_benchmarks {
-    for benchmark in gv-file-hashing gv-genericapp gv-httprequest gv-native-factorization gv-native-hw-1 gv-native-matrixmul gv-sleep #gv-classify gv-video-processing
+function compile_jni_benchmarks {
+    for benchmark in gv-native-factorization gv-native-hw-1 gv-native-matrixmul #gv-file-hashing gv-genericapp gv-httprequest gv-sleep gv-classify gv-video-processing
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script.sh
+        cd -
+    done
+}
+
+function compile_benchmarks {
+    for benchmark in gv-native-hw-1 gv-native-factorization gv-native-matrixmul
+    do
+        cd "$JAVA_BENCHMARKS/$benchmark"
+        ./build_script_proc_iso.sh
         cd -
     done
 }
@@ -86,13 +101,14 @@ function execute {
         -a      $approach \
         -d
     
-    # Kill Graalvisor
+    # Kill Graalvisor and Webserver
     pkill -9 -f polyglot-proxy
 }
 
 function cleanup_resources {
     echo "Received signal, cleaning up resources..."
     pkill -9 -f polyglot-proxy
+    pkill -9 -f webserver.sh
     exit
 }
 
@@ -108,6 +124,9 @@ else
     num_functions=$1
 fi
 
+# Clean resources if killed with signal
+trap 'cleanup_resources' SIGINT
+
 GRAALVISOR_HOME=$ARGO_HOME/graalvisor
 BENCHMARKS_HOME=$ARGO_HOME/benchmarks
 AZURE_DATASET_HOME=$BENCHMARKS_HOME/azure-dataset
@@ -116,20 +135,57 @@ JAVA_BENCHMARKS=$BENCHMARKS_HOME/src/java
 LOGS_HOME=$(DIR)/logs
 TRACES_HOME=$(DIR)/traces
 
-### SCRIPT STARTS HERE ###
-mkdir -p $TRACES_HOME
+rm -rf $LOGS_HOME
 mkdir -p $LOGS_HOME
 
-# Clean resources if killed with signal
-trap 'cleanup_resources' SIGINT
+rm -rf $TRACES_HOME
+mkdir -p $TRACES_HOME
 
+### SCRIPT STARTS HERE ###
 generate_dataset
 extract_functions
 compile_java_classes
 
-for approach in faastion #faastlane isolates process
+# JNI compilation
+compile_jni_benchmarks
+
+start_webserver
+
+for approach in faastion faastlane
 do
+    echo "Measuring metrics for $approach"
+    rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
-    compile_benchmarks
+
+    [ "$approach" = "faastlane" ] && export EAGER_MPK=1
     execute
+    [ "$approach" = "faastlane" ] && unset EAGER_MPK
+
+    echo ""
+    echo "####################################################"
+    echo ""
 done
+
+
+# Normal compilation
+compile_benchmarks
+
+for approach in isolate process
+do
+    echo "Measuring metrics for $approach"
+    rm -rf /tmp/$approach
+    mkdir -p /tmp/$approach
+
+    [ "$approach" = "process" ] && export SANDBOX="process"
+    execute
+
+    echo ""
+    echo "####################################################"
+    echo ""
+done
+
+# Generate plots
+python3 plots.py
+
+# Clean resources when finished
+cleanup_resources

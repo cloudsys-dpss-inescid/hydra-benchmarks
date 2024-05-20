@@ -28,7 +28,7 @@ public class FileHashing {
     public static HashMap<String, Object> main(Map<String, Object> args) {
         HashMap<String, Object> output = new HashMap<>();
 
-        byte[] bytes = downloadBytes((String)args.get("url"));
+        byte[] bytes = downloadBytes("http://127.0.0.1:8000/snap.png");
         try {
 			output.put("hash", String.format("%032X", new BigInteger(1, MessageDigest.getInstance("MD5").digest(bytes))));
 		} catch (NoSuchAlgorithmException e) {
@@ -41,8 +41,6 @@ public class FileHashing {
 
     public static void main(String[] args) {
     	HashMap<String, Object> output = new HashMap<>();
-    	output.put("url", "http://127.0.0.1:8000/snap.png");
     	output = main(output);
-    	System.out.println(output);
     }
 }

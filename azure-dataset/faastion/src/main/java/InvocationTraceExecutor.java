@@ -15,8 +15,8 @@ public class InvocationTraceExecutor {
     public static Map<Integer, String> hashMap = Map.of(
         0, "nativehw1",
         1, "factors",
-        2, "matrixmul",
-        3, "filehashing",
+        2, "filehashing",
+        3, "matrixmul",
         4, "genericapp",
         5, "httprequest",
         6, "sleep"
@@ -25,8 +25,8 @@ public class InvocationTraceExecutor {
     public static Map<String, String> fcMap = Map.of(
         "nativehw1",    System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-hw-1/build/libnativehw1.so",
         "factors",      System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-factorization/build/libfactors.so",
-        "matrixmul",    System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-matrixmul/build/libmatrixmul.so",
         "filehashing",  System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-file-hashing/build/libfilehashing.so",
+        "matrixmul",    System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-matrixmul/build/libmatrixmul.so",
         "genericapp",   System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-genericapp/build/libgenericapp.so",
         "httprequest",  System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-httprequest/build/libhttprequest.so",
         "sleep",        System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-sleep/build/libsleep.so"
@@ -35,13 +35,12 @@ public class InvocationTraceExecutor {
     public static Map<String, String> entryMap = Map.of(
         "nativehw1",    "com.jni.HelloJNI",
         "factors",      "com.jni.Factorization",
-        "matrixmul",    "com.jni.MatrixMultiplication",
         "filehashing",  "com.filehashing.FileHashing",
+        "matrixmul",    "com.jni.MatrixMultiplication",
         "genericapp",   "com.genericapp.GenericApp",
         "httprequest",  "com.httprequest.HttpRequest",
         "sleep",        "com.sleep.Sleep"
     );
-
 
     public InvocationTraceExecutor(ExecutorConfiguration config) {
         this.network = new NetworkUtils(config);
@@ -63,7 +62,7 @@ public class InvocationTraceExecutor {
 
                 waitForInvocation(currentTimestamp, timestamp);
                 currentTimestamp = timestamp;
-                invokeFunction(hashMap.get(function), timestamp);
+                invokeFunction(hashMap.get(function));
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -110,7 +109,7 @@ public class InvocationTraceExecutor {
         network.sendPost("/register?" + queryParameters, "application/octet-stream", content, false);
     }
 
-    private void invokeFunction(String function, int timestamp) {
+    private void invokeFunction(String function) {
         byte[] data = ("{\"name\":\"" + function + "\",\"async\":\"false\",\"cached\":\"true\",\"arguments\":\"\"}").getBytes(StandardCharsets.UTF_8);
         network.sendPost("/" + function, "application/json; charset=UTF-8", data, true);
      }

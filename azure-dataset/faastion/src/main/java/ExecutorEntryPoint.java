@@ -21,7 +21,7 @@ public class ExecutorEntryPoint {
             int numFunctions = Integer.valueOf(cmd.getOptionValue("numFunctions", "5"));
             boolean debug = cmd.hasOption("debug");
             String approach = cmd.getOptionValue("approach");
-            String lambdaManagerAddress = cmd.getOptionValue("lambdaManagerAddress", "localhost:8081");
+            String lambdaManagerAddress = cmd.getOptionValue("lambdaManagerAddress", "localhost:8080");
             ExecutorConfiguration config = new ExecutorConfiguration(numFunctions, approach, debug, lambdaManagerAddress);
             InvocationTraceExecutor executor = new InvocationTraceExecutor(config);
             executor.execute(inputFilePath);

@@ -32,6 +32,7 @@ public class NetworkUtils {
         if (async) {
             final long startTime = System.nanoTime();
             final long timestamp = Instant.now().toEpochMilli();
+            final String function = path.split("/")[1];
             HTTP_CLIENT.sendAsync(request, HttpResponse.BodyHandlers.ofString())
                     .thenApply(response -> {
                         long endTime = System.nanoTime();
@@ -41,7 +42,7 @@ public class NetworkUtils {
                         return response;
                     })
                     .thenAccept(response -> {
-                        System.out.println(response.body());
+                        System.out.println(function + " -> " + response.body());
                     });
         } else {
             try {

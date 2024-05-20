@@ -18,8 +18,4 @@ JNIEXPORT void JNICALL Java_com_jni_Factorization_computeFactors(JNIEnv *env, jo
             num_factors[count++] = i;
         }
     }
-
-    for(int i = 0;i < count;i++){
-        fprintf(stderr, "%d -> Factor number %d \n", num_factors[i], i);
-    }
 }

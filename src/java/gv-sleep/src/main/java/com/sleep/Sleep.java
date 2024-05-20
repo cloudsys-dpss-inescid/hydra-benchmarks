@@ -28,17 +28,14 @@ public class Sleep {
     }
 
     public static Map<String, Object> main(Map<String, Object> input) {
-        memory(Integer.parseInt((String)input.get("memory")));
-        sleep(Long.parseLong((String)input.get("sleep")));
+        memory(1024);
+        sleep(1000);
         return output;
     }
 
     public static void main(String[] args) {
         Map<String, Object> output = new HashMap<>();
-        output.put("memory", "1024");
-        output.put("sleep", "1000");
         output = main(output);
-        System.out.println(output);
     }
 
 }

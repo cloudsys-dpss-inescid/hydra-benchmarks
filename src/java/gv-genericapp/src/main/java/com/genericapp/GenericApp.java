@@ -27,16 +27,12 @@ public class GenericApp {
     }
 
     public static Map<String, Object> main(Map<String, Object> input) throws Exception {
-        genericStuff(Integer.parseInt((String)input.get("memory")), Integer.parseInt((String)input.get("duration")));
+        genericStuff(4000000, 1000);
         return output;
     }
 
     public static void main(String[] args) throws Exception {
         Map<String, Object> input = new HashMap<>();
-        // Memory in bytes.
-        input.put("memory", "4000000");
-        // Duration in milliseconds.
-        input.put("duration", "1000");
         main(input);
     }
 }
