@@ -21,14 +21,14 @@ def get_axis_values(approach: str, metric: str):
 
         for line in lines[:workload]:
             splitted = line.split(",")
-            metrics.append(int(splitted[0]))
-            times.append(int(splitted[1]) - timestamp)
+            metrics.append(int(splitted[0])/1000) # (us) and (MB)
+            times.append((int(splitted[1]) - timestamp)/1000)
     
     # Baseline
     if approach == "faastion":
         workload = len(metrics)
 
-    # Faastlane is fucked up
+    # Faastlane fails early
     if len(metrics) < workload:
         diff = workload - len(metrics)
         metrics_mean = np.mean(metrics)
