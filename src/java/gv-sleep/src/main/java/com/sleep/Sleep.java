@@ -29,7 +29,7 @@ public class Sleep {
 
     public static Map<String, Object> main(Map<String, Object> input) {
         memory(1024);
-        sleep(1000);
+        sleep(1);
         return output;
     }
 

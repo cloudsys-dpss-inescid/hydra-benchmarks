@@ -11,15 +11,15 @@ public class InvocationTraceExecutor {
     private static final int MS_IN_HOUR = 3600000;
 
     private final NetworkUtils network;
+    private final String gvSandbox;
 
     public static Map<Integer, String> hashMap = Map.of(
         0, "nativehw1",
-        1, "factors",
-        2, "filehashing",
-        3, "matrixmul",
-        4, "genericapp",
-        5, "httprequest",
-        6, "sleep"
+        1, "filehashing",
+        2, "factors",
+        3, "httprequest",
+        4, "matrixmul",
+        5, "sleep"
     );
 
     public static Map<String, String> fcMap = Map.of(
@@ -27,7 +27,6 @@ public class InvocationTraceExecutor {
         "factors",      System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-factorization/build/libfactors.so",
         "filehashing",  System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-file-hashing/build/libfilehashing.so",
         "matrixmul",    System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-native-matrixmul/build/libmatrixmul.so",
-        "genericapp",   System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-genericapp/build/libgenericapp.so",
         "httprequest",  System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-httprequest/build/libhttprequest.so",
         "sleep",        System.getenv("ARGO_HOME") + "/benchmarks/src/java/gv-sleep/build/libsleep.so"
     );
@@ -37,12 +36,12 @@ public class InvocationTraceExecutor {
         "factors",      "com.jni.Factorization",
         "filehashing",  "com.filehashing.FileHashing",
         "matrixmul",    "com.jni.MatrixMultiplication",
-        "genericapp",   "com.genericapp.GenericApp",
         "httprequest",  "com.httprequest.HttpRequest",
         "sleep",        "com.sleep.Sleep"
     );
 
     public InvocationTraceExecutor(ExecutorConfiguration config) {
+        this.gvSandbox = config.approach.equals("process") ? "process" : "isolate";
         this.network = new NetworkUtils(config);
     }
 
@@ -104,7 +103,7 @@ public class InvocationTraceExecutor {
     }
 
     private void uploadFunction(String function) throws IOException {
-        String queryParameters = "name=" + function + "&language=java&entryPoint=" + entryMap.get(function);
+        String queryParameters = "name=" + function + "&language=java&entryPoint=" + entryMap.get(function) + "&sandbox=" + gvSandbox;
         byte[] content = Files.readAllBytes(Paths.get(fcMap.get(function)));
         network.sendPost("/register?" + queryParameters, "application/octet-stream", content, false);
     }

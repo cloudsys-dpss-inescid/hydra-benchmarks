@@ -1,3 +1,6 @@
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -10,11 +13,13 @@ import java.time.Instant;
 
 public class NetworkUtils {
 
-    private final String outputFile;
+    private final String latencyFile;
+    private final String executionFile;
     private final String address;
 
     public NetworkUtils(ExecutorConfiguration config) {
-        this.outputFile = "/tmp/" + config.approach + "/latency.csv";
+        this.latencyFile = "/tmp/" + config.approach + "/latency.csv";
+        this.executionFile = "/tmp/" + config.approach + "/execution.csv";
         this.address = config.getLambdaManagerAddress();
     }
 
@@ -37,8 +42,13 @@ public class NetworkUtils {
                     .thenApply(response -> {
                         long endTime = System.nanoTime();
                         long elapsedTime = endTime - startTime;
-                        String data = elapsedTime + "," + timestamp + "\n";
-                        writeToFile(data);
+                        String latency = elapsedTime + "," + timestamp + "\n";
+                        writeToFile(latencyFile, latency);
+
+                        JsonObject jsonResponse = new JsonParser().parse(response.body()).getAsJsonObject();
+                        String processTime = jsonResponse.get("process time (us)").getAsString();
+                        String execution = processTime + "," + timestamp + "\n";
+                        writeToFile(executionFile, execution);
                         return response;
                     })
                     .thenAccept(response -> {
@@ -54,7 +64,7 @@ public class NetworkUtils {
         }
     }
 
-    private void writeToFile(String data) {
+    private void writeToFile(String outputFile, String data) {
         try (FileWriter writer = new FileWriter(outputFile, true)) { // Append mode
             writer.write(data);
         } catch (IOException e) {

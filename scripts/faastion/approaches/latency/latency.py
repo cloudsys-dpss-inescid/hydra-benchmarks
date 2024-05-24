@@ -1,61 +1,69 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-APP = "gv_java_native_factors"
+#static mpk e dynamic mpk (faastion)
+APPROACHES = ["faastion", "isolate", "process", "faastlane"]
+WORKLOAD = [1, 2, 4, 8, 12, 16, 20]
 
-def get_mean_time(approach, metric, requests):
+def get_latency_values(approach: str) -> list[float]:
+    latencies: list[float] = []
+    for requests in WORKLOAD:
+        with open(f"/tmp/{approach}/latency-{requests}.log", mode="r") as file:
+            line = file.readline()
+            latency = float(line.strip())
+
+            if "ms" in latency:
+                latencies.append(latency*1000) #(us)
+            else:
+                latencies.append(latency)
+    return np.array(latencies)
+
+    
+def get_footprint_values(approach: str, requests: int):
+    footprints = []
     times = []
     
-    with open(f"logs/{APP}/{approach}/{metric}-{requests}.log") as file:
-        for line in file.readlines():
-            if "ms" in line:
-                ms = float(line.split("ms")[0])
-                times.append(ms)
-            else:
-                us = float(line.split("us")[0])
-                times.append(us/1000) # Change to ms
+    with open(f"/tmp/{approach}/footprint-{requests}.csv", mode="r") as file:
+        lines = file.readlines()
+        timestamp = int(lines[0].split(",")[1])
 
-    return np.mean(times)
+        for line in lines:
+            splitted = line.split(",")
+            footprints.append(int(splitted[0])/1000) # (MB)
+            times.append((int(splitted[1]) - timestamp)/1000) # (seconds)
+
+    return np.array(times), np.array(footprints)
+
+
+def main():
+    _, axs = plt.subplots(2, 2, figsize=(14, 8))
+
+    # Flatten the axs array for easier indexing
+    axs = axs.flatten()
     
+    x = np.array(WORKLOAD)
 
-def main() -> None:
-    approaches = ["isolate", "process", "faastion-lazy", "faastlane"]
-    metrics = ["latency"]
-    workload = [1, 3, 5, 8, 11, 14]
+    # Latency/#requests graph
+    for approach in APPROACHES:
+        y = get_latency_values(approach)
+        axs[0].plot(x, y, label=approach)
+    axs[0].set_ylabel("Average Latency (us)")
+    axs[0].set_xlabel("Number of concurrent requests")
+    axs[0].legend(loc='upper right')
 
-    """
-    measures = {
-        "isolates": {
-            "latency": [***, ***],
-        },
-        ...
-    }
-    """
-    measures = {}
-    for approach in approaches:
-        metric_times = {}
-        
-        for metric in metrics:
-            times = [get_mean_time(approach, metric, requests) for requests in workload]
-            metric_times[metric] = np.array(times)
-        
-        measures[approach] = metric_times
-       
-    x = np.array(workload)
-    _, ax = plt.subplots()
-    
-    for approach, metrics in measures.items():
-        for _, times in metrics.items():
-            ax.plot(x, times, label=approach)
+    # Footprint/time graph
+    for index, requests in enumerate(WORKLOAD[3:]):
+        current_plot = index + 1
+        for approach in APPROACHES:
+            x, y = get_footprint_values(approach, requests)
+            axs[current_plot].plot(x, y, label=approach)
 
-    # Add some text for labels, title and custom x-axis tick labels, etc.
-    ax.set_ylabel('Average Latency (ms)')
-    ax.set_xlabel('Number of concurrent requests')
-    ax.set_title('Latency for Different Approaches')
-    ax.legend(loc='upper left')
-    ax.set_ylim(0, 25)
+        axs[current_plot].set_ylabel(f"Memory Footprint for {requests} concurrent requests (MB)")
+        axs[current_plot].set_xlabel("Time (s)")
+        axs[current_plot].legend(loc='upper left')
 
-    plt.savefig(f'results/{APP}/Latency.png')
+    plt.tight_layout()
+    plt.savefig('plots.png')
 
 if __name__ == "__main__":
     main()

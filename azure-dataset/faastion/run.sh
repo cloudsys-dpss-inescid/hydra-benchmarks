@@ -4,6 +4,18 @@ function DIR {
     echo "$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 }
 
+GRAALVISOR_HOME=$ARGO_HOME/graalvisor
+BENCHMARKS_HOME=$ARGO_HOME/benchmarks
+AZURE_DATASET_HOME=$BENCHMARKS_HOME/azure-dataset
+JAVA_BENCHMARKS=$BENCHMARKS_HOME/src/java
+
+LOGS_HOME=$(DIR)/logs
+TRACES_HOME=$(DIR)/traces
+
+GREEN='\033[0;32m'
+NC='\033[0m' # No Color
+
+
 function build_azure {
     cd $AZURE_DATASET_HOME
     ./build.sh
@@ -14,7 +26,7 @@ function build_azure {
 function generate_dataset {
     # Uncomment if azure-dataset is first time running
     # build_azure
-    $AZURE_DATASET_HOME/trace-generator.sh -m 100 -d d01 -t $TRACES_HOME/gen-trace.csv
+    $AZURE_DATASET_HOME/trace-generator.sh -m 2048 -d d01 -t $TRACES_HOME/gen-trace.csv
 }
 
 function extract_functions {
@@ -52,6 +64,7 @@ function start_svm {
     export lambda_port="8080"
     
     # Faastion process pool requirement
+    rm -rf /tmp/fifo
     mkdir -p /tmp/fifo
     
     export LD_LIBRARY_PATH=$GRAALVISOR_HOME/build/libs:$LD_LIBRARY_PATH
@@ -67,7 +80,7 @@ function compile_java_classes {
 }
 
 function compile_jni_benchmarks {
-    for benchmark in gv-native-factorization gv-native-hw-1 gv-native-matrixmul #gv-file-hashing gv-genericapp gv-httprequest gv-sleep gv-classify gv-video-processing
+    for benchmark in gv-native-factorization gv-native-hw-1 gv-native-matrixmul gv-file-hashing gv-httprequest gv-sleep #gv-classify gv-video-processing
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script.sh
@@ -127,18 +140,8 @@ fi
 # Clean resources if killed with signal
 trap 'cleanup_resources' SIGINT
 
-GRAALVISOR_HOME=$ARGO_HOME/graalvisor
-BENCHMARKS_HOME=$ARGO_HOME/benchmarks
-AZURE_DATASET_HOME=$BENCHMARKS_HOME/azure-dataset
-JAVA_BENCHMARKS=$BENCHMARKS_HOME/src/java
-
-LOGS_HOME=$(DIR)/logs
-TRACES_HOME=$(DIR)/traces
-
 rm -rf $LOGS_HOME
 mkdir -p $LOGS_HOME
-
-rm -rf $TRACES_HOME
 mkdir -p $TRACES_HOME
 
 ### SCRIPT STARTS HERE ###
@@ -146,46 +149,49 @@ generate_dataset
 extract_functions
 compile_java_classes
 
+start_webserver
+
+# TODO Make average logic!!!
+
 # JNI compilation
 compile_jni_benchmarks
 
-start_webserver
-
-for approach in faastion faastlane
+for approach in faastlane #faastion 
 do
-    echo "Measuring metrics for $approach"
+    echo -e "${GREEN}###################################################"
+    echo -e "#          Measuring metrics for $approach         #"
+    echo -e "###################################################${NC}"
+    
     rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
 
     [ "$approach" = "faastlane" ] && export EAGER_MPK=1
     execute
     [ "$approach" = "faastlane" ] && unset EAGER_MPK
-
-    echo ""
-    echo "####################################################"
-    echo ""
 done
-
 
 # Normal compilation
 compile_benchmarks
 
-for approach in isolate process
+for approach in process isolate 
 do
-    echo "Measuring metrics for $approach"
+    echo -e "${GREEN}###################################################"
+    echo -e "#          Measuring metrics for $approach         #"
+    echo -e "###################################################${NC}"
+
     rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
 
-    [ "$approach" = "process" ] && export SANDBOX="process"
     execute
-
-    echo ""
-    echo "####################################################"
-    echo ""
 done
 
 # Generate plots
 python3 plots.py
+
+# Calculate throughput
+workload=$(wc -l < traces/trace.csv)
+throughput=$((workload / 600))
+echo -e "Throughput ${throughput} invocations/s"
 
 # Clean resources when finished
 cleanup_resources

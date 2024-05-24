@@ -1,14 +1,10 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-APPROACHES = ["faastion", "faastlane", "isolate", "process"]
-METRICS = ["latency", "footprint"]
-
-workload = 0
+#static mpk e dynamic mpk (faastion)
+APPROACHES = ["faastion", "isolate", "process"] #"faastlane"
 
 def get_axis_values(approach: str, metric: str):
-    global workload
-
     metrics = []
     times = []
     
@@ -16,42 +12,61 @@ def get_axis_values(approach: str, metric: str):
         lines = file.readlines()
         timestamp = int(lines[0].split(",")[1])
 
-        if workload == 0:
-            workload = len(lines)
-
-        for line in lines[:workload]:
+        for line in lines:
             splitted = line.split(",")
-            metrics.append(int(splitted[0])/1000) # (us) and (MB)
-            times.append((int(splitted[1]) - timestamp)/1000)
-    
-    # Baseline
-    if approach == "faastion":
-        workload = len(metrics)
-
-    # Faastlane fails early
-    if len(metrics) < workload:
-        diff = workload - len(metrics)
-        metrics_mean = np.mean(metrics)
-        times_mean = times[1] - times[0]
-        for _ in range(workload, diff, -1):
-            metrics.append(metrics_mean)
-            times.append(times[-1] + times_mean)
+            if metric in ["footprint", "execution"]:
+                metrics.append(int(splitted[0])/1000) # (MB) or (ms)
+            elif metric == "latency":
+                metrics.append(int(splitted[0])/1_000_000) # (ms)
+            else: # domains
+                metrics.append(int(splitted[0]))
+            times.append((int(splitted[1]) - timestamp)/1000) # (seconds)
 
     return np.array(times), np.array(metrics)
 
 
-def main():    
-    _, axs = plt.subplots(1, 2)
+def main():
+    fig, axs = plt.subplots(2, 2, figsize=(14, 8))
 
-    for index, metric in enumerate(METRICS):
-        for approach in APPROACHES:
-            x, y = get_axis_values(approach, metric) 
-            axs[index].plot(x, y, label=approach)
-        axs[index].set_ylabel(metric)
-        axs[index].set_xlabel('time')
-        axs[index].legend(loc='upper left')
-        axs[index].set_title(f'{metric} per time')
+    # Flatten the axs array for easier indexing
+    axs = axs.flatten()
 
+    # Latency CDF graph
+    for approach in APPROACHES:
+        _, latency = get_axis_values(approach, "latency")
+        sorted_latency = np.sort(latency)
+        cumulative_prob = np.arange(len(sorted_latency)) / float(len(sorted_latency))
+        axs[0].plot(sorted_latency, cumulative_prob, label=approach)
+    axs[0].set_ylabel("Cumulative Probability")
+    axs[0].set_xlabel("Latency (ms)")
+    axs[0].legend(loc='upper right')
+
+    for approach in APPROACHES:
+        _, execution = get_axis_values(approach, "execution")
+        sorted_execution = np.sort(execution)
+        cumulative_prob = np.arange(len(sorted_execution)) / float(len(sorted_execution))
+        axs[1].plot(sorted_execution, cumulative_prob, label=approach)
+    axs[1].set_ylabel("Cumulative Probability")
+    axs[1].set_xlabel("Process Time (ms)")
+    axs[1].legend(loc='upper right')
+
+    for approach in APPROACHES:
+        x, y = get_axis_values(approach, "footprint")
+        axs[2].plot(x, y, label=approach)
+    axs[2].set_ylabel("Memory Footprint (MB)")
+    axs[2].set_xlabel("Time (s)")
+    axs[2].legend(loc='upper left')
+
+    # Domains/time graph
+    for approach in ["faastion", "faastlane"]:
+        x, y = get_axis_values(approach, "domains")
+        axs[3].plot(x, y, label=approach)
+    axs[3].set_ylabel("# Domains")
+    axs[3].set_xlabel('Time (s)')
+    axs[3].legend(loc='upper right')
+    axs[3].set_xlim(0, 600)
+
+    plt.tight_layout()
     plt.savefig('plots.png')
 
 if __name__ == "__main__":
