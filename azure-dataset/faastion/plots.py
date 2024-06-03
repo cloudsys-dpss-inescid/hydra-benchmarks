@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 #static mpk e dynamic mpk (faastion)
-APPROACHES = ["faastion", "isolate", "process"] #"faastlane"
+APPROACHES = ["faastion", "faastlane", "isolate", "process"]
 
 def get_axis_values(approach: str, metric: str):
     metrics = []
@@ -16,11 +16,13 @@ def get_axis_values(approach: str, metric: str):
             splitted = line.split(",")
             if metric in ["footprint", "execution"]:
                 metrics.append(int(splitted[0])/1000) # (MB) or (ms)
+                times.append((int(splitted[1]) - timestamp)/1000) # (ms) to (s)
             elif metric == "latency":
                 metrics.append(int(splitted[0])/1_000_000) # (ms)
+                times.append((int(splitted[1]) - timestamp)/1000) # (ms) to (s)
             else: # domains
                 metrics.append(int(splitted[0]))
-            times.append((int(splitted[1]) - timestamp)/1000) # (seconds)
+                times.append((int(splitted[1]) - timestamp)/1_000_000) # (us) to (s)
 
     return np.array(times), np.array(metrics)
 
@@ -61,7 +63,7 @@ def main():
     for approach in ["faastion", "faastlane"]:
         x, y = get_axis_values(approach, "domains")
         axs[3].plot(x, y, label=approach)
-    axs[3].set_ylabel("# Domains")
+    axs[3].set_ylabel("Domains usage")
     axs[3].set_xlabel('Time (s)')
     axs[3].legend(loc='upper right')
     axs[3].set_xlim(0, 600)

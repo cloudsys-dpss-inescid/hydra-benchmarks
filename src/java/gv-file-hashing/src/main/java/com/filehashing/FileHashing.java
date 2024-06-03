@@ -11,25 +11,15 @@ import java.util.Map;
 import java.util.HashMap;
 
 public class FileHashing {
-	
-	public static byte[] downloadBytes(String url) {
-    	try {
-    		URLConnection conn = new URL(url).openConnection();
-			InputStream is = conn.getInputStream();
-			byte[] bytes = is.readAllBytes();
-			is.close();
-			return bytes;
-		} catch (IOException e) {
-			e.printStackTrace();
-			return null;
-		}
-    }
 
     public static HashMap<String, Object> main(Map<String, Object> args) {
         HashMap<String, Object> output = new HashMap<>();
 
-        byte[] bytes = downloadBytes("http://127.0.0.1:8000/snap.png");
-        try {
+        byte[] bytes = new byte[1000];
+        Random random = new Random();
+        random.nextBytes(bytes);
+		
+		try {
 			output.put("hash", String.format("%032X", new BigInteger(1, MessageDigest.getInstance("MD5").digest(bytes))));
 		} catch (NoSuchAlgorithmException e) {
 			output.put("hash", e.getMessage());
