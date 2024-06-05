@@ -27,13 +27,14 @@ then
 fi
 
 
+
 #docker run -d -p 8000:80 --rm -v $DIR:/usr/share/nginx/html --name web nginx
 docker run --log-opt max-size=100m --log-opt max-file=3 -d -p 8000:80 --rm -v $DIR:/usr/share/nginx/html --name web nginx 
 
 
 
 #for the memcached
-docker run -d --name memcached-server -p 11211:11211 memcached
+docker run -d --name memcached-server -p 11211:11211 memcached -m 256 -c 4096
 
 # Wait for the Memcached server to be ready
 while ! nc -z localhost 11211; do

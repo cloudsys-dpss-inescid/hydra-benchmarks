@@ -53,11 +53,12 @@ function remote_Cclient_benchmark {
 
 }
 
-#example:  benchmark-graalvisor.sh svm gv_java_hw launch_and_wait 1
+#example:  ./benchmark-graalvisor.sh svm gv_java_hw launch_and_wait 1
 function launch_and_wait {
     sleep 4 #this starts to fast, the GraalVM is still not running
 
-    echo "\n Graalvisor was launched, press enter to terminate ..."
+    echo ""
+    echo "Graalvisor was launched, press enter to terminate ..."
     read
 
     echo "Terminating Graalvisor..."
@@ -146,7 +147,10 @@ function run {
     prepare_resources
 
     # Load function into runtime.
+    gv_java_sleep # I need this to load first other wise the payload.post that is updloaded to the client e wrong
+    gv_java_dbreader
     $app
+
 
     # Run test/benchmark.
     $mode 2>&1 | tee $TDIR/app.log

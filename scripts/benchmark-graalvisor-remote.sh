@@ -27,7 +27,8 @@ function run_remote_client {
     
     #printf "\n\n a fazer pedido aqui\n"
     #printf "\n\n pedido: && ./http_post $SERVER_IP $SERVER_PORT $REMOTE_PAYLOAD_FILE $LOCAL_THREADS $WORKLOAD $REMOTE_RESULTS_DIR    e  $USERNAME@$CLIENT_IP" "ulimit -n 16384 && cd $SSH_PASSWORD "
-    sshpass -p "$SSH_PASSWORD" ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$CLIENT_IP" "ulimit -n 16384 && cd $REMOTE_DIRECTORY_CODE && ./http_post $SERVER_IP $SERVER_PORT $REMOTE_PAYLOAD_FILE $LOCAL_THREADS $WORKLOAD $REMOTE_RESULTS_DIR"  >> $TDIR/remote_client.log  2>&1
+    sshpass -p "$SSH_PASSWORD" ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$CLIENT_IP" "ulimit -n 1048576 && cd $REMOTE_DIRECTORY_CODE && ./http_post $SERVER_IP $SERVER_PORT $REMOTE_PAYLOAD_FILE $LOCAL_THREADS $WORKLOAD $REMOTE_RESULTS_DIR"  >> $TDIR/remote_client.log  2>&1
+    #sshpass -p "$SSH_PASSWORD" ssh  -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null "$USERNAME@$CLIENT_IP" " cd $REMOTE_DIRECTORY_CODE && ./http_post $SERVER_IP $SERVER_PORT $REMOTE_PAYLOAD_FILE $LOCAL_THREADS $WORKLOAD $REMOTE_RESULTS_DIR"  >> $TDIR/remote_client.log  2>&1
     #printf "\n\n a enviar os datapoints\n"
     sshpass -p "$SSH_PASSWORD" scp -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -r "$USERNAME@$CLIENT_IP:$REMOTE_RESULTS_DIR*" "$TDIR" >> $TDIR/remote_client.log  2>&1
     #printf "\n\n  datapoints enviados \n"

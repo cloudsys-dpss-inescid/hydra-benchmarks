@@ -333,6 +333,32 @@ def get_latency_datapoints(file_path, thread_id, experience_start_time = 0):
     
     return timestamp_array, latency_array
 
+
+def get_latency_sleep_datapoints(file_path, experience_start_time = 0):
+    sleep_duration_array = []
+    process_time_array = []
+    timestamp_array = []
+    duration_at_client_array = []
+    try:
+        with open(file_path) as file:
+            for line in file:
+                if "process time (us)" in line:
+                    if "sleep duration (nanoseconds)" in line:
+                        sleep_duration = float( line.split('sleep duration (nanoseconds)')[1].split(",")[0].replace('}"', '').split(":")[1] ) / 1000000
+                        sleep_duration_array.append(sleep_duration)
+                    process_time = float( line.split('process time (us)":')[1].split("}")[0] ) / 1000
+                    process_time_array.append(process_time)
+                elif "timestamp" in line:
+                    timestamp = float( line.split("timestamp")[1].split(",")[0] )  - experience_start_time
+                    duration_at_client = float( line.split("duration")[1].split(")")[0] )
+                    timestamp_array.append(timestamp)
+                    duration_at_client_array.append(duration_at_client)
+    except Exception as e:
+        print("Error processing " + file_path + " line :" + line )
+        raise e
+    
+    return sleep_duration_array, process_time_array, timestamp_array, duration_at_client_array
+
 def get_thread_throughput(timestamp_left, timestamp_rigth, timestamp_array):
     total_below = ( np.array(timestamp_array) < timestamp_left).sum()
     total_larger = ( np.array(timestamp_array) > timestamp_rigth).sum()

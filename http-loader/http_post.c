@@ -184,10 +184,10 @@ void *run_request(void *arg) {
             }
 
         }
-
+		
         if(DEBUG_MODE){
             response[total_bytes_recv] = '\0';
-            printf("Server response (received %ld bytes and expected %d bytes, Thread %d):\n%s\n", total_bytes_recv, ( content_length + HTTP_HEADER + character_counter(content_length)), thread_id, response);           
+            printf("\n** Server response ** \n ( timestamp %f, duration %f ) \n ( received %ld bytes and expected %d bytes, Thread %d ):\n%s\n", (start_timestamp[i] / 1000000.0), (elapsed_time[i] / 1000000.0), total_bytes_recv, ( content_length + HTTP_HEADER + character_counter(content_length)), thread_id, response);          
         }
 
         if (bytes_recv < 0) {

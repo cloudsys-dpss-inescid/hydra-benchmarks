@@ -134,8 +134,8 @@ function pin_core {
 
 # I was able to disable the hyperthreading by using: "echo off | sudo tee /sys/devices/system/cpu/smt/control". Options are: on, off, forceoff
 function pin_sokcet {
-    sudo taskset -a -cp 26-51,78-103 $PID
-    #sudo taskset -a -cp 26-51 $PID
+    #sudo taskset -a -cp 26-51,78-103 $PID
+    sudo taskset -a -cp 26-51 $PID
     echo "Pinned process $PID to sokcet 1."
 }
 
@@ -346,23 +346,14 @@ function start_svm {
         #APP_PID=$!
         
         #I used this for Oracle meeting
-        perf sched record ./app -Xms31g -Xmx31g  -XX:+PrintGC &
-        APP_PID=$!
+        #perf sched record ./app -Xms31g -Xmx31g  -XX:+PrintGC &
+        #APP_PID=$!
 
         # this works for G1
-        #./app -Xms31g -Xmx31g -XX:+PrintGC & 
+        ./app -Xms31g -Xmx31g -XX:+PrintGC & 
+        APP_PID=$!
         
 
-
-        #### with  "perf record" youe need both  line is enough  
-        ###perf record -e context-switches -p $APP_PID &
-        #perf record -e sched:sched_switch -p $APP_PID &
-        #perf record -e 'sched:*' -p $APP_PID &
-
-        ####echo -n "$!" > "$TDIR/perf.pid"
-
-        #### with  "perf sched" this line is enough  
-        #sudo perf sched record -p $APP_PID &
 
 
 
@@ -451,4 +442,3 @@ function stop_svm {
         kill $(cat "$TDIR/perf.pid")
     fi
 }
-
