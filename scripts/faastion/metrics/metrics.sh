@@ -20,7 +20,7 @@ function gv_java_native_factors {
     APP_MAIN=com.jni.Factorization
     # Register the native application in GraalVM
     curl -s -X POST 127.0.0.1:8080/register?name=factors\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"factors","async":"false","cached":"true","arguments":""}' > /tmp/payload.post
+    echo '{"name":"factors","async":"false","cached":"true","arguments":""}' > /tmp/payload1.post
 }
 
 function gv_java_native_matrix {
@@ -30,7 +30,7 @@ function gv_java_native_matrix {
     APP_MAIN=com.jni.MatrixMultiplication
     # Register the native application in GraalVM
     curl -s -X POST 127.0.0.1:8080/register?name=matrixmul\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"matrixmul","async":"false","cached":"true","arguments":""}' > /tmp/payload.post
+    echo '{"name":"matrixmul","async":"false","cached":"true","arguments":""}' > /tmp/payload2.post
 }
 
 function compile_jni_benchmarks {
@@ -83,7 +83,7 @@ function log_resources {
 }
 
 function benchmark {
-    wrk -t$workload -c$workload -d1m -s native.lua http://127.0.0.1:8080
+    wrk -t$workload -c$workload -d5s -s native.lua http://127.0.0.1:8080
 }
 
 function capture {
@@ -100,28 +100,35 @@ function capture {
     throughput=$(echo "$output" | grep "Requests/sec" | awk '{print $2}')
 
     echo $avg_latency > /tmp/$approach/latency-$workload.log
-    echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach-$workload.txt
+    echo "$output" | grep 'Response Body' | sed 's/Response Body://' | jq -r '.["process time (us)"]' > /tmp/$approach/execution-$workload.log
+
+    echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach/data-$workload.txt
 }
 
 function warmup {
     # Sequential
     for i in $(seq 14)
     do
-        curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload.post) &>/dev/null 
+        curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload1.post) &>/dev/null 
     done
 
     # Concurrent
     (
-    for i in $(seq 14)
-    do
-        curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload.post) &>/dev/null &
-    done
-    wait
+        for i in $(seq 14)
+        do
+            curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload1.post) &>/dev/null &
+        done
+        wait
     )
 }
 
+function register {
+    gv_java_native_factors
+    #gv_java_native_matrix
+}
+
 function execute {
-    # Faastion process pool requirement
+    # Faastion process pool requirements
     rm -rf /tmp/fifo
     mkdir -p /tmp/fifo
     rm -rf /tmp/ret
@@ -129,21 +136,21 @@ function execute {
     rm -f /tmp/$approach/domains.csv
     
     # Start Graalvisor
-    start_svm &> $LOGS_HOME/$approach-$workload-lambda.log &
+    start_svm &> $LOGS_HOME/$approach/$workload-lambda.log &
     PID=$(echo -n "$!")
 
     # Log Resources (memory and CPU)
     log_resources $PID &
 
-    # Register application
-    $app
+    # Register applications
+    register
 
     # Comment for cold-start measures
     warmup
     
     # Run Benchmarking tool
-    #capture
-    benchmark
+    capture
+    #benchmark
     
     # Kill Graalvisor and Webserver
     pkill -9 -f polyglot-proxy
@@ -160,13 +167,6 @@ if [ -z "${ARGO_HOME}" ]; then
     echo "ARGO_HOME is not defined. Existing..."
     exit 1
 fi
-if [ "$#" -ne 1 ]; then
-    echo "Syntax: <app>"
-    echo "- app=<gv_java_native_matrix|gv_java_native_factors|...>"
-    exit 1
-else
-    app=$1
-fi
 
 # Clean resources if killed with signal
 trap 'cleanup_resources' SIGINT
@@ -178,17 +178,19 @@ mkdir -p $LOGS_HOME
 nrequests=(1 2 4 6 8 10 12 14 16 18 20)
 
 # JNI compilation
-compile_jni_benchmarks
+#compile_jni_benchmarks
 
 export SANDBOX=isolate
 for approach in faastion faastlane 
 do
     echo -e "${GREEN}###################################################"
-    echo -e "#         Measuring metrics for $approach         #"
+    echo -e "          Measuring metrics for $approach         "
     echo -e "###################################################${NC}"
     
     rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
+    rm -rf $LOGS_HOME/$approach
+    mkdir -p $LOGS_HOME/$approach
 
     [ "$approach" = "faastlane" ] && export EAGER_MPK=1
     for workload in "${nrequests[@]}"
@@ -205,11 +207,13 @@ compile_benchmarks
 for approach in process isolate 
 do
     echo -e "${GREEN}###################################################"
-    echo -e "#         Measuring metrics for $approach         #"
+    echo -e "          Measuring metrics for $approach         "
     echo -e "###################################################${NC}"
 
     rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
+    rm -rf $LOGS_HOME/$approach
+    mkdir -p $LOGS_HOME/$approach
 
     export SANDBOX=$approach
     for workload in "${nrequests[@]}"
