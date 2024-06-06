@@ -83,8 +83,7 @@ function log_resources {
 }
 
 function benchmark {
-    #wrk -t$workload -c$workload -d1s -s native.lua http://127.0.0.1:8080
-    wrk -t4 -c4 -d1m -s native.lua http://127.0.0.1:8080
+    wrk -t$workload -c$workload -d1m -s native.lua http://127.0.0.1:8080
 }
 
 function capture {
@@ -125,6 +124,9 @@ function execute {
     # Faastion process pool requirement
     rm -rf /tmp/fifo
     mkdir -p /tmp/fifo
+    rm -rf /tmp/ret
+    mkdir -p /tmp/ret
+    rm -f /tmp/$approach/domains.csv
     
     # Start Graalvisor
     start_svm &> $LOGS_HOME/$approach-$workload-lambda.log &
@@ -173,13 +175,13 @@ rm -rf $LOGS_HOME
 mkdir -p $LOGS_HOME
 
 ### SCRIPT STARTS HERE ###
-nrequests=(1 2 4 8 12 16 20)
+nrequests=(1 2 4 6 8 10 12 14 16 18 20)
 
 # JNI compilation
-#compile_jni_benchmarks
+compile_jni_benchmarks
 
 export SANDBOX=isolate
-for approach in faastion #faastlane 
+for approach in faastion faastlane 
 do
     echo -e "${GREEN}###################################################"
     echo -e "#         Measuring metrics for $approach         #"
@@ -192,31 +194,33 @@ do
     for workload in "${nrequests[@]}"
     do
         execute
+        sleep 1
     done
     [ "$approach" = "faastlane" ] && unset EAGER_MPK
 done
 
 # Normal compilation
-# compile_benchmarks
+compile_benchmarks
 
-# for approach in process isolate 
-# do
-#     echo -e "${GREEN}###################################################"
-#     echo -e "#         Measuring metrics for $approach         #"
-#     echo -e "###################################################${NC}"
+for approach in process isolate 
+do
+    echo -e "${GREEN}###################################################"
+    echo -e "#         Measuring metrics for $approach         #"
+    echo -e "###################################################${NC}"
 
-#     rm -rf /tmp/$approach
-#     mkdir -p /tmp/$approach
+    rm -rf /tmp/$approach
+    mkdir -p /tmp/$approach
 
-#     export SANDBOX=$approach
-#     for workload in "${nrequests[@]}"
-#     do
-#         execute
-#     done
-# done
+    export SANDBOX=$approach
+    for workload in "${nrequests[@]}"
+    do
+        execute
+        sleep 1
+    done
+done
 
 # Generate plots
-#python3 latency.py
+python3 latency.py
 
 # Clean resources when finished
 cleanup_resources
