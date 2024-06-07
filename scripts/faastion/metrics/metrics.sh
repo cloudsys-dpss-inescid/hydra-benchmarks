@@ -83,12 +83,13 @@ function log_resources {
 }
 
 function benchmark {
-    wrk -t$workload -c$workload -d5s -s native.lua http://127.0.0.1:8080
+    wrk -t$workload -c$workload -d1m -s native.lua http://127.0.0.1:8080
 }
 
 function capture {
     # Execute wrk and capture the output
     output=$(benchmark)
+
 
     # Extract the average latency
     avg_latency=$(echo "$output" | grep "Latency" | awk '{print $2}')
@@ -99,10 +100,10 @@ function capture {
     # Extract the throughput (requests per second)
     throughput=$(echo "$output" | grep "Requests/sec" | awk '{print $2}')
 
-    echo $avg_latency > /tmp/$approach/latency-$workload.log
-    echo "$output" | grep 'Response Body' | sed 's/Response Body://' | jq -r '.["process time (us)"]' > /tmp/$approach/execution-$workload.log
-
-    echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach/data-$workload.txt
+     echo $avg_latency > /tmp/$approach/latency-$workload.log
+    #  echo "$output" | grep 'Response Body' | sed 's/Response Body://' | jq -r '.["process time (us)"]' > /tmp/$approach/execution-$workload.log
+     echo $(echo $output | jq -r '."process time (us)"') > /tmp/$approach/$(echo $output | jq -r '.function')
+     echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach/data-$workload.txt
 }
 
 function warmup {
@@ -149,8 +150,8 @@ function execute {
     warmup
     
     # Run Benchmarking tool
-    capture
-    #benchmark
+    #capture
+    benchmark
     
     # Kill Graalvisor and Webserver
     pkill -9 -f polyglot-proxy
@@ -178,7 +179,7 @@ mkdir -p $LOGS_HOME
 nrequests=(1 2 4 6 8 10 12 14 16 18 20)
 
 # JNI compilation
-#compile_jni_benchmarks
+compile_jni_benchmarks
 
 export SANDBOX=isolate
 for approach in faastion faastlane 
@@ -224,7 +225,7 @@ do
 done
 
 # Generate plots
-python3 latency.py
+python3 metrics.py
 
 # Clean resources when finished
 cleanup_resources
