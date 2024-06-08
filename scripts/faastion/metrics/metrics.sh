@@ -64,7 +64,7 @@ function start_svm {
 
 function log_resources {
     PID=$1
-    OFILE_RSS=/tmp/$approach/footprint-$workload.csv
+    OFILE_RSS=/tmp/$approach/footprint.csv
 
     rm $OFILE_RSS &> /dev/null
         while kill -0 $PID &> /dev/null; do
@@ -83,13 +83,12 @@ function log_resources {
 }
 
 function benchmark {
-    wrk -t$workload -c$workload -d1m -s native.lua http://127.0.0.1:8080
+    wrk -t20 -c20 -d10s -s native.lua http://127.0.0.1:8080
 }
 
 function capture {
     # Execute wrk and capture the output
     output=$(benchmark)
-
 
     # Extract the average latency
     avg_latency=$(echo "$output" | grep "Latency" | awk '{print $2}')
@@ -100,10 +99,9 @@ function capture {
     # Extract the throughput (requests per second)
     throughput=$(echo "$output" | grep "Requests/sec" | awk '{print $2}')
 
-     echo $avg_latency > /tmp/$approach/latency-$workload.log
-    #  echo "$output" | grep 'Response Body' | sed 's/Response Body://' | jq -r '.["process time (us)"]' > /tmp/$approach/execution-$workload.log
-     echo $(echo $output | jq -r '."process time (us)"') > /tmp/$approach/$(echo $output | jq -r '.function')
-     echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach/data-$workload.txt
+    echo $avg_latency > /tmp/$approach/avg_latency.log
+    echo $(echo $output | jq -r '."process time (us)"') > /tmp/$approach/$(echo $output | jq -r '."function"')_latency.log # ssl stands for Server Side Latency
+    echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach/data.txt
 }
 
 function warmup {
@@ -128,16 +126,19 @@ function register {
     #gv_java_native_matrix
 }
 
-function execute {
-    # Faastion process pool requirements
+function requirements {
     rm -rf /tmp/fifo
     mkdir -p /tmp/fifo
     rm -rf /tmp/ret
     mkdir -p /tmp/ret
-    rm -f /tmp/$approach/domains.csv
+}
+
+function execute {
+    # Faastion process pool requirements
+    requirements
     
     # Start Graalvisor
-    start_svm &> $LOGS_HOME/$approach/$workload-lambda.log &
+    start_svm &> $LOGS_HOME/$approach/lambda.log &
     PID=$(echo -n "$!")
 
     # Log Resources (memory and CPU)
@@ -157,6 +158,13 @@ function execute {
     pkill -9 -f polyglot-proxy
 }
 
+function setup {
+    rm -rf /tmp/$approach
+    mkdir -p /tmp/$approach
+    rm -rf $LOGS_HOME/$approach
+    mkdir -p $LOGS_HOME/$approach
+}
+
 function cleanup_resources {
     echo "Received signal, cleaning up resources..."
     pkill -9 -f polyglot-proxy
@@ -172,11 +180,23 @@ fi
 # Clean resources if killed with signal
 trap 'cleanup_resources' SIGINT
 
-rm -rf $LOGS_HOME
-mkdir -p $LOGS_HOME
-
 ### SCRIPT STARTS HERE ###
-nrequests=(1 2 4 6 8 10 12 14 16 18 20)
+# Normal compilation
+compile_benchmarks
+
+for approach in process isolate 
+do
+    echo -e "${GREEN}###################################################"
+    echo -e "          Measuring metrics for $approach         "
+    echo -e "###################################################${NC}"
+
+    # Setup environment
+    setup
+
+    export SANDBOX=$approach
+    execute
+    sleep 1
+done
 
 # JNI compilation
 compile_jni_benchmarks
@@ -188,40 +208,13 @@ do
     echo -e "          Measuring metrics for $approach         "
     echo -e "###################################################${NC}"
     
-    rm -rf /tmp/$approach
-    mkdir -p /tmp/$approach
-    rm -rf $LOGS_HOME/$approach
-    mkdir -p $LOGS_HOME/$approach
+    # Setup environment
+    setup
 
     [ "$approach" = "faastlane" ] && export EAGER_MPK=1
-    for workload in "${nrequests[@]}"
-    do
-        execute
-        sleep 1
-    done
+    execute
+    sleep 1
     [ "$approach" = "faastlane" ] && unset EAGER_MPK
-done
-
-# Normal compilation
-compile_benchmarks
-
-for approach in process isolate 
-do
-    echo -e "${GREEN}###################################################"
-    echo -e "          Measuring metrics for $approach         "
-    echo -e "###################################################${NC}"
-
-    rm -rf /tmp/$approach
-    mkdir -p /tmp/$approach
-    rm -rf $LOGS_HOME/$approach
-    mkdir -p $LOGS_HOME/$approach
-
-    export SANDBOX=$approach
-    for workload in "${nrequests[@]}"
-    do
-        execute
-        sleep 1
-    done
 done
 
 # Generate plots
