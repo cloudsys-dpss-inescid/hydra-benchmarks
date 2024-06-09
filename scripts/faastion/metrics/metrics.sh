@@ -23,18 +23,48 @@ function gv_java_native_factors {
     echo '{"name":"factors","async":"false","cached":"true","arguments":""}' > /tmp/payload1.post
 }
 
-function gv_java_native_matrix {
+function gv_java_native_matmul {
     APP_LANG=java
-    APP_NAME=gv-native-matrixmul
-    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libmatrixmul.so
+    APP_NAME=gv-native-matmul
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libmatmul.so
     APP_MAIN=com.jni.MatrixMultiplication
     # Register the native application in GraalVM
-    curl -s -X POST 127.0.0.1:8080/register?name=matrixmul\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
-    echo '{"name":"matrixmul","async":"false","cached":"true","arguments":""}' > /tmp/payload2.post
+    curl -s -X POST 127.0.0.1:8080/register?name=matmul\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"matmul","async":"false","cached":"true","arguments":""}' > /tmp/payload2.post
+}
+
+function gv_java_httprequest {
+    APP_LANG=java
+    APP_NAME=gv-httprequest
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libhttprequest.so
+    APP_MAIN=com.httprequest.HttpRequest
+    # Register the native application in GraalVM
+    curl -s -X POST 127.0.0.1:8080/register?name=httprequest\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"httprequest","async":"false","cached":"true","arguments":""}' > /tmp/payload3.post
+}
+
+function gv_java_sleep {
+    APP_LANG=java
+    APP_NAME=gv-sleep
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libsleep.so
+    APP_MAIN=com.sleep.Sleep
+    # Register the native application in GraalVM
+    curl -s -X POST 127.0.0.1:8080/register?name=sleep\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"sleep","async":"false","cached":"true","arguments":""}' > /tmp/payload4.post
+}
+
+function gv_java_native_hw {
+    APP_LANG=java
+    APP_NAME=gv-native-hw
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libnativehw.so
+    APP_MAIN=com.jni.HelloJNI
+    # Register the native application in GraalVM
+    curl -s -X POST 127.0.0.1:8080/register?name=nativehw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"nativehw","async":"false","cached":"true","arguments":""}' > /tmp/payload5.post
 }
 
 function compile_jni_benchmarks {
-    for benchmark in gv-native-factorization #gv-native-hw-1 gv-native-matrixmul gv-file-hashing gv-httprequest gv-sleep #gv-classify gv-video-processing
+    for benchmark in gv-native-factorization gv-native-hw gv-native-matmul
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script.sh
@@ -43,12 +73,19 @@ function compile_jni_benchmarks {
 }
 
 function compile_benchmarks {
-    for benchmark in gv-native-factorization #gv-native-hw-1 gv-native-matrixmul
+    for benchmark in gv-native-factorization gv-native-hw gv-native-matmul
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script_proc_iso.sh
         cd -
     done
+
+    # for benchmark in  gv-httprequest gv-sleep
+    # do
+    #     cd "$JAVA_BENCHMARKS/$benchmark"
+    #     ./build_script.sh
+    #     cd -
+    # done
 }
 
 function start_svm {
@@ -100,22 +137,31 @@ function capture {
     throughput=$(echo "$output" | grep "Requests/sec" | awk '{print $2}')
 
     echo $avg_latency > /tmp/$approach/avg_latency.log
-    echo $(echo $output | jq -r '."process time (us)"') > /tmp/$approach/$(echo $output | jq -r '."function"')_latency.log # ssl stands for Server Side Latency
-    echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach/data.txt
+    echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach-data.txt
+
+    for function in factors matmul sleep httprequest nativehw
+    do
+        function_responses=$(echo $output | tr ' ' '\n' | tr '{' '\n' | tr -d '}' | grep $function)
+        echo "$function_responses" | while read -r line
+        do
+            process_time=$(echo "$line" | awk -F'"process_time\\(us\\)":' '{print $2}')
+            echo "$process_time" >> "/tmp/$approach/$function-latency.log"
+        done
+    done
 }
 
 function warmup {
     # Sequential
-    for i in $(seq 14)
+    for i in $(seq 5)
     do
-        curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload1.post) &>/dev/null 
+        curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload$i.post) &>/dev/null 
     done
 
     # Concurrent
     (
-        for i in $(seq 14)
+        for i in $(seq 5)
         do
-            curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload1.post) &>/dev/null &
+            curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload$i.post) &>/dev/null &
         done
         wait
     )
@@ -123,7 +169,10 @@ function warmup {
 
 function register {
     gv_java_native_factors
-    #gv_java_native_matrix
+    gv_java_native_matmul
+    gv_java_httprequest
+    gv_java_sleep
+    gv_java_native_hw
 }
 
 function requirements {
@@ -138,7 +187,7 @@ function execute {
     requirements
     
     # Start Graalvisor
-    start_svm &> $LOGS_HOME/$approach/lambda.log &
+    start_svm &> $LOGS_HOME/$approach-lambda.log &
     PID=$(echo -n "$!")
 
     # Log Resources (memory and CPU)
@@ -151,8 +200,8 @@ function execute {
     warmup
     
     # Run Benchmarking tool
-    #capture
-    benchmark
+    capture
+    #benchmark
     
     # Kill Graalvisor and Webserver
     pkill -9 -f polyglot-proxy
@@ -161,8 +210,12 @@ function execute {
 function setup {
     rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
-    rm -rf $LOGS_HOME/$approach
-    mkdir -p $LOGS_HOME/$approach
+}
+
+function start_webserver {
+    cd $(DIR)/webserver
+    ./webserver.sh &> $LOGS_HOME/webserver.log &
+    cd -
 }
 
 function cleanup_resources {
@@ -180,8 +233,11 @@ fi
 # Clean resources if killed with signal
 trap 'cleanup_resources' SIGINT
 
+mkdir -p $LOGS_HOME
+
 ### SCRIPT STARTS HERE ###
-# Normal compilation
+#start_webserver
+
 compile_benchmarks
 
 for approach in process isolate 

@@ -1,4 +1,4 @@
-local function_names = {"factors"} 
+local function_names = {"factors", "matmul", "httprequest", "nativehw", "sleep"} 
 local function_index = 1
 
 request = function()

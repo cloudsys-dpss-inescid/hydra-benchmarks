@@ -8,7 +8,7 @@ import java.util.Map;
 public class MatrixMultiplication {
 
     static {
-        System.loadLibrary("matrixmul-jni");
+        System.loadLibrary("matmul-jni");
     }
     
     public static native void multiply();

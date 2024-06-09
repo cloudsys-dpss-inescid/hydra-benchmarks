@@ -1,10 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-#static mpk e dynamic mpk (faastion)
 APPROACHES = ["faastion", "isolate", "process", "faastlane"]
 #BENCHMARKS = ["factors", "matmul", "filehashing", "httprequest", "sleep", "nativehw"]
-BENCHMARKS = ["factors"]
+BENCHMARKS = ["factors", "matmul", "httprequest", "nativehw", "sleep"]
 
 def get_latency_values():
     approaches_latencies = {}
@@ -13,7 +12,7 @@ def get_latency_values():
         latencies = []
         
         for benchmark in BENCHMARKS:
-            with open(f"/tmp/{approach}/{benchmark}_latency.log", mode="r") as file:
+            with open(f"/tmp/{approach}/{benchmark}-latency.log", mode="r") as file:
                 lines = file.readlines()
                 benchmark_latencies = [float(line.strip()) for line in lines]
                 avg_latency = np.mean(benchmark_latencies)
@@ -57,29 +56,26 @@ def get_domain_values(approach: str):
 
 
 # LATENCY
-benchmarks = ("factors", "filehashing", "nativehw", "matmul")
 approaches_latencies = get_latency_values()
 
-x = np.arange(len(benchmarks))  # the label locations
-width = 0.25  # the width of the bars
+x = np.arange(len(BENCHMARKS))  # the label locations
+width = 0.2  # the width of the bars
 multiplier = 0
 
 fig, ax = plt.subplots(layout='constrained')
 
 for approach, measurement in approaches_latencies.items():
     offset = width * multiplier
-    rects = ax.bar(x + offset, measurement, width, label=approach)
-    ax.bar_label(rects, padding=3)
+    ax.bar(x + offset, measurement, width, label=approach)
     multiplier += 1
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel('Server Side Latency (ms)')
+ax.set_ylabel('Server Side Latency (us)')
 ax.set_title('Average latency per approach')
-ax.set_xticks(x + width, benchmarks)
+ax.set_xticks(x + width, BENCHMARKS)
 ax.legend(loc='upper left', ncols=4)
 ax.set_ylim(bottom=0)
 
-plt.tight_layout()
 plt.savefig('latency.png')
 
 # FOOTPRINT
@@ -94,7 +90,6 @@ ax.legend(loc='upper left')
 ax.set_xlim(left=0)
 ax.set_ylim(bottom=0)
 
-plt.tight_layout()
 plt.savefig('footprint.png')
 
 # Domain usage/time graph
@@ -109,5 +104,4 @@ ax.legend(loc='upper left')
 ax.set_xlim(left=0)
 ax.set_ylim(bottom=0)
 
-plt.tight_layout()
 plt.savefig('domains.png')
