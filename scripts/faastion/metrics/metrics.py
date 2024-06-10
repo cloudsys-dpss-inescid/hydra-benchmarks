@@ -1,24 +1,37 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-APPROACHES = ["faastion", "isolate", "process", "faastlane"]
-#BENCHMARKS = ["factors", "matmul", "filehashing", "httprequest", "sleep", "nativehw"]
-BENCHMARKS = ["factors", "matmul", "httprequest", "nativehw", "sleep"]
+APPROACHES = ["faastlane", "process", "faastion", "isolate"]
+BENCHMARKS = ["hello-world", "native-hello-world", "matmul", "httrequest", "factorization", "sleep"]
+
+COLORS = {
+    "faastion": "gold",
+    "faastlane": "orange",
+    "process": "seagreen",
+    "isolate": "blue"
+}
+LABELS = {
+    "faastion": "Faastion",
+    "faastlane": "Faastlane",
+    "process": "Process-based",
+    "isolate": "Memory Isolates"
+}
 
 def get_latency_values():
     approaches_latencies = {}
 
     for approach in APPROACHES:
         latencies = []
+        stdevs = []
         
-        for benchmark in BENCHMARKS:
+        for benchmark in ["hw", "nativehw", "matmul", "httprequest", "factors", "sleep"]:
             with open(f"/tmp/{approach}/{benchmark}-latency.log", mode="r") as file:
                 lines = file.readlines()
-                benchmark_latencies = [float(line.strip()) for line in lines]
-                avg_latency = np.mean(benchmark_latencies)
-                latencies.append(avg_latency)
+                benchmark_latencies = [float(line.strip())/1000 for line in lines]
+                latencies.append(np.mean(benchmark_latencies))
+                stdevs.append(np.std(benchmark_latencies))
     
-        approaches_latencies[approach] = np.array(latencies)
+        approaches_latencies[approach] = np.array(latencies), np.array(stdevs)
 
     return approaches_latencies
 
@@ -64,16 +77,18 @@ multiplier = 0
 
 fig, ax = plt.subplots(layout='constrained')
 
-for approach, measurement in approaches_latencies.items():
+for approach, measurements in approaches_latencies.items():
+    latencies, stdevs = measurements
     offset = width * multiplier
-    ax.bar(x + offset, measurement, width, label=approach)
+    ax.bar(x + offset, latencies, width, color=COLORS[approach], label=LABELS[approach], yerr=stdevs)
     multiplier += 1
 
 # Add some text for labels, title and custom x-axis tick labels, etc.
-ax.set_ylabel('Server Side Latency (us)')
+ax.set_ylabel('Server Side Latency (ms)')
 ax.set_title('Average latency per approach')
-ax.set_xticks(x + width, BENCHMARKS)
-ax.legend(loc='upper left', ncols=4)
+ax.set_xticks([r + width for r in range(len(BENCHMARKS))], BENCHMARKS, rotation=15)
+
+ax.legend(loc='upper left')
 ax.set_ylim(bottom=0)
 
 plt.savefig('latency.png')
@@ -83,7 +98,7 @@ fig, ax = plt.subplots(layout='constrained')
 
 for approach in APPROACHES:
     x, y = get_footprint_values(approach)
-    ax.plot(x, y, label=approach)
+    ax.plot(x, y, label=LABELS[approach], color=COLORS[approach])
 ax.set_ylabel(f"Memory Footprint (MB)")
 ax.set_xlabel("Time (s)")
 ax.legend(loc='upper left')
@@ -97,8 +112,8 @@ fig, ax = plt.subplots(layout='constrained')
 
 for approach in ["faastion", "faastlane"]:
     x, y = get_domain_values(approach)
-    ax.plot(x, y, label=approach)
-ax.set_ylabel(f"Domain usage for 20 concurrent requests")
+    ax.plot(x, y, label=LABELS[approach], color=COLORS[approach])
+ax.set_ylabel(f"Domain usage")
 ax.set_xlabel("Time (s)")
 ax.legend(loc='upper left')
 ax.set_xlim(left=0)

@@ -63,6 +63,16 @@ function gv_java_native_hw {
     echo '{"name":"nativehw","async":"false","cached":"true","arguments":""}' > /tmp/payload5.post
 }
 
+function gv_java_hw {
+    APP_LANG=java
+    APP_NAME=gv-hello-world
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libhelloworld.so
+    APP_MAIN=com.hello_world.HelloWorld
+    # Register the native application in GraalVM
+    curl -s -X POST 127.0.0.1:8080/register?name=hw\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"hw","async":"false","cached":"true","arguments":""}' > /tmp/payload6.post
+}
+
 function compile_jni_benchmarks {
     for benchmark in gv-native-factorization gv-native-hw gv-native-matmul
     do
@@ -80,12 +90,12 @@ function compile_benchmarks {
         cd -
     done
 
-    # for benchmark in  gv-httprequest gv-sleep
-    # do
-    #     cd "$JAVA_BENCHMARKS/$benchmark"
-    #     ./build_script.sh
-    #     cd -
-    # done
+    for benchmark in  gv-httprequest gv-sleep gv-hello-world
+    do
+        cd "$JAVA_BENCHMARKS/$benchmark"
+        ./build_script.sh
+        cd -
+    done
 }
 
 function start_svm {
@@ -120,7 +130,10 @@ function log_resources {
 }
 
 function benchmark {
-    wrk -t20 -c20 -d10s -s native.lua http://127.0.0.1:8080
+    wrk -t$WORKLOAD -c$WORKLOAD -d$DURATION -s native.lua http://127.0.0.1:8080
+
+    # Kill Graalvisor
+    pkill -9 -f polyglot-proxy
 }
 
 function capture {
@@ -139,7 +152,7 @@ function capture {
     echo $avg_latency > /tmp/$approach/avg_latency.log
     echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach-data.txt
 
-    for function in factors matmul sleep httprequest nativehw
+    for function in factors matmul sleep httprequest nativehw hw
     do
         function_responses=$(echo $output | tr ' ' '\n' | tr '{' '\n' | tr -d '}' | grep $function)
         echo "$function_responses" | while read -r line
@@ -152,14 +165,14 @@ function capture {
 
 function warmup {
     # Sequential
-    for i in $(seq 5)
+    for i in $(seq 6)
     do
         curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload$i.post) &>/dev/null 
     done
 
     # Concurrent
     (
-        for i in $(seq 5)
+        for i in $(seq 6)
         do
             curl -s -X POST 127.0.0.1:8080 -H 'Content-Type: application/json' -d $(cat /tmp/payload$i.post) &>/dev/null &
         done
@@ -173,6 +186,7 @@ function register {
     gv_java_httprequest
     gv_java_sleep
     gv_java_native_hw
+    gv_java_hw
 }
 
 function requirements {
@@ -202,14 +216,12 @@ function execute {
     # Run Benchmarking tool
     capture
     #benchmark
-    
-    # Kill Graalvisor and Webserver
-    pkill -9 -f polyglot-proxy
 }
 
 function setup {
     rm -rf /tmp/$approach
     mkdir -p /tmp/$approach
+    rm -f $LOGS_HOME/$approach-*
 }
 
 function start_webserver {
@@ -233,48 +245,51 @@ fi
 # Clean resources if killed with signal
 trap 'cleanup_resources' SIGINT
 
+WORKLOAD=10
+DURATION="30s"
+
 mkdir -p $LOGS_HOME
 
 ### SCRIPT STARTS HERE ###
-#start_webserver
+# start_webserver
 
-compile_benchmarks
+#compile_benchmarks
 
-for approach in process isolate 
-do
-    echo -e "${GREEN}###################################################"
-    echo -e "          Measuring metrics for $approach         "
-    echo -e "###################################################${NC}"
+# for approach in process isolate 
+# do
+#     echo -e "${GREEN}###################################################"
+#     echo -e "          Measuring metrics for $approach         "
+#     echo -e "###################################################${NC}"
 
-    # Setup environment
-    setup
+#     # Setup environment
+#     setup
 
-    export SANDBOX=$approach
-    execute
-    sleep 1
-done
+#     export SANDBOX=$approach
+#     execute
+#     sleep 1
+# done
 
 # JNI compilation
 compile_jni_benchmarks
 
-export SANDBOX=isolate
-for approach in faastion faastlane 
-do
-    echo -e "${GREEN}###################################################"
-    echo -e "          Measuring metrics for $approach         "
-    echo -e "###################################################${NC}"
+# export SANDBOX=isolate
+# for approach in faastion faastlane 
+# do
+#     echo -e "${GREEN}###################################################"
+#     echo -e "          Measuring metrics for $approach         "
+#     echo -e "###################################################${NC}"
     
-    # Setup environment
-    setup
+#     # Setup environment
+#     setup
 
-    [ "$approach" = "faastlane" ] && export EAGER_MPK=1
-    execute
-    sleep 1
-    [ "$approach" = "faastlane" ] && unset EAGER_MPK
-done
+#     [ "$approach" = "faastlane" ] && export EAGER_MPK=1
+#     execute
+#     sleep 1
+#     [ "$approach" = "faastlane" ] && unset EAGER_MPK
+# done
 
 # Generate plots
-python3 metrics.py
+# python3 metrics.py
 
 # Clean resources when finished
 cleanup_resources
