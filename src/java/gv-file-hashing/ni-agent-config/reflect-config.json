@@ -1,6 +1,6 @@
 [
 {
-  "name":"com.filehashing.FileHashing",
+  "name":"com.jni.FileHashing",
   "methods":[{"name":"main","parameterTypes":["java.util.Map"] }]}
 
 ]

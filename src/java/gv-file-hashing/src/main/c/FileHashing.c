@@ -5,7 +5,7 @@
 
 
 JNIEXPORT void JNICALL Java_com_jni_FileHashing_hash(JNIEnv *env, jobject object) {
-    const char *filename = "";
+    const char *filename = "~/snap.png";
     FILE *file = fopen(filename, "rb");
     if (!file) {
         perror("Unable to open file");

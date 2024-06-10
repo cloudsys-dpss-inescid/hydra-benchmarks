@@ -2,13 +2,13 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#define ROWS 3
-#define COLS 3
+#define ROWS 10
+#define COLS 10
 
 void matrixGenerator(int **matrix){
     for (int i = 0; i < ROWS; i++) {
         for (int j = 0; j < COLS; j++) {
-            matrix[i][j] = 10000; 
+            matrix[i][j] = 1000; 
         }
     }
 }

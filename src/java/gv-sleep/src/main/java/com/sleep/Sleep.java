@@ -10,15 +10,6 @@ public class Sleep {
 
     static Map<String, Object> output = new HashMap<>();
 
-    static byte[] buffer;
-
-    public static void memory(int bytes) {
-        buffer = new byte[bytes];
-        for (int i = 0; i < bytes; i++) {
-            buffer[i] = 1;
-        }
-    }
-
     public static void sleep(long millis) {
         try {
             Thread.sleep(millis);
@@ -28,8 +19,7 @@ public class Sleep {
     }
 
     public static Map<String, Object> main(Map<String, Object> input) {
-        memory(1024);
-        sleep(1);
+        sleep(50);
         return output;
     }
 
