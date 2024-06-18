@@ -1,0 +1,15 @@
+{
+    "resample_interval": "30min",
+    "aggregate_function": "sum",
+    "autogluon_prediction_length": 24,      
+    "cut_index_size": 200, 
+    "trace_dir_drive": "dataset_traces/",
+    "aot_output_dir": "",
+    "normal_output_dir": "",
+    "autogluon_eval_metric": "MASE",
+    "autogluon_presets": "medium_quality",
+    "autogluon_time_limit": 600,
+    "raw_dataset": "/home/claudiocorreia/backupStuff/AzureDataset/OriginalTraces/",
+    "offline_traces_dir": "offline_trace_ids.txt",
+    "online_traces_dir": "online_traces_dir.txt"
+}
