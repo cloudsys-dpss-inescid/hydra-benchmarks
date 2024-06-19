@@ -8,6 +8,7 @@ import java.util.Map;
 public class Factorization {
 
     public static HashMap<String, Object> main(Map<String, Object> input) {
+	int number = 100000;
         HashMap<String, Object> output = new HashMap<>();
         if (number > 0) {
             System.out.print("1 " + number + " ");
