@@ -120,6 +120,7 @@ def train_dataset(dataset):
           target="target",
           eval_metric=simulation_configuration["autogluon_eval_metric"],
           cache_predictions=False,
+          log_to_file=False,
           path="AutogluonModels/Hydra_" + obj_trace.trace_id,
       )
 

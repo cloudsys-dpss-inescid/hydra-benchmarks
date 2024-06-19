@@ -7,5 +7,7 @@
 #deactivate
 
 
+rm -r AutogluonModels/*
+
 python3 model_training.py
 
