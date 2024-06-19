@@ -3,7 +3,7 @@ plugins {
     id "com.github.johnrengelman.shadow" version "7.1.0"
 }
 
-group 'com.matrix-mul'
+group 'com.matrix_mul'
 version '1.0'
 
 repositories {
@@ -18,7 +18,7 @@ shadowJar() {
 jar {
     manifest {
         attributes(
-                'Main-Class': ' com.matrix-mul.MatrixMul',
+                'Main-Class': 'com.matrix_mul.MatrixMul',
                 'Class-Path': configurations.runtimeClasspath.files.collect { it.getName() }.join(' ')
         )
     }

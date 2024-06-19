@@ -4,8 +4,8 @@ DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
 function run_hotspot {
         $JAVA_HOME/bin/java \
-                -cp build/libs/matrixMul-1.0-all.jar \
-                com.matrix-mul.MatrixMul
+                -cp build/libs/matrix-Mul-1.0-all.jar \
+                com.matrix_mul.MatrixMul
 }
 
 function build_ni {
@@ -23,7 +23,7 @@ function build_ni {
 }
 
 function build_ni_standalone {
-	NI_BIN_OPTS="com.matrix-mul.MatrixMul"
+	NI_BIN_OPTS="com.matrix_mul.MatrixMul"
 	build_ni
 }
 
@@ -56,28 +56,9 @@ cd $DIR &> /dev/null
 TARGET=$1
 if [ ! -z "$TARGET" ]
 then
-        $TARGET
-	exit 0
+	$TARGET
+exit 0
 else
-	read -p "Run benchmark on hotspot (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                run_hotspot
-                exit 0
-        fi
-	read -p "Build standalone Native Image (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                build_ni_standalone
-                exit 0
-        fi
-	read -p "Build shared library Native Image (y or Y, everything else as no)? " -n 1 -r
-        echo # move to a new line
-        if [[ $REPLY =~ ^[Yy]$ ]]
-        then
-                build_ni_sharedlibrary
-                exit 0
-        fi
+	build_ni_sharedlibrary
+	exit 0
 fi

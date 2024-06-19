@@ -1,4 +1,4 @@
-package com.matrix-mul;
+package com.matrix_mul;
 
 import java.util.HashMap;
 import java.util.Map;
