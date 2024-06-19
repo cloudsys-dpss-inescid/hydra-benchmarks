@@ -73,6 +73,26 @@ function gv_java_hw {
     echo '{"name":"hw","async":"false","cached":"true","arguments":""}' > /tmp/payload6.post
 }
 
+function gv_java_maxtrixmul {
+    APP_LANG=java
+    APP_NAME=gv-matrixmul
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libmanmatrixmul.so
+    APP_MAIN=com.matrix_mul.MatrixMul
+    # Register the native application in GraalVM
+    curl -s -X POST 127.0.0.1:8080/register?name=manmatrixmul\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"manmatrixmul","async":"false","cached":"true","arguments":""}' > /tmp/payload1.post
+}
+
+function gv_java_factors {
+    APP_LANG=java
+    APP_NAME=gv-factorization
+    APP_SO=$ARGO_HOME/benchmarks/src/$APP_LANG/$APP_NAME/build/libmanfactors.so
+    APP_MAIN=com.factorization.Factorization
+    # Register the native application in GraalVM
+    curl -s -X POST 127.0.0.1:8080/register?name=manfactors\&entryPoint=$APP_MAIN\&language=$APP_LANG\&sandbox=$SANDBOX -H 'Content-Type: application/json' --data-binary @$APP_SO
+    echo '{"name":"manfactors","async":"false","cached":"true","arguments":""}' > /tmp/payload1.post
+}
+
 function compile_jni_benchmarks {
     for benchmark in gv-native-factorization gv-native-hw gv-native-matmul
     do
@@ -182,11 +202,13 @@ function warmup {
 
 function register {
     gv_java_native_factors
+    gv_java_factors
     gv_java_native_matmul
     gv_java_httprequest
     gv_java_sleep
     gv_java_native_hw
     gv_java_hw
+    gv_java_maxtrixmul
 }
 
 function requirements {
@@ -245,8 +267,8 @@ fi
 # Clean resources if killed with signal
 trap 'cleanup_resources' SIGINT
 
-WORKLOAD=10
-DURATION="30s"
+WORKLOAD=20
+DURATION="60s"
 
 mkdir -p $LOGS_HOME
 
