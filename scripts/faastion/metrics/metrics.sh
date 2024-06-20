@@ -8,7 +8,9 @@ GRAALVISOR_HOME=$ARGO_HOME/graalvisor
 BENCHMARKS_HOME=$ARGO_HOME/benchmarks
 JAVA_BENCHMARKS=$BENCHMARKS_HOME/src/java
 
-LOGS_HOME=$(DIR)/logs
+experiment_name=$(date +"experiment_%Y%m%d_%H%M%S")
+
+LOGS_HOME=$(DIR)/logs/$experiment_name
 
 GREEN='\033[0;32m'
 NC='\033[0m' # No Color
@@ -110,7 +112,7 @@ function compile_benchmarks {
         cd -
     done
 
-    for benchmark in  gv-httprequest gv-sleep gv-hello-world
+    for benchmark in  gv-hello-world gv-httprequest gv-sleep
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script.sh
@@ -131,7 +133,7 @@ function start_svm {
 
 function log_resources {
     PID=$1
-    OFILE_RSS=/tmp/$approach/footprint.csv
+    OFILE_RSS=/tmp/$experiment_name/$approach/footprint.csv
 
     rm $OFILE_RSS &> /dev/null
         while kill -0 $PID &> /dev/null; do
@@ -169,7 +171,7 @@ function capture {
     # Extract the throughput (requests per second)
     throughput=$(echo "$output" | grep "Requests/sec" | awk '{print $2}')
 
-    echo $avg_latency > /tmp/$approach/avg_latency.log
+    echo $avg_latency > /tmp/$experiment_name/$approach/avg_latency.log
     echo -e "Latency Stdev: $stddev_latency, Throughput: $throughput" > $LOGS_HOME/$approach-data.txt
 
     for function in factors matmul sleep httprequest nativehw hw
@@ -178,7 +180,7 @@ function capture {
         echo "$function_responses" | while read -r line
         do
             process_time=$(echo "$line" | awk -F'"process_time\\(us\\)":' '{print $2}')
-            echo "$process_time" >> "/tmp/$approach/$function-latency.log"
+            echo "$process_time" >> "/tmp/$experiment_name/$approach/$function-latency.log"
         done
     done
 }
@@ -241,9 +243,11 @@ function execute {
 }
 
 function setup {
-    rm -rf /tmp/$approach
-    mkdir -p /tmp/$approach
-    rm -f $LOGS_HOME/$approach-*
+    base_dir="/tmp/${experiment_name}"
+    directories=("isolate" "process" "faastlane" "faastion")
+    for dir in "${directories[@]}"; do
+        mkdir -p "${base_dir}/${dir}"
+    done
 }
 
 function start_webserver {
@@ -268,23 +272,24 @@ fi
 trap 'cleanup_resources' SIGINT
 
 WORKLOAD=20
-DURATION="60s"
+DURATION="30s"
+
+echo "$experiment_name" > /tmp/experiment_name.log
 
 mkdir -p $LOGS_HOME
+
+setup
 
 ### SCRIPT STARTS HERE ###
 # start_webserver
 
-#compile_benchmarks
+# compile_benchmarks
 
-# for approach in process isolate 
+# for approach in isolate process
 # do
 #     echo -e "${GREEN}###################################################"
 #     echo -e "          Measuring metrics for $approach         "
 #     echo -e "###################################################${NC}"
-
-#     # Setup environment
-#     setup
 
 #     export SANDBOX=$approach
 #     execute
@@ -292,7 +297,7 @@ mkdir -p $LOGS_HOME
 # done
 
 # JNI compilation
-compile_jni_benchmarks
+# compile_jni_benchmarks
 
 # export SANDBOX=isolate
 # for approach in faastion faastlane 
@@ -300,9 +305,6 @@ compile_jni_benchmarks
 #     echo -e "${GREEN}###################################################"
 #     echo -e "          Measuring metrics for $approach         "
 #     echo -e "###################################################${NC}"
-    
-#     # Setup environment
-#     setup
 
 #     [ "$approach" = "faastlane" ] && export EAGER_MPK=1
 #     execute
@@ -312,6 +314,8 @@ compile_jni_benchmarks
 
 # Generate plots
 # python3 metrics.py
+echo "Experiment: $experiment_name"
+
 
 # Clean resources when finished
 cleanup_resources
