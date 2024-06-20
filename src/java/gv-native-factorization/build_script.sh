@@ -9,7 +9,7 @@ JAVA_AGENT="$JAVASSIST_HOME/target/JavassistWrapper-1.0-jar-with-dependencies.ja
 JNI_INCLUDE="-I$DEF_JAVA_HOME/include -I$DEF_JAVA_HOME/include/linux"
 ERIM_INCLUDE="-I$ERIM_HOME/src/erim -I$ERIM_HOME/src/common"
 
-CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE -I/usr/include/"
+CFLAGS="-Wall -g -fPIC -shared $JNI_INCLUDE"
 CFLAGS_PROC="-Wall -g -fPIC $JNI_INCLUDE"
 SFLAGS="$CFLAGS -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/main/c/memisolation/src"
 SFLAGS_PROC="$CFLAGS_PROC -O0 -fno-inline $ERIM_INCLUDE -I$GRAALVISOR_HOME/src/main/c/memisolation/src"
