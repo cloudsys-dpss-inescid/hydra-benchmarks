@@ -1,0 +1,120 @@
+from datetime import datetime, timedelta
+import sys
+import os
+import pandas as pd
+import threading
+import time
+
+# Add the path to the python modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'predictor')))
+
+from predictor import model_training, model_predictor, shared
+
+# Global variable to store Trace_Object instances
+trace_objects = {}
+leaderboard_entries = []
+trace_dir_drive = "dataset_traces/"
+trained_traces = [] 
+
+# Helper function to fill missing minutes with zeros
+def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
+    time_format = '%Y-%m-%d %H:%M:%S'
+    current_time = datetime.strptime(last_timestamp, time_format) + timedelta(minutes=1)
+    new_time = datetime.strptime(new_timestamp, time_format)
+    
+    while current_time < new_time:
+        new_entry = pd.DataFrame({
+            'level_0': [len(trace_obj.raw_trace)],
+            'item_id': [trace_obj.trace_id],
+            'timestamp': [current_time.strftime(time_format)],
+            'target': [0]
+        })
+        trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
+        current_time += timedelta(minutes=1)
+
+
+# Function to add entries to a Trace_Object, this assumes that each entry is one minute interval
+def add_trace_entry(timestamp, trace_id, call_count):
+    global trace_objects
+    
+    # If trace_id is not in trace_objects, create a new Trace_Object
+    if trace_id not in trace_objects:
+        trace_objects[trace_id] = shared.Trace_Object(trace_id=trace_id)
+    
+    # Get the corresponding Trace_Object
+    trace_obj = trace_objects[trace_id]
+    
+    # Fill missing minutes with zeroes if there are previous entries
+    if not trace_obj.raw_trace.empty:
+        last_timestamp = trace_obj.raw_trace.iloc[-1]['timestamp']
+        fill_missing_minutes(trace_obj, last_timestamp, timestamp)
+
+    # Create a DataFrame for the new entry
+    new_entry = pd.DataFrame({
+        'level_0': [len(trace_obj.raw_trace)],
+        'item_id': [trace_id],
+        'timestamp': [timestamp],
+        'target': [call_count]
+    })
+
+    # Add the new entry to raw_trace
+    trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
+    trace_obj.trace_id = trace_id
+
+    #print("...debug...")
+    #print(trace_objects)
+
+
+def compute_leaderboard():
+    global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
+
+    # Iterate over all traces
+    for trace_id in trace_objects:
+        
+        # Get forecast using model predictor
+        prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive,  debug = False, log = False, output_dir = "predictor/log_results/")
+        
+        cost = model_predictor.get_normal_cost(trace_id, prediction)
+        
+        # Append to leaderboard entries
+        leaderboard_entries.append({"trace_id": trace_id, "cost": cost})
+    
+    # Sort leaderboard entries by cost in descending order
+    leaderboard_entries_sorted = sorted(leaderboard_entries, key=lambda x: x["cost"], reverse=True)
+    
+    leaderboard_entries = leaderboard_entries_sorted
+
+
+def leaderboard_routine():
+    """Function to run compute_leaderboard() every 10 minutes."""
+    while True:
+        compute_leaderboard()  # Call compute_leaderboard() function
+        time.sleep(600)  # Wait for 10 minutes (600 seconds) before running again
+
+
+
+def init():
+    global trained_traces, trace_dir_drive
+
+    #model_training.shared.simulation_configuration #if I want to define some  configurations, this is the place
+    #model_predictor.shared.simulation_configuration #if I want to define some  configurations, this is the place
+    
+    trace_dir_drive = "dataset_traces/" # this iss for  debuging
+    trained_traces = model_training.load_trained_traces()
+
+    leaderboard_thread = threading.Thread(target=leaderboard_routine)
+    leaderboard_thread.daemon = True  # Set the thread as a daemon so it will terminate when the main program ends
+    leaderboard_thread.start()
+
+    #print(trained_traces)
+    #get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, debug = False, log = False, output_dir = "")
+    
+    trace_id = "4db5a36c4ed07ddb5efa64230a11afa0bd21d29bf33d9d908382cfd1b9fead83"
+    #trace_dir_drive = "dataset_traces/" # this iss for  debuging
+    #query_trace = model_predictor.get_query_trace(trace_id, 200, 200, trace_dir_drive)
+    #query_trace.recycled_sample = []
+    #query_trace.raw_trace = query_trace.raw_trace.drop('index', axis=1)
+    #print(query_trace.raw_trace)
+    #prediction = model_predictor.get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, log = True, output_dir = "predictor/log_results/")
+
+    print("ola")
