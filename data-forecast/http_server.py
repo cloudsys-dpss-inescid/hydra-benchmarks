@@ -32,19 +32,14 @@ class S(BaseHTTPRequestHandler):
             self._set_response(404)
             self.wfile.write("404 - Not Found".encode('utf-8'))
 
-
-    #def do_GET(self):
-    #    self._set_response()
-    #    self.wfile.write("GET request for {}".format(self.path).encode('utf-8'))
-
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])  # Gets the size of data
         post_data = self.rfile.read(content_length)  # Gets the data itself
         logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
                      str(self.path), str(self.headers), post_data.decode('utf-8'))
 
-        # Check if the path is "/addpoint"
-        if self.path == "/addpoint":
+        # Check if the path is "/add_invocation"
+        if self.path == "/add_invocation":
             try:
                 # Parse the JSON data from the POST request
                 data = json.loads(post_data.decode('utf-8'))
@@ -97,7 +92,3 @@ if __name__ == '__main__':
     else:
         run()
 
-#testing:
-# curl -X POST http://localhost:8085/addpoint -H "Content-Type: application/json" -d '{"timestamp":"2019-01-07 03:30:00", "trace_id":"trace123", "call_count":"30"}'
-# curl -X POST http://localhost:8085/ -H "Content-Type: application/json" -d '{"key1":"value1", "key2":"value2"}'
-#curl -X GET http://localhost:8085/custom

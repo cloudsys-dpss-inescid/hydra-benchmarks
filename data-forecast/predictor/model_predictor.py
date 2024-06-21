@@ -55,7 +55,7 @@ def get_manufactured_function_past(query_trace, similar_trace, debug = False):
 
   if  len(usable_points["timestamp"]) < recycle_time_window:
     end_timestamp = pd.to_datetime( usable_points["timestamp"][ len(usable_points["timestamp"]) - 1 ] )
-    timestamps = pd.date_range(end=end_timestamp, periods=recycle_time_window, freq='T')
+    timestamps = pd.date_range(end=end_timestamp, periods=recycle_time_window, freq='min')
 
     recycled_target_values = recycled_sample.loc[recycle_trace_id]["target"]
     recycled_array = np.array(recycled_target_values[:recycle_time_window])
@@ -226,23 +226,24 @@ def get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, d
   start_time = time.time()
   query_trace = shared.get_filtered_dataset([query_trace])[0]
   end_time = time.time()
-  print(f"get_filtered_dataset took {end_time - start_time:.4f} seconds")
+  print(f"\nLOG: get_filtered_dataset took {end_time - start_time:.4f} seconds")
 
   start_time = time.time()
   similar_trace = get_similar_function(query_trace, trained_traces)
   end_time = time.time()
-  print(f"get_similar_function took {end_time - start_time:.4f} seconds")
+  print(f"LOG: get_similar_function took {end_time - start_time:.4f} seconds")
 
   start_time = time.time()
   query_trace = get_manufactured_function_past(query_trace, similar_trace, debug)  # replace points
   end_time = time.time()
-  print(f"get_manufactured_function_past took {end_time - start_time:.4f} seconds")
+  print(f"LOG: get_manufactured_function_past took {end_time - start_time:.4f} seconds")
 
   start_time = time.time()
   prediction = get_function_forecast(similar_trace.trace_id, query_trace.recycled_sample, similar_trace.predictor, debug = debug, output_dir = output_dir)
   end_time = time.time()
-  print(f"get_function_forecast took {end_time - start_time:.4f} seconds, similar id {similar_trace.trace_id}, query trace id {query_trace.trace_id} query trace:" )
-  print(query_trace.recycled_sample)
+  print(f"LOG: get_function_forecast took {end_time - start_time:.4f} seconds, query trace id {query_trace.trace_id}" )
+  #print(f"get_function_forecast took {end_time - start_time:.4f} seconds, similar id {similar_trace.trace_id}, query trace id {query_trace.trace_id} query trace:" )
+  #print(query_trace.recycled_sample)
 
   if log:
     plt.figure(figsize=(20, 6))

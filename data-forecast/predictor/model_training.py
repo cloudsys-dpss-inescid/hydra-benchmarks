@@ -92,8 +92,6 @@ def load_trained_traces():
       obj_trace.recycled_sample = recycled_sample
 
       obj_trace.predictor = TimeSeriesPredictor.load( shared.current_dir + "/autogluon_models/Hydra_" + obj_trace.trace_id)
-      obj_trace.predictor_loaded = True
-
   
   return dataset
 

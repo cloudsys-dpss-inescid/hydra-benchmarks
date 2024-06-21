@@ -37,6 +37,9 @@ def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
 def add_trace_entry(timestamp, trace_id, call_count):
     global trace_objects
     
+    # Adjust the timestamp to have seconds as "00", just in case there are seconds
+    timestamp = timestamp[:16] + ":00"
+
     # If trace_id is not in trace_objects, create a new Trace_Object
     if trace_id not in trace_objects:
         trace_objects[trace_id] = shared.Trace_Object(trace_id=trace_id)
@@ -49,16 +52,22 @@ def add_trace_entry(timestamp, trace_id, call_count):
         last_timestamp = trace_obj.raw_trace.iloc[-1]['timestamp']
         fill_missing_minutes(trace_obj, last_timestamp, timestamp)
 
-    # Create a DataFrame for the new entry
-    new_entry = pd.DataFrame({
-        'level_0': [len(trace_obj.raw_trace)],
-        'item_id': [trace_id],
-        'timestamp': [timestamp],
-        'target': [call_count]
-    })
-
-    # Add the new entry to raw_trace
-    trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
+    # Check if the timestamp already exists in raw_trace
+    if trace_obj.raw_trace.size > 0 and timestamp in trace_obj.raw_trace['timestamp'].values:
+        # Update the existing entry
+        trace_obj.raw_trace.loc[trace_obj.raw_trace['timestamp'] == timestamp, 'target'] += call_count
+    else:
+        # Create a DataFrame for the new entry
+        new_entry = pd.DataFrame({
+            'level_0': [len(trace_obj.raw_trace)],
+            'item_id': [trace_id],
+            'timestamp': [timestamp],
+            'target': [call_count]
+        })
+        
+        # Add the new entry to raw_trace
+        trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
+    
     trace_obj.trace_id = trace_id
 
     #print("...debug...")
@@ -106,15 +115,3 @@ def init():
     leaderboard_thread.daemon = True  # Set the thread as a daemon so it will terminate when the main program ends
     leaderboard_thread.start()
 
-    #print(trained_traces)
-    #get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, debug = False, log = False, output_dir = "")
-    
-    trace_id = "4db5a36c4ed07ddb5efa64230a11afa0bd21d29bf33d9d908382cfd1b9fead83"
-    #trace_dir_drive = "dataset_traces/" # this iss for  debuging
-    #query_trace = model_predictor.get_query_trace(trace_id, 200, 200, trace_dir_drive)
-    #query_trace.recycled_sample = []
-    #query_trace.raw_trace = query_trace.raw_trace.drop('index', axis=1)
-    #print(query_trace.raw_trace)
-    #prediction = model_predictor.get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, log = True, output_dir = "predictor/log_results/")
-
-    print("ola")

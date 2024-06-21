@@ -1,14 +1,8 @@
 #!/bin/bash
 
 # URL do seu servidor e endpoint
-export URL="http://localhost:8085/addpoint"
+export URL="http://localhost:8085/add_invocation"
 export raw_dataset_dir="/home/claudiocorreia/backupStuff/AzureDataset/OriginalTraces/"
-
-
-##simple example
-#curl -X POST $URL -H "Content-Type: application/json" -d '{"timestamp":"2019-01-07 03:30:00", "trace_id":"trace123", "call_count":"30"}'
-#curl -X POST $URL -H "Content-Type: application/json" -d '{"timestamp":"2019-01-07 03:31:00", "trace_id":"trace123", "call_count":"32"}'
-
 
 send_trace_data() {
     local trace_id="$1"

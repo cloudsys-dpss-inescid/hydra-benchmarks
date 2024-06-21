@@ -1,5 +1,3 @@
-I need to improve this!
-
 # Pipeline Forecasting
 
 In this directory, there is a `default_config.json` file that contains many parameters that can be changed. The `raw_dataset` needs to point to a folder that stores the Azure 2019 Dataset, where the directory should have the following structure: "invocations_per_function_md.anon.d01.csv", "invocations_per_function_md.anon.d02.csv", up to 14 days.
