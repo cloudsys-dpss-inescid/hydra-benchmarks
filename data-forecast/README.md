@@ -2,6 +2,8 @@
 
 This directory contains the script `run_server_container.sh`, which launches a Docker container running an HTTP server capable of predicting trace forecasts for the Azure 2019 dataset. The server assumes the existence of previously trained models using AutoGluon. To train the models, navigate to the `predictor` directory and run the `run-training.sh` script. This directory also contains a README.md with more information. The server provided here offers different HTTP endpoints, as detailed below. By default, this service is launched on port 8085.
 
+Warning: The run_server_container.sh script currently has an absolute path hardcoded to mount the current directory. I need to fix this.
+
 Currently is only using the naive model, I have to change this: https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html#autogluon.timeseries.models.AverageModel
 
 ## Endpoints
