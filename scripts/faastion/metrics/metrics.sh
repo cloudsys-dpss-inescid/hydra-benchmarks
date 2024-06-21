@@ -96,7 +96,7 @@ function gv_java_factors {
 }
 
 function compile_jni_benchmarks {
-    for benchmark in gv-native-factorization gv-native-hw gv-native-matmul
+    for benchmark in gv-native-hw gv-native-factorization gv-native-matmul
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script.sh
@@ -112,7 +112,7 @@ function compile_benchmarks {
         cd -
     done
 
-    for benchmark in  gv-hello-world gv-httprequest gv-sleep
+    for benchmark in gv-hello-world gv-httprequest gv-factorization
     do
         cd "$JAVA_BENCHMARKS/$benchmark"
         ./build_script.sh
@@ -203,26 +203,27 @@ function warmup {
 }
 
 function register {
-    gv_java_native_factors
-    gv_java_factors
-    gv_java_native_matmul
-    gv_java_httprequest
-    gv_java_sleep
+    # gv_java_native_factors
+    # gv_java_factors
+    # gv_java_native_matmul
+    # gv_java_httprequest
+    # gv_java_sleep
     gv_java_native_hw
-    gv_java_hw
-    gv_java_maxtrixmul
+    # gv_java_hw
+    # gv_java_maxtrixmul
 }
 
-function requirements {
-    rm -rf /tmp/fifo
+function LPI_requirements {
     mkdir -p /tmp/fifo
-    rm -rf /tmp/ret
     mkdir -p /tmp/ret
 }
 
+function LPI_cleanup {
+    rm -rf /tmp/ret
+    rm -rf /tmp/fifo
+}
+
 function execute {
-    # Faastion process pool requirements
-    requirements
     
     # Start Graalvisor
     start_svm &> $LOGS_HOME/$approach-lambda.log &
@@ -238,8 +239,8 @@ function execute {
     warmup
     
     # Run Benchmarking tool
-    capture
-    #benchmark
+    #capture
+    benchmark
 }
 
 function setup {
@@ -259,6 +260,7 @@ function start_webserver {
 function cleanup_resources {
     echo "Received signal, cleaning up resources..."
     pkill -9 -f polyglot-proxy
+    LPI_cleanup
     exit
 }
 
@@ -278,6 +280,8 @@ echo "$experiment_name" > /tmp/experiment_name.log
 
 mkdir -p $LOGS_HOME
 
+LPI_requirements
+
 setup
 
 ### SCRIPT STARTS HERE ###
@@ -296,21 +300,22 @@ setup
 #     sleep 1
 # done
 
-# JNI compilation
-# compile_jni_benchmarks
+# # JNI compilation
+  compile_jni_benchmarks
 
-# export SANDBOX=isolate
-# for approach in faastion faastlane 
-# do
-#     echo -e "${GREEN}###################################################"
-#     echo -e "          Measuring metrics for $approach         "
-#     echo -e "###################################################${NC}"
+export SANDBOX=isolate
+for approach in faastion # faastlane 
+do
+    echo -e "${GREEN}###################################################"
+    echo -e "          Measuring metrics for $approach         "
+    echo -e "###################################################${NC}"
 
-#     [ "$approach" = "faastlane" ] && export EAGER_MPK=1
-#     execute
-#     sleep 1
-#     [ "$approach" = "faastlane" ] && unset EAGER_MPK
-# done
+    [ "$approach" = "faastlane" ] && export EAGER_MPK=1
+    execute
+    sleep 1
+    [ "$approach" = "faastlane" ] && unset EAGER_MPK
+done
+
 
 # Generate plots
 # python3 metrics.py
