@@ -77,6 +77,7 @@ def add_trace_entry(timestamp, trace_id, call_count):
 def compute_leaderboard():
     global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
 
+    print("** computing leaderboard **")
     # Iterate over all traces
     for trace_id in trace_objects:
         
@@ -97,8 +98,8 @@ def compute_leaderboard():
 def leaderboard_routine():
     """Function to run compute_leaderboard() every 10 minutes."""
     while True:
-        compute_leaderboard()  # Call compute_leaderboard() function
         time.sleep(600)  # Wait for 10 minutes (600 seconds) before running again
+        compute_leaderboard()  # Call compute_leaderboard() function
 
 
 

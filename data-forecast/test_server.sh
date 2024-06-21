@@ -34,8 +34,9 @@ send_trace_data() {
         data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "call_count":"'$target'"}'
 
         # Send the POST request using curl
-        echo "Sending POST for timestamp $timestamp_formatted with target $target"
+        echo "Sending POST for timestamp $timestamp_formatted with target $target  "
         curl -X POST $URL -H "Content-Type: application/json" -d "$data"
+        echo
     done
 }
 

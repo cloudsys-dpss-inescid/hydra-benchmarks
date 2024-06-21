@@ -48,6 +48,9 @@ def train_dataset(dataset):
           train_sample_resampled,
           presets=shared.get_config("autogluon_presets"),
           time_limit=shared.get_config("autogluon_time_limit"),
+          hyperparameters={
+              "NaiveModel": {},
+          },          
       )
 
       obj_trace.predictor = predictor

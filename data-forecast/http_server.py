@@ -9,7 +9,7 @@ Usage::
 """
 from http.server import BaseHTTPRequestHandler, HTTPServer
 from socketserver import ThreadingMixIn
-import logging
+#import logging
 import json
 import predictor_service
 
@@ -20,7 +20,7 @@ class S(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
-        logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
+        #logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         if self.path == "/leaderboard":
             self._set_response()
             self.wfile.write(json.dumps(predictor_service.leaderboard_entries).encode('utf-8'))
@@ -35,8 +35,7 @@ class S(BaseHTTPRequestHandler):
     def do_POST(self):
         content_length = int(self.headers['Content-Length'])  # Gets the size of data
         post_data = self.rfile.read(content_length)  # Gets the data itself
-        logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n",
-                     str(self.path), str(self.headers), post_data.decode('utf-8'))
+        #logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n", str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         # Check if the path is "/add_invocation"
         if self.path == "/add_invocation":
@@ -65,22 +64,27 @@ class S(BaseHTTPRequestHandler):
             self._set_response()
             self.wfile.write("POST request for {} not handled".format(self.path).encode('utf-8'))
 
+    # this avoids constant prints
+    def log_message(self, format, *args):
+        return
+    
+
 #I use this  to have some level of multithreading, but the multithreading is only when precesing the requests, the sockert that receives the request is stil single thread and sequencial.
 class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
     """Handle requests in a separate thread."""
 
 def run(server_class=HTTPServer, handler_class=S, port=8085):
-    logging.basicConfig(level=logging.INFO)
+    #logging.basicConfig(level=logging.INFO)
     server_address = ('', port)
     #httpd = server_class(server_address, handler_class)
     httpd = ThreadedHTTPServer(server_address, handler_class)
-    logging.info('Starting httpd...\n')
+    print('Starting httpd...\n')
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
-    logging.info('Stopping httpd...\n')
+    print('Stopping httpd...\n')
 
 if __name__ == '__main__':
     from sys import argv
