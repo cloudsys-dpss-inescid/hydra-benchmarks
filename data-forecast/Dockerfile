@@ -21,7 +21,14 @@ RUN python3 --version
 RUN curl -sS https://bootstrap.pypa.io/get-pip.py | python3.10
 RUN python3 -m pip --version
 
+
+RUN apt-get update
+RUN apt-get install -y libtbb-dev
+RUN pip3 install tbb
+RUN pip3 install numba
+
 RUN pip3 install autogluon
 RUN pip3 install stumpy
+
 
 CMD ["python3", "/data-forecast/http_server.py"]

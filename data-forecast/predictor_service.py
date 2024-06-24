@@ -77,6 +77,7 @@ def add_trace_entry(timestamp, trace_id, invocation_count):
 
 def compute_leaderboard():
     global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
+    new_leaderboard = []
 
     print("** computing leaderboard **")
     # Iterate over all traces
@@ -88,12 +89,12 @@ def compute_leaderboard():
         cost = model_predictor.get_normal_cost(trace_id, prediction)
         
         # Append to leaderboard entries
-        leaderboard_entries.append({"trace_id": trace_id, "cost": cost})
+        new_leaderboard.append({"trace_id": trace_id, "cost": cost})
     
     # Sort leaderboard entries by cost in descending order
-    leaderboard_entries_sorted = sorted(leaderboard_entries, key=lambda x: x["cost"], reverse=True)
+    new_leaderboard = sorted(new_leaderboard, key=lambda x: x["cost"], reverse=True)
     
-    leaderboard_entries = leaderboard_entries_sorted
+    leaderboard_entries = new_leaderboard
 
 
 def leaderboard_routine():

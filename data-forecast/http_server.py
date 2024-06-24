@@ -12,6 +12,9 @@ from socketserver import ThreadingMixIn
 #import logging
 import json
 import predictor_service
+from numba import config
+config.THREADING_LAYER = 'tbb'
+
 
 class S(BaseHTTPRequestHandler):
     def _set_response(self):
