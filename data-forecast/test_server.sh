@@ -31,7 +31,7 @@ send_trace_data() {
         timestamp_formatted=$(date -d "$timestamp" +"%Y-%m-%d %H:%M:%S")
 
         # Build the JSON data for the POST body
-        data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "call_count":"'$target'"}'
+        data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'"}'
 
         # Send the POST request using curl
         echo "Sending POST for timestamp $timestamp_formatted with target $target  "

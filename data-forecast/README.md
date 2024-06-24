@@ -1,8 +1,6 @@
 # Forecasting Service
 
-This directory contains the script `run_server_container.sh`, which launches a Docker container running an HTTP server capable of predicting trace forecasts for the Azure 2019 dataset. The server assumes the existence of previously trained models using AutoGluon. To train the models, navigate to the `predictor` directory and run the `run-training.sh` script. This directory also contains a README.md with more information. The server provided here offers different HTTP endpoints, as detailed below. By default, this service is launched on port 8085.
-
-Warning: The run_server_container.sh script currently has an absolute path hardcoded to mount the current directory. I need to fix this.
+This directory contains the script `run_server_container.sh`, which launches a Docker container running an HTTP server capable of predicting trace forecasts for the Azure 2019 dataset. The server assumes the existence of previously trained models using AutoGluon. To train the models, navigate to the `/predictor` directory and run the `run-training.sh` script. This directory also contains a README.md with more information. The server provided here offers different HTTP endpoints, as detailed below. By default, this service is launched on port 8085.
 
 Currently is only using the naive model, I have to change this: https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html#autogluon.timeseries.models.AverageModel
 
@@ -13,14 +11,14 @@ Currently is only using the naive model, I have to change this: https://auto.glu
 This POST request requires three arguments as input:
 1. **`timestamp`**: A string with the following representation: `"2019-01-07 03:30:00"`.
 2. **`trace_id`**: A string representing the unique identifier of the function executed in Hydra/GraalVM, e.g., `"fac75689598f4a70c04eb92e12930a95f109d88ca612cae6afb5fea9969af425"`.
-3. **`call_count`**: A string containing an integer, representing how many times the trace/function was called at this timestamp.
+3. **`invocation_count`**: A string containing an integer, representing how many times the trace/function was called at this timestamp.
 
 
-Within the service, we assume a granularity of minutes. Depending on the timestamp, the service will either add the received `call_count` to the previous value for the same timestamp (within a minute's granularity) or create a new timestamp entry. When there is a gap between two timestamps larger than one minute, the service will fill these minutes with zeros, assuming the function was not called during this period.
+Within the service, we assume a granularity of minutes. Depending on the timestamp, the service will either add the received `invocation_count` to the previous value for the same timestamp (within a minute's granularity) or create a new timestamp entry. When there is a gap between two timestamps larger than one minute, the service will fill these minutes with zeros, assuming the function was not called during this period.
 
 Example usage:
 ```sh
-curl -X POST http://localhost:8085/add_invocation -H "Content-Type: application/json" -d '{"timestamp":"2019-01-07 03:30:00", "trace_id":"trace123", "call_count":"30"}'
+curl -X POST http://localhost:8085/add_invocation -H "Content-Type: application/json" -d '{"timestamp":"2019-01-07 03:30:00", "trace_id":"trace123", "invocation_count":"30"}'
 ```
 
 ### GET request: /leaderboard
@@ -42,4 +40,4 @@ curl -X GET http://localhost:8085/compute_leaderboard
 ```
 
 ## Simple Testing
-This directory also contains the script `test_server.sh`, which can be used to test the prediction service. This script will upload 400 points for two distinct services. It requires access to the Azure original dataset and the correct path provided in the `raw_dataset_dir` variable within the script. It also assumes the existence of trained models in the local folder. After uploading the 400 points, the script will call the `/compute_leaderboardà endpoint and print the result.
+This directory also contains the script `test_server.sh`, which can be used to test the prediction service. This script will upload 400 points for two distinct function traces. It requires access to the Azure original dataset and the correct path provided in the `raw_dataset_dir` variable within the script. It also assumes the existence of trained models in the local folder. After uploading the 400 points, the script will call the `/compute_leaderboard` endpoint and print the result.

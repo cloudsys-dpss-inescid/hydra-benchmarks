@@ -44,10 +44,10 @@ class S(BaseHTTPRequestHandler):
                 data = json.loads(post_data.decode('utf-8'))
                 timestamp = data['timestamp']
                 trace_id = data['trace_id']
-                call_count = int(data['call_count'])
+                invocation_count = int(data['invocation_count'])
 
                 # Call the add_trace_entry function with the extracted data
-                predictor_service.add_trace_entry(timestamp, trace_id, call_count)
+                predictor_service.add_trace_entry(timestamp, trace_id, invocation_count)
 
                 # Send a success response
                 self._set_response()
