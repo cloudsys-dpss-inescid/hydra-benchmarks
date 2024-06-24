@@ -27,7 +27,7 @@ def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
         new_entry = pd.DataFrame({
             'level_0': [len(trace_obj.raw_trace)],
             'item_id': [trace_obj.trace_id],
-            'timestamp': [current_time.strftime(time_format)],
+            'timestamp': [pd.to_datetime( current_time.strftime(time_format) )],
             'target': [0]
         })
         trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
@@ -54,7 +54,7 @@ def add_trace_entry(timestamp, trace_id, invocation_count):
         fill_missing_minutes(trace_obj, last_timestamp, timestamp)
 
     # Check if the timestamp already exists in raw_trace
-    if trace_obj.raw_trace.size > 0 and timestamp in trace_obj.raw_trace['timestamp'].values:
+    if trace_obj.raw_trace.size > 0 and pd.to_datetime(timestamp) in trace_obj.raw_trace['timestamp'].values:
         # Update the existing entry
         trace_obj.raw_trace.loc[trace_obj.raw_trace['timestamp'] == timestamp, 'target'] += invocation_count
     else:
@@ -62,7 +62,7 @@ def add_trace_entry(timestamp, trace_id, invocation_count):
         new_entry = pd.DataFrame({
             'level_0': [len(trace_obj.raw_trace)],
             'item_id': [trace_id],
-            'timestamp': [timestamp],
+            'timestamp': [pd.to_datetime(timestamp)],
             'target': [invocation_count]
         })
         
@@ -70,7 +70,7 @@ def add_trace_entry(timestamp, trace_id, invocation_count):
         trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
     
     trace_obj.trace_id = trace_id
-
+    
     #print("...debug...")
     #print(trace_objects)
 
@@ -84,7 +84,7 @@ def compute_leaderboard():
     for trace_id in trace_objects:
         
         # Get forecast using model predictor
-        prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive,  debug = False, log = False, output_dir = "predictor/log_results/")
+        prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive,  debug = False, log = False, output_dir = "data-forecast/predictor/log_results/")
         
         cost = model_predictor.get_normal_cost(trace_id, prediction)
         

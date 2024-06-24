@@ -8,7 +8,7 @@ send_trace_data() {
     local trace_id="$1"
     
     # Number of lines to read from the CSV file
-    NUM_LINES=400
+    NUM_LINES=200
 
     # Construct the file path using the trace_id
     local file_path="predictor/dataset_traces/traces_datapoints/${trace_id}.csv"
@@ -44,4 +44,3 @@ send_trace_data "c69576eccda1d707aa642f3989a794831cd88dd4368e07c93d54f26245d33f9
 send_trace_data "0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"
 
 curl -X GET http://localhost:8085/compute_leaderboard
-

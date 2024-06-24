@@ -23,6 +23,10 @@ def get_similar_function(query_trace, traces_to_search):
   best_trace_euclidean_distance = float('inf')
   filtered_query_trace = query_trace.filtered_trace
 
+  ### Stumpy only works with 3 or more points, so I just copy the last value and append
+  while len(filtered_query_trace) < 3:
+    filtered_query_trace = np.append(filtered_query_trace, filtered_query_trace[-1])
+
   for idx, obj_trace in enumerate(traces_to_search):
     filtered_trace = obj_trace.filtered_trace
 

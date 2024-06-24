@@ -68,7 +68,7 @@ def get_filtered_dataset(raw_traces_datapoints):
     window_size = 5
     trace = raw_trace.rolling(window=window_size).max()
 
-    for i in range(0,window_size):
+    for i in range(0, min(window_size, len(raw_trace))):
       trace[i] = raw_trace[i]
 
     trace = gaussian_filter(trace, sigma=2)
