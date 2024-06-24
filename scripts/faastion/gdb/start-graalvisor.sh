@@ -6,6 +6,7 @@ JAIL=/tmp/musl-chroot
 # Function is important to ensure that we umount proc.
 function cleanup {
     sudo umount $JAIL/proc
+    sudo umount -l $JAIL/dev
 }
 trap cleanup EXIT
 
@@ -18,7 +19,9 @@ cp -r $MUSL $JAIL
 
 # Add proc to it.
 mkdir $JAIL/proc
+mkdir $JAIL/dev
 sudo mount --bind -o ro /proc $JAIL/proc
+sudo mount --bind -o ro /dev $JAIL/dev
 
 # Add graalvisor and faastion directories.
 mkdir -p $JAIL/tmp/faastion
