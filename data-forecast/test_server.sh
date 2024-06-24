@@ -1,8 +1,26 @@
 #!/bin/bash
 
-# URL do seu servidor e endpoint
+# Server URL and endpoint
 export URL="http://localhost:8085/add_invocation"
 export raw_dataset_dir="/home/claudiocorreia/backupStuff/AzureDataset/OriginalTraces/"
+
+# Function to check if the server is ready
+wait_for_server() {
+    
+    printf 'Connecting to server.'
+    until $(nc -z localhost 8085 2>/dev/null); do
+        printf '.'
+        sleep 2
+    done
+
+    echo "Server is up!"
+}
+
+# Launch the container in the background and redirect output to server.log
+./run_server_container.sh
+
+# Wait until the server is ready
+wait_for_server $URL
 
 send_trace_data() {
     local trace_id="$1"
@@ -31,7 +49,7 @@ send_trace_data() {
         timestamp_formatted=$(date -d "$timestamp" +"%Y-%m-%d %H:%M:%S")
 
         # Build the JSON data for the POST body
-        data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'"}'
+        data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
 
         # Send the POST request using curl
         echo "Sending POST for timestamp $timestamp_formatted with target $target  "
@@ -40,7 +58,14 @@ send_trace_data() {
     done
 }
 
+# Send trace data
 send_trace_data "c69576eccda1d707aa642f3989a794831cd88dd4368e07c93d54f26245d33f94"
 send_trace_data "0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"
 
+#remove a trace
+#curl -X POST http://localhost:8085/remove_trace_by_id -H "Content-Type: application/json" -d '{"trace_id":"0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"}'
+
+# Request leaderboard
 curl -X GET http://localhost:8085/compute_leaderboard
+
+docker stop timeseries-predictor-container

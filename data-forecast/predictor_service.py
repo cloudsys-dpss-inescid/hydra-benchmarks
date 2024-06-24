@@ -33,9 +33,18 @@ def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
         trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
         current_time += timedelta(minutes=1)
 
+def remove_trace(trace_id):
+    global trace_objects
+    
+    if trace_id in trace_objects:
+        del trace_objects[trace_id]
+        #print(f"Trace ID {trace_id} removed from trace_objects.")
+    else:
+        print(f"Trace ID {trace_id} does not exist in trace_objects.")
+
 
 # Function to add entries to a Trace_Object, this assumes that each entry is one minute interval
-def add_trace_entry(timestamp, trace_id, invocation_count):
+def add_trace_entry(timestamp, trace_id, invocation_count, invocation_duration, memory_used_invocation, compilation_cost):
     global trace_objects
     
     # Adjust the timestamp to have seconds as "00", just in case there are seconds
@@ -70,6 +79,9 @@ def add_trace_entry(timestamp, trace_id, invocation_count):
         trace_obj.raw_trace = pd.concat([trace_obj.raw_trace, new_entry], ignore_index=True)
     
     trace_obj.trace_id = trace_id
+    trace_obj.invocation_duration = invocation_duration
+    trace_obj.memory_used_invocation = memory_used_invocation
+    trace_obj.compilation_cost = compilation_cost
     
     #print("...debug...")
     #print(trace_objects)

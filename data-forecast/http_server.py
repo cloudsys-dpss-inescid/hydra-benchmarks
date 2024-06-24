@@ -48,9 +48,12 @@ class S(BaseHTTPRequestHandler):
                 timestamp = data['timestamp']
                 trace_id = data['trace_id']
                 invocation_count = int(data['invocation_count'])
+                invocation_duration = int(data['invocation_duration'])
+                memory_used_invocation = int(data['memory_used_invocation'])
+                compilation_cost = int(data['compilation_cost'])
 
                 # Call the add_trace_entry function with the extracted data
-                predictor_service.add_trace_entry(timestamp, trace_id, invocation_count)
+                predictor_service.add_trace_entry(timestamp, trace_id, invocation_count, invocation_duration, memory_used_invocation, compilation_cost)
 
                 # Send a success response
                 self._set_response()
@@ -62,6 +65,16 @@ class S(BaseHTTPRequestHandler):
                 self.end_headers()
                 error_message = "Error processing POST data: {}".format(str(e))
                 self.wfile.write(error_message.encode('utf-8'))
+        elif self.path == "/remove_trace_by_id":
+                data = json.loads(post_data.decode('utf-8'))
+                trace_id = data['trace_id']
+
+                predictor_service.remove_trace(trace_id)
+
+                # Send a success response
+                self._set_response()
+                self.wfile.write("POST request for {} succeeded".format(self.path).encode('utf-8'))                
+
         else:
             # Handle other POST paths if necessary
             self._set_response()

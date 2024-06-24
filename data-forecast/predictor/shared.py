@@ -17,6 +17,9 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 class Trace_Object:
     """Class to store traces of the dataset."""
     trace_id: str
+    invocation_duration: int = 1
+    memory_used_invocation: int = 1
+    compilation_cost: int = 1
     raw_trace: pd.DataFrame = field(default_factory=pd.DataFrame)
     filtered_trace: pd.DataFrame = field(default_factory=pd.DataFrame)
     recycled_sample: pd.DataFrame = field(default_factory=pd.DataFrame) # this is suposed to be a TimeSeriesDataFrame, but I could not make ir work

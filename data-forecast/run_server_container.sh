@@ -1,13 +1,16 @@
 #!/bin/bash
 
 IMAGE_NAME="timeseries-predictor-image"
+CONTAINER_NAME="timeseries-predictor-container"
 CURRENT_DIR=$(pwd)
 
 docker build -t $IMAGE_NAME .
 
-# replace the -it with -d to run the service in background/detached 
-docker run -it --rm \
+# Run the container in background/detached mode and give it a name
+docker run -d --rm \
     --network host \
     -v "${CURRENT_DIR}:/data-forecast" \
+    --name $CONTAINER_NAME \
     $IMAGE_NAME
 
+docker logs -f $CONTAINER_NAME &> server.log &
