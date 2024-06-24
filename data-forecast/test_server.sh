@@ -44,3 +44,4 @@ send_trace_data "c69576eccda1d707aa642f3989a794831cd88dd4368e07c93d54f26245d33f9
 send_trace_data "0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"
 
 curl -X GET http://localhost:8085/compute_leaderboard
+

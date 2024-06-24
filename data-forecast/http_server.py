@@ -78,13 +78,13 @@ def run(server_class=HTTPServer, handler_class=S, port=8085):
     server_address = ('', port)
     #httpd = server_class(server_address, handler_class)
     httpd = ThreadedHTTPServer(server_address, handler_class)
-    print('Starting httpd...\n')
+    print('Starting http server...\n')
     try:
         httpd.serve_forever()
     except KeyboardInterrupt:
         pass
     httpd.server_close()
-    print('Stopping httpd...\n')
+    print('Stopping http server ...\n')
 
 if __name__ == '__main__':
     from sys import argv

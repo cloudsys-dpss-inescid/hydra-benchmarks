@@ -19,7 +19,8 @@ trained_traces = []
 # Helper function to fill missing minutes with zeros
 def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
     time_format = '%Y-%m-%d %H:%M:%S'
-    current_time = datetime.strptime(last_timestamp, time_format) + timedelta(minutes=1)
+
+    current_time = datetime.strptime(str(last_timestamp), time_format) + timedelta(minutes=1)
     new_time = datetime.strptime(new_timestamp, time_format)
     
     while current_time < new_time:
