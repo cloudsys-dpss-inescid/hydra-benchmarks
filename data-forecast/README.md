@@ -31,8 +31,13 @@ This POST request requires one argument as input:
 
 This will remove the function trace from the service and therefore it will no longer be evaluated in the leaderboard. This function should be called when the function code has been AoT compiled, as it no longer makes sense to predict it.
 
+Example usage:
+```sh
+curl -X POST http://localhost:8085/remove_trace_by_id -H "Content-Type: application/json" -d '{"trace_id":"trace123"}'
+```
+
 ### GET request: /leaderboard
-This GET request returns a list of tuples, where each tuple contains a trace ID that has been uploaded through the `/add_invocation` endpoint, along with a corresponding cost value. The leaderboard only includes functions that have not yet been AOT-compiled (feature to be implemented). The cost is calculated based on multiple factors (feature to be implemented). The returned list is ordered from the highest costing function to the lowest costing function. This cost is based solely on a prediction of the future number of calls that a given trace may have. No input is required for this endpoint.
+This GET request returns a list of tuples, where each tuple contains a trace ID that has been uploaded through the `/add_invocation` endpoint, along with a corresponding cost value. The leaderboard only includes functions that have not yet been AOT-compiled. The cost is calculated based on multiple factors (feature to be implemented). The returned list is ordered from the highest costing function to the lowest costing function. This cost is based solely on a prediction of the future number of calls that a given trace may have. No input is required for this endpoint.
 
 The leaderboard is automatically recomputed every 10 minutes, but this interval can be adjusted.
 
