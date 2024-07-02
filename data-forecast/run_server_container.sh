@@ -8,6 +8,7 @@ docker build -t $IMAGE_NAME .
 
 # Run the container in background/detached mode and give it a name
 docker run -d --rm \
+    --gpus all \
     --network host \
     -v "${CURRENT_DIR}:/data-forecast" \
     --name $CONTAINER_NAME \

@@ -13,6 +13,7 @@ from predictor import model_training, model_predictor, shared
 # Global variable to store Trace_Object instances
 trace_objects = {}
 leaderboard_entries = []
+last_execution_time = None
 trace_dir_drive = "dataset_traces/"
 trained_traces = [] 
 
@@ -35,7 +36,7 @@ def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
 
 def remove_trace(trace_id):
     global trace_objects
-    
+
     if trace_id in trace_objects:
         del trace_objects[trace_id]
         #print(f"Trace ID {trace_id} removed from trace_objects.")
@@ -96,7 +97,7 @@ def compute_leaderboard():
     for trace_id in trace_objects:
         
         # Get forecast using model predictor
-        prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive,  debug = False, log = False, output_dir = "data-forecast/predictor/log_results/")
+        prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive,  debug = False, log = True, output_dir = "data-forecast/predictor/log_results/")
         
         cost = model_predictor.get_normal_cost(trace_id, prediction)
         
@@ -108,13 +109,21 @@ def compute_leaderboard():
     
     leaderboard_entries = new_leaderboard
 
+    print("LOG: flush logs", flush=True)
+
 
 def leaderboard_routine():
     """Function to run compute_leaderboard() every 10 minutes."""
+    global last_execution_time
+    routine_sleep = 600 # Wait for 10 minutes (600 seconds) before running again
+    
     while True:
-        time.sleep(600)  # Wait for 10 minutes (600 seconds) before running again
-        compute_leaderboard()  # Call compute_leaderboard() function
-
+        
+        if last_execution_time is None or (datetime.now() - last_execution_time) > timedelta(seconds=routine_sleep):
+            compute_leaderboard()
+            last_execution_time = datetime.now()
+            
+        time.sleep( (timedelta(seconds=routine_sleep) - (datetime.now() - last_execution_time)).total_seconds() )
 
 
 def init():

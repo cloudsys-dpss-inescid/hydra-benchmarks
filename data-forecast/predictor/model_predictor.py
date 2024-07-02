@@ -268,7 +268,8 @@ def get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, d
     if  len(query_trace.raw_trace["timestamp"]) < recycle_time_window:
       recycled_used_size = len(query_trace.recycled_sample.loc[similar_trace.trace_id]["target"])
       for i in range(0, recycled_used_size):
-        similar_resampled.loc[similar_trace.trace_id]["target"][i] = query_trace.recycled_sample.loc[similar_trace.trace_id]["target"][i]
+        similar_resampled.loc[similar_trace.trace_id, "target"].iat[i] = query_trace.recycled_sample.loc[similar_trace.trace_id, "target"].iat[i]
+
       used_values_manufactured = similar_resampled.slice_by_timestep(0, recycled_used_size )
       plt.plot(used_values_manufactured.loc[similar_trace.trace_id], color="black", label="final recycled_sample", linestyle='dashed')
 

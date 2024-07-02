@@ -46,11 +46,12 @@ def train_dataset(dataset):
 
       predictor.fit(
           train_sample_resampled,
-          presets=shared.get_config("autogluon_presets"),
+          #presets=shared.get_config("autogluon_presets"),
           time_limit=shared.get_config("autogluon_time_limit"),
-          hyperparameters={
-              "NaiveModel": {},
-          },          
+          presets="chronos_tiny",
+          #hyperparameters={
+          #    "NaiveModel": {},
+          #},          
       )
 
       obj_trace.predictor = predictor

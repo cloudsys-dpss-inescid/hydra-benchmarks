@@ -26,7 +26,7 @@ send_trace_data() {
     local trace_id="$1"
     
     # Number of lines to read from the CSV file
-    NUM_LINES=200
+    NUM_LINES=2240
 
     # Construct the file path using the trace_id
     local file_path="predictor/dataset_traces/traces_datapoints/${trace_id}.csv"
@@ -44,6 +44,11 @@ send_trace_data() {
         if [[ "$item_id" == "item_id" ]]; then
             continue
         fi
+        
+        # Ignore empty lines, I do not know why there are some in the file
+        if [[ "$target" == "" ]]; then
+            continue
+        fi
 
         # Format the timestamp into the desired format ("2019-01-01 00:00:00")
         timestamp_formatted=$(date -d "$timestamp" +"%Y-%m-%d %H:%M:%S")
@@ -52,9 +57,9 @@ send_trace_data() {
         data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
 
         # Send the POST request using curl
-        echo "Sending POST for timestamp $timestamp_formatted with target $target  "
-        curl -X POST $URL -H "Content-Type: application/json" -d "$data"
-        echo
+        #echo "Sending POST for timestamp $timestamp_formatted with target $target  "
+        curl -X POST $URL -H "Content-Type: application/json" -d "$data" > /dev/null 2>&1
+        #echo
     done
 }
 
@@ -66,6 +71,9 @@ send_trace_data "0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c
 #curl -X POST http://localhost:8085/remove_trace_by_id -H "Content-Type: application/json" -d '{"trace_id":"0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"}'
 
 # Request leaderboard
-curl -X GET http://localhost:8085/compute_leaderboard
+echo "leaderboard:"
+time curl -X GET http://localhost:8085/compute_leaderboard
+
+sleep 5
 
 docker stop timeseries-predictor-container
