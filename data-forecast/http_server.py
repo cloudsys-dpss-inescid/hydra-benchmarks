@@ -27,10 +27,12 @@ class S(BaseHTTPRequestHandler):
         if self.path == "/leaderboard":
             self._set_response()
             self.wfile.write(json.dumps(predictor_service.leaderboard_entries).encode('utf-8'))
+        
         elif self.path == "/compute_leaderboard":
             self._set_response()
             predictor_service.compute_leaderboard()
             self.wfile.write(json.dumps(predictor_service.leaderboard_entries).encode('utf-8'))
+        
         else:
             self._set_response(404)
             self.wfile.write("404 - Not Found".encode('utf-8'))
@@ -65,6 +67,7 @@ class S(BaseHTTPRequestHandler):
                 self.end_headers()
                 error_message = "Error processing POST data: {}".format(str(e))
                 self.wfile.write(error_message.encode('utf-8'))
+
         elif self.path == "/remove_trace_by_id":
                 data = json.loads(post_data.decode('utf-8'))
                 trace_id = data['trace_id']

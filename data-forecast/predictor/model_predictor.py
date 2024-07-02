@@ -1,11 +1,14 @@
 #load all the required packages
 import pandas as pd
+import matplotlib
+matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import numpy as np
 from autogluon.timeseries import TimeSeriesDataFrame, TimeSeriesPredictor
 import stumpy
 import time
 import shared
+from copy import deepcopy
 
 
 #######################################################
@@ -56,7 +59,7 @@ def get_manufactured_function_past(query_trace, similar_trace, debug = False):
 
   data = usable_points #default value in case the query is larger than 24h
   data["item_id"] = recycle_trace_id
-
+  
   if  len(usable_points["timestamp"]) < recycle_time_window:
     end_timestamp = pd.to_datetime( usable_points["timestamp"][ len(usable_points["timestamp"]) - 1 ] )
     timestamps = pd.date_range(end=end_timestamp, periods=recycle_time_window, freq='min')
@@ -74,10 +77,12 @@ def get_manufactured_function_past(query_trace, similar_trace, debug = False):
         'timestamp': timestamps,
         'target': recycled_array
     }
+  
 
   df = pd.DataFrame(data)
   ts_df = TimeSeriesDataFrame(df)
-  manufactured_sample = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function") )
+  #I am using num_cpus=1 because it was causing problems when running in multiple processes
+  manufactured_sample = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
   query_trace.recycled_sample = manufactured_sample
 
   #### Print for debug
@@ -237,20 +242,23 @@ def get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, d
   end_time = time.time()
   print(f"LOG: get_similar_function took {end_time - start_time:.4f} seconds")
 
+
   start_time = time.time()
   query_trace = get_manufactured_function_past(query_trace, similar_trace, debug)  # replace points
   end_time = time.time()
   print(f"LOG: get_manufactured_function_past took {end_time - start_time:.4f} seconds")
+  prediction = ""
 
   start_time = time.time()
   prediction = get_function_forecast(similar_trace.trace_id, query_trace.recycled_sample, similar_trace.predictor, debug = debug, output_dir = output_dir)
   end_time = time.time()
   print(f"LOG: get_function_forecast took {end_time - start_time:.4f} seconds, query trace id {query_trace.trace_id}" )
+  
   #print(f"get_function_forecast took {end_time - start_time:.4f} seconds, similar id {similar_trace.trace_id}, query trace id {query_trace.trace_id} query trace:" )
   #print(query_trace.recycled_sample)
 
   if log:
-    plt.figure(figsize=(20, 6))
+    fig  = plt.figure(figsize=(20, 6))
 
 
     plt.subplot(3, 1, 1)
@@ -262,7 +270,7 @@ def get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, d
     right_half_trace_points_similar[0].raw_trace['timestamp'] = pd.to_datetime(right_half_trace_points_similar[0].raw_trace['timestamp'])
     plt.plot(right_half_trace_points_similar[0].raw_trace["timestamp"], right_half_trace_points_similar[0].raw_trace["target"], color="grey", label="removed part")
 
-    similar_resampled = similar_trace.recycled_sample.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function") )
+    similar_resampled = similar_trace.recycled_sample.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1 )
     plt.plot(similar_resampled.loc[similar_trace.trace_id], color="coral", label="similar trace (time resampling)")
 
     if  len(query_trace.raw_trace["timestamp"]) < recycle_time_window:
@@ -294,8 +302,10 @@ def get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, d
     plt.xlim(XaxisLimits)
 
     plt.legend()
-    #plt.show()
     plt.savefig(output_dir + trace_id + ".png", bbox_inches='tight')
+    plt.close()
+
+
 
   return prediction
 

@@ -26,7 +26,7 @@ send_trace_data() {
     local trace_id="$1"
     
     # Number of lines to read from the CSV file
-    NUM_LINES=2240
+    NUM_LINES=200
 
     # Construct the file path using the trace_id
     local file_path="predictor/dataset_traces/traces_datapoints/${trace_id}.csv"

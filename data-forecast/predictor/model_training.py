@@ -46,9 +46,9 @@ def train_dataset(dataset):
 
       predictor.fit(
           train_sample_resampled,
-          #presets=shared.get_config("autogluon_presets"),
+          #presets="chronos_tiny", it can also be "medium_quality"
+          presets=shared.get_config("autogluon_presets"),
           time_limit=shared.get_config("autogluon_time_limit"),
-          presets="chronos_tiny",
           #hyperparameters={
           #    "NaiveModel": {},
           #},          

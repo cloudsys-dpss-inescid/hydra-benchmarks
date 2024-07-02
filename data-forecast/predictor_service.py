@@ -3,6 +3,8 @@ import sys
 import os
 import pandas as pd
 import threading
+import multiprocessing
+from concurrent.futures import ProcessPoolExecutor
 import time
 
 # Add the path to the python modules
@@ -88,26 +90,38 @@ def add_trace_entry(timestamp, trace_id, invocation_count, invocation_duration, 
     #print(trace_objects)
 
 
+# Define the function outside of compute_leaderboard
+def process_trace(trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock):
+    # Get forecast using model predictor
+    prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive, debug=False, log=True, output_dir="data-forecast/predictor/log_results/")
+    
+    cost = model_predictor.get_normal_cost(trace_id, prediction)
+    
+    # Append to leaderboard entries in a thread-safe manner
+    with leaderboard_lock:
+        new_leaderboard.append({"trace_id": trace_id, "cost": cost})
+
 def compute_leaderboard():
     global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
-    new_leaderboard = []
-
     print("** computing leaderboard **")
-    # Iterate over all traces
-    for trace_id in trace_objects:
-        
-        # Get forecast using model predictor
-        prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive,  debug = False, log = True, output_dir = "data-forecast/predictor/log_results/")
-        
-        cost = model_predictor.get_normal_cost(trace_id, prediction)
-        
-        # Append to leaderboard entries
-        new_leaderboard.append({"trace_id": trace_id, "cost": cost})
-    
+
+    # Use Manager to create a list and a lock that can be shared between processes
+    manager = multiprocessing.Manager()
+    new_leaderboard = manager.list()
+    leaderboard_lock = manager.Lock()
+
+    # Use ProcessPoolExecutor to process each trace_id in a separate process
+    with ProcessPoolExecutor(max_workers=2) as executor:
+        futures = [executor.submit(process_trace, trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock) for trace_id in trace_objects]
+
+        # Ensure all processes complete
+        for future in futures:
+            future.result()
+
     # Sort leaderboard entries by cost in descending order
     new_leaderboard = sorted(new_leaderboard, key=lambda x: x["cost"], reverse=True)
     
-    leaderboard_entries = new_leaderboard
+    leaderboard_entries = list(new_leaderboard)
 
     print("LOG: flush logs", flush=True)
 
