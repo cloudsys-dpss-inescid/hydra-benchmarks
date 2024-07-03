@@ -111,7 +111,7 @@ def compute_leaderboard():
     leaderboard_lock = manager.Lock()
 
     # Use ProcessPoolExecutor to process each trace_id in a separate process
-    with ProcessPoolExecutor(max_workers=2) as executor:
+    with ProcessPoolExecutor(max_workers=None) as executor:
         futures = [executor.submit(process_trace, trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock) for trace_id in trace_objects]
 
         # Ensure all processes complete

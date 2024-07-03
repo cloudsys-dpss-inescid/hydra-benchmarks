@@ -1,6 +1,6 @@
 # Forecasting Service
 
-This directory contains the script `run_server_container.sh`, which launches a Docker container running an HTTP server capable of predicting trace forecasts for the Azure 2019 dataset. The server assumes the existence of previously trained models using AutoGluon. To train the models, navigate to the `/predictor` directory and run the `run-training.sh` script. This directory also contains a README.md with more information. The server provided here offers different HTTP endpoints, as detailed below. By default, this service is launched on port 8085.
+This directory contains the script `run_server_container.sh`, which launches a Docker container running an HTTP server capable of predicting trace forecasts for the Azure 2019 dataset. This script will generate a local file named server.log containing the server run output. The server assumes the existence of previously trained models using AutoGluon. To train the models, use the script `run_training.sh`, more details on the scripts below. The server provided here offers different HTTP endpoints, as detailed below. By default, this service is launched on port 8085.
 
 Currently is only using the Chronos model, I have to change this: https://auto.gluon.ai/stable/tutorials/timeseries/forecasting-model-zoo.html
 
@@ -54,5 +54,13 @@ Example usage:
 curl -X GET http://localhost:8085/compute_leaderboard
 ```
 
-## Simple Testing
+## Scripts
+
+### Training models
+To train the model using AutoGluon, simply run the script `run_training.sh` in the root directory. This script will call a secondary script, named `run-training.sh`, located in the `/predictor` directory. More information on the details and requirements of this secondary script can be found in the README.md in the `/predictor` directory. The most critical requirement is the location of the raw Azure dataset.
+
+### Launching the service
+To launch the service, simply run the `run_server_container.sh` script. Both this script and the previous one launch the Docker container with the necessary requirements for everything to work.
+
+### Simple Testing
 This directory also contains the script `test_server.sh`, which can be used to test the prediction service. This script will upload 400 points for two distinct function traces. It requires access to the Azure original dataset and the correct path provided in the `raw_dataset_dir` variable within the script. It also assumes the existence of trained models in the local folder. After uploading the 400 points, the script will call the `/compute_leaderboard` endpoint and print the result.

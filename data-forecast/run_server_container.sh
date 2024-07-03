@@ -12,6 +12,7 @@ docker run -d --rm \
     --network host \
     -v "${CURRENT_DIR}:/data-forecast" \
     --name $CONTAINER_NAME \
-    $IMAGE_NAME
+    $IMAGE_NAME \
+    python3 "/data-forecast/http_server.py"
 
 docker logs -f $CONTAINER_NAME &> server.log &

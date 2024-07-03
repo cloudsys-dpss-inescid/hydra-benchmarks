@@ -39,6 +39,6 @@ RUN sed -i -e '/experimental/ s/^#//g' /etc/apt/sources.list.d/nvidia-container-
 RUN apt-get update
 RUN apt-get install -y nvidia-container-toolkit
 RUN nvidia-ctk runtime configure --runtime=docker
-#RUN systemctl restart docker
 
-CMD ["python3", "/data-forecast/http_server.py"]
+
+
