@@ -1,9 +1,16 @@
 #!/bin/bash
 
 IMAGE_NAME="timeseries-predictor-image"
-CONTAINER_NAME="timeseries-predictor-container"
+#CONTAINER_NAME="timeseries-predictor-container"
+CONTAINER_NAME=$2
 CURRENT_DIR=$(pwd)
 MODELS_DIR="../predictor/autogluon_models"
+
+if [ -z "$CONTAINER_NAME" ]
+then
+    CONTAINER_NAME="timeseries-predictor-container"
+fi
+
 
 # check if there are trained models
 if [ -d "$MODELS_DIR" ] && [ -z "$(ls -A "$MODELS_DIR")" ]; then
@@ -21,6 +28,6 @@ docker run -d --rm \
     -v "${CURRENT_DIR}/../../azure-dataset:/azure-dataset" \
     --name $CONTAINER_NAME \
     $IMAGE_NAME \
-    python3 "/data-forecast/service/http_server.py"
+    python3 "/data-forecast/service/http_server.py" $1 #I assume the first argument is the server port
 
-docker logs -f $CONTAINER_NAME &> debug/server.log &
+#docker logs -f $CONTAINER_NAME &> debug/server.log &

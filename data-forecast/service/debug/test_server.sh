@@ -81,6 +81,4 @@ cat "$traces_location" | xargs -I {} -P 40 bash -c 'send_trace_data "$@"' _ {}
 echo "leaderboard:"
 time curl -X GET http://localhost:8085/compute_leaderboard
 
-sleep 1
-
 docker stop timeseries-predictor-container

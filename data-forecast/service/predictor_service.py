@@ -123,7 +123,7 @@ def compute_leaderboard():
     new_leaderboard = sorted(new_leaderboard, key=lambda x: x["cost"], reverse=True)
     
     leaderboard_entries = list(new_leaderboard)
-
+    
     print("LOG: flush logs", flush=True)
 
 
