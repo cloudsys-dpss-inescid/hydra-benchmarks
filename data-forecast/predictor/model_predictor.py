@@ -252,8 +252,7 @@ def get_trace_forecast(trace_id, query_trace, trained_traces, trace_dir_drive, d
   start_time = time.time()
   prediction = get_function_forecast(similar_trace.trace_id, query_trace.recycled_sample, similar_trace.predictor, debug = debug, output_dir = output_dir)
   end_time = time.time()
-  print(f"LOG: get_function_forecast took {end_time - start_time:.4f} seconds, query trace id {query_trace.trace_id}, in processed by pid: {os.getpid()} " )
-  print("LOG: flush logs", flush=True)
+  print(f"LOG: get_function_forecast took {end_time - start_time:.4f} seconds, query trace id {query_trace.trace_id}, in processed by pid: {os.getpid()} ",  flush=True )
 
   #print(f"get_function_forecast took {end_time - start_time:.4f} seconds, similar id {similar_trace.trace_id}, query trace id {query_trace.trace_id} query trace:" )
   #print(query_trace.recycled_sample)

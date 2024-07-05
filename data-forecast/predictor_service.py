@@ -6,6 +6,7 @@ import threading
 import multiprocessing
 from concurrent.futures import ProcessPoolExecutor
 import time
+from concurrent.futures import wait
 
 # Add the path to the python modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), 'predictor')))
@@ -117,6 +118,8 @@ def compute_leaderboard():
         # Ensure all processes complete
         for future in futures:
             future.result()
+        
+        executor.shutdown(wait=False)  # Explicitly shut down the executor
 
     # Sort leaderboard entries by cost in descending order
     new_leaderboard = sorted(new_leaderboard, key=lambda x: x["cost"], reverse=True)
@@ -129,15 +132,15 @@ def compute_leaderboard():
 def leaderboard_routine():
     """Function to run compute_leaderboard() every 10 minutes."""
     global last_execution_time
-    routine_sleep = 600 # Wait for 10 minutes (600 seconds) before running again
+    #routine_sleep = 600 # Wait for 10 minutes (600 seconds) before running again
     
-    while True:
+    #while True:
         
-        if last_execution_time is None or (datetime.now() - last_execution_time) > timedelta(seconds=routine_sleep):
-            compute_leaderboard()
-            last_execution_time = datetime.now()
+    #    if last_execution_time is None or (datetime.now() - last_execution_time) > timedelta(seconds=routine_sleep):
+    #        compute_leaderboard()
+    #        last_execution_time = datetime.now()
             
-        time.sleep( (timedelta(seconds=routine_sleep) - (datetime.now() - last_execution_time)).total_seconds() )
+    #    time.sleep( (timedelta(seconds=routine_sleep) - (datetime.now() - last_execution_time)).total_seconds() )
 
 
 def init():

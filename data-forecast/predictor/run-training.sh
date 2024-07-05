@@ -13,6 +13,7 @@ rm -r autogluon_models/*
 
 python3 model_training.py
 
+echo "training finished!"
 #cd ..
 #python3 -m predictor.model_training
 

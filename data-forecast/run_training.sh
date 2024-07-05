@@ -16,3 +16,8 @@ docker run -d --rm \
     sh -c "cd /data-forecast/predictor && ./run-training.sh"
 
 docker logs -f $CONTAINER_NAME &> server.log &
+
+echo "training...."
+docker wait $CONTAINER_NAME
+echo "training finished!"
+

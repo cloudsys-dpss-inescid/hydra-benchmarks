@@ -22,8 +22,10 @@ wait_for_server() {
 # Wait until the server is ready
 wait_for_server $URL
 
+#Exaempl ao to usesend_trace_data "0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"
 send_trace_data() {
-    local trace_id="$1"
+    local trace_id=$(echo "$1" | tr -d '\r\n')
+    echo "sending points for $trace_id"
     
     # Number of lines to read from the CSV file
     NUM_LINES=200
@@ -46,6 +48,7 @@ send_trace_data() {
         fi
         
         # Ignore empty lines, I do not know why there are some in the file
+        #if [[ "$target" == "" || "$target" == "0" ]]; then
         if [[ "$target" == "" ]]; then
             continue
         fi
@@ -63,28 +66,11 @@ send_trace_data() {
     done
 }
 
-# Send trace data
-#send_trace_data "c69576eccda1d707aa642f3989a794831cd88dd4368e07c93d54f26245d33f94"
-
-
 # Read the file line by line from a online traces
 traces_location="online_trace_ids.txt"
-while IFS= read -r line
-do
-    trace_id=$(echo "$line" | tr -d '\r\n')
-    echo "sending points for $trace_id"
-    send_trace_data "$trace_id"
-done < "$traces_location"
-        
-#send_trace_data "0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"
-#send_trace_data "d620f3838e8985a166b8715a4071e63cb78c4a97b5fbc55f1afc07373493f160"
-#send_trace_data "d2c14a262ab4b723d197cd12b7543518dbe8d29dd9b8cbd921c5003d3d7fc252"
-#send_trace_data "d01f39bd08833e5f3c3b1f955d0b7ae61ae04b6aae9b6b73ab83365bb023ea3a"
-#send_trace_data "d1e533e2931419c2f2fd52a331ac67ad8a69f533c56d1b12a0ac6cf46b426901"
-#send_trace_data "d1cf09b1700cf827ee242a61b7744f71a5d5b9c2faf5ed915ad77a67d61dc6e9"
-#send_trace_data "d0f0dd6a06162b4431c8ca772059f887cff5a3ef2d47bee83e020f364f67bc88"
-#send_trace_data "cd127839cad8213d7c7b6359bafe76867670eff3c13befdc92595272c9e969ce"
-#send_trace_data "cd7f16fcccee2be1f58f4e041bceaddb1b4de832eb22b1a8d6e6de1e76bed5ab"
+export -f send_trace_data
+#using xargs to parallelize this part, the -P defines how many threads
+cat "$traces_location" | xargs -I {} -P 40 bash -c 'send_trace_data "$@"' _ {}
 
 #remove a trace
 #curl -X POST http://localhost:8085/remove_trace_by_id -H "Content-Type: application/json" -d '{"trace_id":"0bbf3ed03a8bd9360b056421dc63bf3ad0a12f34f158a23ed762fe78256fa4c8"}'
@@ -93,6 +79,6 @@ done < "$traces_location"
 echo "leaderboard:"
 time curl -X GET http://localhost:8085/compute_leaderboard
 
-sleep 5
+sleep 1
 
 docker stop timeseries-predictor-container

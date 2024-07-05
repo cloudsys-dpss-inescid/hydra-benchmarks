@@ -49,9 +49,9 @@ def train_dataset(dataset):
           #presets="chronos_tiny", it can also be "medium_quality"
           presets=shared.get_config("autogluon_presets"),
           time_limit=shared.get_config("autogluon_time_limit"),
-          #hyperparameters={
-          #    "NaiveModel": {},
-          #},          
+          hyperparameters={
+              "NaiveModel": {},
+          },          
       )
 
       obj_trace.predictor = predictor

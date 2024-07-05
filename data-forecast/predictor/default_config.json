@@ -7,7 +7,7 @@
     "aot_output_dir": "",
     "normal_output_dir": "",
     "autogluon_eval_metric": "MASE",
-    "autogluon_presets": "chronos_tiny",
+    "autogluon_presets": "medium_quality",
     "autogluon_time_limit": 600,
     "raw_dataset": "/home/claudiocorreia/backupStuff/AzureDataset/OriginalTraces/",
     "offline_traces_dir": "offline_trace_ids.txt",
