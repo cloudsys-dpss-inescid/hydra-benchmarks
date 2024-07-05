@@ -9,7 +9,7 @@
     "autogluon_eval_metric": "MASE",
     "autogluon_presets": "medium_quality",
     "autogluon_time_limit": 600,
-    "raw_dataset": "/home/claudiocorreia/backupStuff/AzureDataset/OriginalTraces/",
+    "raw_dataset": "/home/claudiocorreia/work/hydra/benchmarks/azure-dataset/input/",
     "offline_traces_dir": "offline_trace_ids.txt",
     "online_traces_dir": "online_traces_dir.txt"
 }
