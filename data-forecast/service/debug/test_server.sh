@@ -17,10 +17,9 @@ wait_for_server() {
 }
 
 # Launch the container in the background and redirect output to server.log
-(
-    cd ..
-    ./run_server_container.sh
-) &
+cd ..
+./run_server_container.sh
+cd debug/
 
 # Wait until the server is ready
 wait_for_server $URL

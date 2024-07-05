@@ -14,3 +14,11 @@ __pycache__
 /virtualization/**/*.png
 /virtualization/**/*.log
 virtualenv
+# Ignore autogluon models and other debug data
+/data-forecast/predictor/autogluon_models/*
+/data-forecast/predictor/log_results/*
+/data-forecast/predictor/dataset_traces/traces_datapoints/*
+/data-forecast/predictor/dataset_traces/traces_plots/*
+/data-forecast/AutogluonModels
+/data-forecast/*/AutogluonModels
+/data-forecast/service/debug/*.log

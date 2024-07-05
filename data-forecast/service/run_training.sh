@@ -3,6 +3,13 @@
 IMAGE_NAME="timeseries-predictor-image"
 CONTAINER_NAME="timeseries-predictor-container"
 CURRENT_DIR=$(pwd)
+DATASET_DIR="../../azure-dataset/input"
+
+# check if the Azure dataset is found localy, other wise download it
+if [ -d "$DATASET_DIR" ] && [ -z "$(find "$DATASET_DIR" -type f | grep -v '\.gitignore')" ]; then
+    echo "Azure dataset not found, it will downdload it now."
+    ./../../azure-dataset/download_dataset.sh 
+fi
 
 docker build -t $IMAGE_NAME .
 
@@ -21,4 +28,3 @@ docker logs -f $CONTAINER_NAME &> debug/server.log &
 echo "training...."
 docker wait $CONTAINER_NAME
 echo "training finished!"
-

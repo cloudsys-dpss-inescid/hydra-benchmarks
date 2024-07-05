@@ -3,6 +3,13 @@
 IMAGE_NAME="timeseries-predictor-image"
 CONTAINER_NAME="timeseries-predictor-container"
 CURRENT_DIR=$(pwd)
+MODELS_DIR="../predictor/autogluon_models"
+
+# check if there are trained models
+if [ -d "$MODELS_DIR" ] && [ -z "$(ls -A "$MODELS_DIR")" ]; then
+    echo "No trained models found, it will train now."
+    ./run_training.sh
+fi
 
 docker build -t $IMAGE_NAME .
 
