@@ -4,6 +4,7 @@ import pandas as pd
 from autogluon.timeseries import TimeSeriesDataFrame, TimeSeriesPredictor
 import shared
 
+
 #######################################################
 ################## Offline processing #################
 #######################################################
