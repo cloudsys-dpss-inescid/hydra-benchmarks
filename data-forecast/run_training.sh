@@ -11,6 +11,7 @@ docker run -d --rm \
     --gpus all \
     --network host \
     -v "${CURRENT_DIR}:/data-forecast" \
+    -v "${CURRENT_DIR}/../azure-dataset:/azure-dataset" \
     --name $CONTAINER_NAME \
     $IMAGE_NAME \
     sh -c "cd /data-forecast/predictor && ./run-training.sh"
