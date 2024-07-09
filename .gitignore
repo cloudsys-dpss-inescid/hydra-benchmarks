@@ -22,3 +22,6 @@ virtualenv
 /data-forecast/AutogluonModels
 /data-forecast/*/AutogluonModels
 /data-forecast/service/debug/*.log
+/data-forecast/simulator/debug/*.log
+/data-forecast/simulator/*.log
+

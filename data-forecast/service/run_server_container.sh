@@ -11,7 +11,6 @@ then
     CONTAINER_NAME="timeseries-predictor-container"
 fi
 
-
 # check if there are trained models
 if [ -d "$MODELS_DIR" ] && [ -z "$(ls -A "$MODELS_DIR")" ]; then
     echo "No trained models found, it will train now."
@@ -30,4 +29,6 @@ docker run -d --rm \
     $IMAGE_NAME \
     python3 "/data-forecast/service/http_server.py" $1 #I assume the first argument is the server port
 
-#docker logs -f $CONTAINER_NAME &> debug/server.log &
+CONTAINER_NAME=$2
+
+docker logs -f $CONTAINER_NAME &> "debug/server-$CONTAINER_NAME.log" &

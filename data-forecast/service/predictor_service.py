@@ -40,9 +40,9 @@ def remove_trace(trace_id):
 
     if trace_id in trace_objects:
         del trace_objects[trace_id]
-        #print(f"Trace ID {trace_id} removed from trace_objects.")
+        #print(f"Trace ID {trace_id} removed from trace_objects.", flush=True) 
     else:
-        print(f"Trace ID {trace_id} does not exist in trace_objects.")
+        print(f"Trace ID {trace_id} does not exist in trace_objects.", flush=True)
 
 
 # Function to add entries to a Trace_Object, this assumes that each entry is one minute interval
@@ -97,8 +97,8 @@ def process_trace(trace_id, trace_objects, trained_traces, trace_dir_drive, new_
     cost = model_predictor.get_normal_cost(trace_id, prediction)
     
     # Append to leaderboard entries in a thread-safe manner
-    with leaderboard_lock:
-        new_leaderboard.append({"trace_id": trace_id, "cost": cost})
+    #with leaderboard_lock:
+    new_leaderboard.append({"trace_id": trace_id, "cost": cost})
 
 def compute_leaderboard():
     global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
@@ -107,17 +107,19 @@ def compute_leaderboard():
     # Use Manager to create a list and a lock that can be shared between processes
     manager = multiprocessing.Manager()
     new_leaderboard = manager.list()
-    leaderboard_lock = manager.Lock()
-
+    #leaderboard_lock = manager.Lock()
+    
+    for trace_id in trace_objects:
+        process_trace(trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, None)
     # Use ProcessPoolExecutor to process each trace_id in a separate process
-    with ProcessPoolExecutor(max_workers=None) as executor:
-        futures = [executor.submit(process_trace, trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock) for trace_id in trace_objects]
+    #with ProcessPoolExecutor(max_workers=None) as executor:
+        #futures = [executor.submit(process_trace, trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock) for trace_id in trace_objects]
 
         # Ensure all processes complete
-        for future in futures:
-            future.result()
+        #for future in futures:
+        #    future.result()
         
-        executor.shutdown(wait=False)  # Explicitly shut down the executor
+        #executor.shutdown(wait=False)  # Explicitly shut down the executor
 
     # Sort leaderboard entries by cost in descending order
     new_leaderboard = sorted(new_leaderboard, key=lambda x: x["cost"], reverse=True)

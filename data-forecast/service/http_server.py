@@ -69,6 +69,7 @@ class S(BaseHTTPRequestHandler):
                 self.wfile.write(error_message.encode('utf-8'))
 
         elif self.path == "/remove_trace_by_id":
+
                 data = json.loads(post_data.decode('utf-8'))
                 trace_id = data['trace_id']
 
