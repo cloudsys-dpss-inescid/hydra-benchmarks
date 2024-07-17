@@ -1,6 +1,8 @@
 #!/bin/bash
 
-GRAALOS_SDK_DIR="/home/claudiocorreia/graalos_work/graalos"
+CONTAINER_NAME="graalos-container"
+#export GRAALOS_SDK_DIR="/home/claudiocorreia/graalos_work/graalos"
+CURRENT_DIR=$(pwd)
 
 if [ -z "$GRAALOS_SDK_DIR" ]
 then
@@ -8,24 +10,8 @@ then
     exit 1
 fi
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+tmpdir=${CURRENT_DIR}/logs/graalos-last
+declare -i curl_counter=0
 
 # Terminate graalhost:
 function terminate_graalhost() {
@@ -69,64 +55,37 @@ EOF
     wait ${graalhost_pid}
 }
 
+function load_aplication() {
 
-echo "starting graalhost"
-# start graalhost as a single process containing the hub & a single visor:
-${GRAALOS_SDK_DIR}/graalhost/graalhost --verbose \
-          --port=uds@${tmpdir}/graalhost.socket \
-          --seccomp 2 \
-          --hub \
-          --webserver \
-          --internal_visor \
-          --add_visors=1 \
-          --log_to=file \
-          --visorcalloutput=visorcalloutput.txt \
-          --musl_path=${GRAALOS_HOME}/graalhost/libc.so \
-          --ephemeral_dir=${tmpdir} \
-          --write_pid=${tmpdir}/graalhost.pid \
-           >${tmpdir}/graalhost.stdout \
-           2>${tmpdir}/graalhost.stderr &
-echo "graalhost"
+    # The graalos management interface expects you to define an end point 
+    # ID, which is unique to this instance of the hub:
+    epid=2001
 
-# get the Unix domain socket path to the hub (aka management
-# interface):
-hub_port=${tmpdir}/graalhost.socket
+    # The isolate to run, example: ISOLATE=/scripts/apps/hello-world/helloworld
+    ISOLATE=$1
 
-# Wait for graalhost to start running:
-while [[ ! -S ${tmpdir}/graalhost.socket ]] ; do 
-        sleep 0.1
-done
-graalhost_pid=$(<${tmpdir}/graalhost.pid)
-echo "graalhost up"
-
-# The graalos management interface expects you to define an end point 
-# ID, which is unique to this instance of the hub:
-epid=2001
-
-# The isolate to run:
-ISOLATE=${CURRENT_DIR}/apps/hello-world/helloworld
-
-# Tell the hub to load a GraalAPP into memory and start a single 
-# isolate instance:
-curl_counter+=1
-curl_tmpdir=${tmpdir}/curl-${curl_counter}
-mkdir -p ${curl_tmpdir}
-touch ${curl_tmpdir}/curl.header ${curl_tmpdir}/curl.stderr ${curl_tmpdir}/curl.stdout
-sed -e '/^[[:space:]]*$/d' >${curl_tmpdir}/curl.cmd <<EOF
+    # Tell the hub to load a GraalAPP into memory and start a single 
+    # isolate instance:
+    curl_counter+=1
+    curl_tmpdir=${tmpdir}/curl-${curl_counter}
+    mkdir -p ${curl_tmpdir}
+    touch ${curl_tmpdir}/curl.header ${curl_tmpdir}/curl.stderr ${curl_tmpdir}/curl.stdout
+    sed -e '/^[[:space:]]*$/d' >${curl_tmpdir}/curl.cmd <<EOF
 curl --silent
-     --show-error
-     --write-out "%{http_code}"
-     --output ${curl_tmpdir}/curl.stdout
-     --stderr ${curl_tmpdir}/curl.stderr
-     --dump-header ${curl_tmpdir}/curl.header
-     --max-time 3
-     --unix-socket ${tmpdir}/graalhost.socket
-     --data @${curl_tmpdir}/http_request_body.json
-     http://localhost/command
+    --show-error
+    --write-out "%{http_code}"
+    --output ${curl_tmpdir}/curl.stdout
+    --stderr ${curl_tmpdir}/curl.stderr
+    --dump-header ${curl_tmpdir}/curl.header
+    --max-time 3
+    --unix-socket ${tmpdir}/graalhost.socket
+    --data @${curl_tmpdir}/http_request_body.json
+    http://localhost/command
 EOF
-echo "first curl"
-curl_cmd=$(<${curl_tmpdir}/curl.cmd)
-cat - >${curl_tmpdir}/http_request_body.json <<EOF 
+
+    echo "Performing first curl, loading aplication"
+    curl_cmd=$(<${curl_tmpdir}/curl.cmd)
+    cat - >${curl_tmpdir}/http_request_body.json <<EOF 
 {
     "act": "add_ep",
     "app": "${ISOLATE}",
@@ -141,7 +100,7 @@ cat - >${curl_tmpdir}/http_request_body.json <<EOF
     "fsmappings": [
         {
             "concrete": "/",
-             "virt": "/"
+            "virt": "/"
         }
     ],
     "env": {
@@ -150,33 +109,54 @@ cat - >${curl_tmpdir}/http_request_body.json <<EOF
     "instances": 1
 }
 EOF
-http_code=$(eval ${curl_cmd})
-curl_status=$?
-#expect to see something like the following :
-# {"ep":20125,"msg":"AddEndpoint","port":39187}
-# HTTP/1.1 200 OK
-# Content-Type: application/json
-# Date: Wed, 08 Nov 2023 03:44:41 GMT 
-# uWebSockets: 20
-# Content-Length: 46
-#
-if [[ ${verbose} == "yes" ]] ; then
-    echo "${curl_cmd}" >&2
-    cat ${curl_tmpdir}/http_request_body.json >&2 cat ${curl_tmpdir}/curl.header >&2
-    cat ${curl_tmpdir}/curl.stdout >&2
-    cat ${curl_tmpdir}/curl.stderr >&2
-fi
-if [[ ${curl_status} != 0 || ! ${http_code} =~ ^2[0-9][0-9]$ ]] ; then
-    echo "[ERROR] unable to start isolate" >&2
-    terminate_graalhost
-    exit 1
-fi
-isolate_port=$(cat ${curl_tmpdir}/curl.stdout | jq -a -e .port)
+    http_code=$(eval ${curl_cmd})
+    curl_status=$?
+    #expect to see something like the following :
+    # {"ep":20125,"msg":"AddEndpoint","port":39187}
+    # HTTP/1.1 200 OK
+    # Content-Type: application/json
+    # Date: Wed, 08 Nov 2023 03:44:41 GMT 
+    # uWebSockets: 20
+    # Content-Length: 46
+    #
+    if [[ ${verbose} == "yes" ]] ; then
+        echo "${curl_cmd}" >&2
+        cat ${curl_tmpdir}/http_request_body.json >&2 cat ${curl_tmpdir}/curl.header >&2
+        cat ${curl_tmpdir}/curl.stdout >&2
+        cat ${curl_tmpdir}/curl.stderr >&2
+    fi
+    if [[ ${curl_status} != 0 || ! ${http_code} =~ ^2[0-9][0-9]$ ]] ; then
+        echo "[ERROR] unable to start isolate" >&2
+        terminate_graalhost
+        exit 1
+    fi
+    #isolate_port=$(cat ${curl_tmpdir}/curl.stdout | jq -a -e .port)
 
+}
+
+
+./launch-graalhost-container.sh
+
+# Wait for graalhost to start running:
+while [[ ! -S ${tmpdir}/graalhost.socket ]] ; do 
+        sleep 0.1
+done
+echo "Graalhost is up"
+
+load_aplication /scripts/apps/hello-world/helloworld
+
+echo "Terminating GraalOS"
 terminate_graalhost
+
+sleep 1 #I need to wait for the graal os to change the logs permisions
 
 # Validate the isolate output:
 if ! grep --silent "Hello, World!" ${tmpdir}/isolate1.log ; then 
     echo "[ERROR] Unexpected isolate output" >&2
     exit 1
-fi    
+fi
+
+# create a temporary directory to retain an execution log:
+finaldir=$(mktemp -d ${CURRENT_DIR}/logs/graalos-$(whoami)-XXXXXXXX)
+cp -r ${tmpdir}/* ${finaldir}
+echo Folder containing the execution log: $finaldir

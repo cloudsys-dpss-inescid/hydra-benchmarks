@@ -11,10 +11,15 @@ then
     exit 1
 fi
 
+logsdir=${CURRENT_DIR}/logs/graalos-last
+rm -r ${logsdir}/* &>/dev/null 
+mkdir ${logsdir} &>/dev/null 
+
+echo hello
 docker build -t $IMAGE_NAME .
 
 # Run the container in background/detached mode
-docker run -it --rm \
+docker run -t -d --rm \
     --network host \
     --name $CONTAINER_NAME \
     -v "${GRAALOS_SDK_DIR}:/graalos" \
@@ -23,4 +28,4 @@ docker run -it --rm \
     $IMAGE_NAME \
     ./run-graalhost.sh
 
-    
+
