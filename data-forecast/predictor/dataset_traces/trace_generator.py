@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from datetime import datetime, timedelta
+from pathlib import Path
 
 #for each funciton ID generate a trace for all days and a plot
 start_datetime = datetime(2019, 1, 1, 0, 0, 0)
@@ -64,15 +65,16 @@ def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir):
 
           timestamps_array = timestamps_array + [current_datetime]
           output_file.write(f"{trace_id},{current_datetime.strftime('%Y-%m-%d %H:%M:%S') },{value}\n")
+    
+    if False:
+      plt.figure(figsize=(40, 6))
+      calls_array_int = [int(value) for value in calls_array]
 
-    plt.figure(figsize=(40, 6))
-    calls_array_int = [int(value) for value in calls_array]
+      plt.plot(timestamps_array, calls_array_int, color="blue", label="data points")
+      plt.legend()
 
-    plt.plot(timestamps_array, calls_array_int, color="blue", label="data points")
-    plt.legend()
-
-    plt.savefig(result_dir + "traces_plots/" + trace_id + ".png", bbox_inches='tight')
-    plt.close()  # Close the plot without displaying it
+      plt.savefig(result_dir + "traces_plots/" + trace_id + ".png", bbox_inches='tight')
+      plt.close()  # Close the plot without displaying it
 
 ## this will generate the traces and plots for all the trace_ids in the dataset, that have not yet been generated
 def generate_all_traces(dataset_dir, result_dir, all_traces_ids_files_name):
@@ -92,9 +94,14 @@ def generate_all_traces(dataset_dir, result_dir, all_traces_ids_files_name):
       print("working on " + trace_id)
       generate_and_plot_trace_id(trace_id, dataset_dir, result_dir)
 
-
+#dir_path = None
 def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
+    #global trace_path
+    
     trace_path = os.path.join(trace_dir_drive, "traces_datapoints/", trace_id + '.csv')
+    
+    #if trace_path is None;  
+       #dir_path = Path("/path/to/file")
     
     # case the trace has not yet being generated
     if not os.path.isfile(trace_path):

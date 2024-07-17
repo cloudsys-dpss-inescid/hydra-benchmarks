@@ -1,0 +1,15 @@
+# Ignore autogluon models and other debug data
+
+/*/AutogluonModels
+#predictor
+/predictor/autogluon_models/*
+/predictor/log_results/*
+/predictor/dataset_traces/traces_datapoints/*
+/predictor/dataset_traces/traces_plots/*
+#service
+/service/debug/*.log
+/service/running_traces/*
+#simulator
+/simulator/debug/*.log
+/simulator/*.log
+

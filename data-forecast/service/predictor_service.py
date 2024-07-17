@@ -3,8 +3,8 @@ import sys
 import os
 import pandas as pd
 import threading
-import multiprocessing
-from concurrent.futures import ProcessPoolExecutor
+#import multiprocessing
+#from concurrent.futures import ProcessPoolExecutor
 
 # Add the path to the python modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
@@ -92,21 +92,22 @@ def add_trace_entry(timestamp, trace_id, invocation_count, invocation_duration, 
 # Define the function outside of compute_leaderboard
 def process_trace(trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock):
     # Get forecast using model predictor
-    prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive, debug=False, log=True, output_dir="data-forecast/predictor/log_results/")
+    prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive, debug=False, log=False, output_dir="data-forecast/predictor/log_results/")
     
-    cost = model_predictor.get_normal_cost(trace_id, prediction)
+    #cost = model_predictor.get_normal_cost(trace_id, prediction)
     
     # Append to leaderboard entries in a thread-safe manner
     #with leaderboard_lock:
-    new_leaderboard.append({"trace_id": trace_id, "cost": cost})
+    #new_leaderboard.append({"trace_id": trace_id, "cost": cost})
+    new_leaderboard.append({"trace_id": trace_id, "cost": 10})
 
 def compute_leaderboard():
     global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
     print("** computing leaderboard **")
 
     # Use Manager to create a list and a lock that can be shared between processes
-    manager = multiprocessing.Manager()
-    new_leaderboard = manager.list()
+    #manager = multiprocessing.Manager()
+    new_leaderboard = [] #anager.list()
     #leaderboard_lock = manager.Lock()
     
     for trace_id in trace_objects:
@@ -152,7 +153,7 @@ def init():
     trace_dir_drive = "dataset_traces/" # this iss for  debuging
     trained_traces = model_training.load_trained_traces()
 
-    leaderboard_thread = threading.Thread(target=leaderboard_routine)
-    leaderboard_thread.daemon = True  # Set the thread as a daemon so it will terminate when the main program ends
-    leaderboard_thread.start()
+    #leaderboard_thread = threading.Thread(target=leaderboard_routine)
+    #leaderboard_thread.daemon = True  # Set the thread as a daemon so it will terminate when the main program ends
+    #leaderboard_thread.start()
 

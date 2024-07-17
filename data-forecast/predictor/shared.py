@@ -8,7 +8,7 @@ import json
 from dataset_traces import trace_generator
 import os
 from scipy.ndimage import gaussian_filter
-
+import copy
 
 #I use this to fild the relative path for the local files, I need this when a superior pyhton script calls this one
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -56,30 +56,48 @@ def get_splited_dataset(trace_ids, trace_dir_drive):
   return left_half_trace_points, right_half_trace_points
 
 
+def get_trace_data(trace_ids):
+
+  ##### traces to use and comapre in search
+  left_half_trace_points = []
+  for trace_id in trace_ids:
+
+    points = trace_generator.read_csv_trace(trace_id, get_config("raw_dataset"), current_dir + "/" + get_config("trace_dir_drive"))
+
+    left_points = points[:len(points)//2]
+    left_half_trace_points.append( [trace_id, left_points] )
+
+  return left_half_trace_points
+
+
 ##################
 # filtering function, it filters the trace
 ##################
 
 def get_filtered_dataset(raw_traces_datapoints):
 
-  for idx, obj_trace in enumerate(raw_traces_datapoints):
+    filtered_traces = []
 
-    raw_trace = obj_trace.raw_trace
-    raw_trace['timestamp'] = pd.to_datetime(raw_trace['timestamp'])
-    raw_trace = raw_trace['target'].astype(float)
+    for obj_dataframe in raw_traces_datapoints:
 
-    window_size = 5
-    trace = raw_trace.rolling(window=window_size).max()
+        obj_dataframe = copy.deepcopy(obj_dataframe)
+        trace_id = obj_dataframe[0]
+        dataframe_cp = obj_dataframe[1]
 
-    for i in range(0, min(window_size, len(raw_trace))):
-      trace[i] = raw_trace[i]
+        dataframe_cp['timestamp'] = pd.to_datetime(dataframe_cp['timestamp'])
+        dataframe_cp = dataframe_cp['target'].astype(float)
 
-    trace = gaussian_filter(trace, sigma=2)
+        window_size = 5
+        trace = dataframe_cp.rolling(window=window_size).max()
 
-    #raw_traces_datapoints[idx].insert(3,  "filtered", trace, True)
-    obj_trace.filtered_trace = trace
+        for i in range(0, min(window_size, len(dataframe_cp))):
+            trace[i] = dataframe_cp[i]
 
-  return raw_traces_datapoints
+        trace = gaussian_filter(trace, sigma=2)
+
+        filtered_traces.append([trace_id, trace])
+
+    return filtered_traces
 
 def load_dataset_ids(path):
     
@@ -97,3 +115,10 @@ def get_config(config):
         simulation_configuration = json.load(file)
 
   return simulation_configuration[config]
+
+
+def find_in_nested_list(nested_list, search_string):
+    for index, sublist in enumerate(nested_list):
+        if sublist[0] == search_string:
+            return nested_list[index]
+    return -1  # Retorna -1 se não encontrar o elemento

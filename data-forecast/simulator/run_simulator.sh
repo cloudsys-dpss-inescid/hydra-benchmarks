@@ -3,7 +3,7 @@
 # File containing the trace IDs (one per line)
 TRACE_FILE="simulation_trace_ids.txt"
 raw_dataset_dir="../../../azure-dataset/input/"
-N_PARTS=80
+N_PARTS=1
 
 echo "Running simulator!"
 
@@ -97,7 +97,6 @@ process_trace_ids() {
     # Clear the log file
     > "debug/service-$my_id.log"
 
-
     cd ../service/
     ./run_server_container.sh $port $container_name
     cd ../simulator/
@@ -138,9 +137,7 @@ process_trace_ids() {
 
     done
 
-
     docker stop $container_name
-
 
 }
 
