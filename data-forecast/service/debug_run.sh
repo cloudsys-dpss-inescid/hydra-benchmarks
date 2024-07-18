@@ -21,8 +21,9 @@ docker run -it --rm \
     --network host \
     -v "${CURRENT_DIR}/../../data-forecast:/data-forecast" \
     -v "${CURRENT_DIR}/../../azure-dataset:/azure-dataset" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $(which docker):/usr/bin/docker \
     --name $CONTAINER_NAME \
     $IMAGE_NAME 
     #\
     #python3 "/data-forecast/service/debug.py"
-

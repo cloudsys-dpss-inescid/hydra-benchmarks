@@ -69,6 +69,18 @@ def get_trace_data(trace_ids):
 
   return left_half_trace_points
 
+def get_trace_data_fast(trace_ids, local_dataset):
+
+  ##### traces to use and comapre in search
+  left_half_trace_points = []
+  for trace_id in trace_ids:
+
+    points = trace_generator.read_csv_trace_fast(trace_id, get_config("raw_dataset"), current_dir + "/" + get_config("trace_dir_drive"), local_dataset)
+
+    left_points = points[:len(points)//2]
+    left_half_trace_points.append( [trace_id, left_points] )
+
+  return left_half_trace_points
 
 ##################
 # filtering function, it filters the trace

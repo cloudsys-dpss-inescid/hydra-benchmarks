@@ -4,6 +4,7 @@ import os
 import pandas as pd
 from datetime import datetime, timedelta
 from pathlib import Path
+import time
 
 #for each funciton ID generate a trace for all days and a plot
 start_datetime = datetime(2019, 1, 1, 0, 0, 0)
@@ -34,17 +35,62 @@ def generate_trace_ids_file(dataset_dir, all_traces_ids_file):
 
   print("generate_trace_ids_file - done")
 
+def load_dataset(dataset_dir):
+  
+  local_dataset = {} #that contains { "file_path" : " { "trace_id" : [1,2,3,4,5, ... ] } " }
+  
+  for file_number in range(1, 15):
+  
+    file_number = str(file_number).zfill(2)  #transform 1 in 01    
+    file_path = dataset_dir + dataset_file_name + file_number + ".csv"
+    file_content = {}
 
-def get_function_traces_from_file(file_number, trace_id, dataset_dir):
+    with open(file_path , 'r') as file:
+      for line in file:
+        splited_line = line.strip().split(',')
+        file_content[splited_line[2]] = splited_line[4:]
+  
+    local_dataset[file_path] = file_content
+
+  return local_dataset
+
+def get_function_traces_from_file_fast(file_number, trace_id, dataset_dir, local_dataset):
+
   file_number = str(file_number).zfill(2)  #transform 1 in 01
+  file_path = dataset_dir + dataset_file_name + file_number + ".csv"
+  file_content = {}
 
-  with open(dataset_dir + dataset_file_name + file_number + ".csv" , 'r') as file:
-    for line in file:
-      if trace_id in line:
-        calls_array = line.split(',')[4:]
-        return calls_array
+  file_content = local_dataset[file_path]
+  
+  if trace_id in file_content.keys():
+     return file_content[trace_id]
+  
+  return ['0'] * 1440 #if is not found on the dataset return zero values for each timestamp
 
-    return ['0'] * 1440 #if is not found on the dataset return zero values for each timestamp
+dataset = {} #that contains { "file_path" : " { "trace_id" : [1,2,3,4,5, ... ] } " }
+def get_function_traces_from_file(file_number, trace_id, dataset_dir):
+  global dataset
+  
+  file_number = str(file_number).zfill(2)  #transform 1 in 01
+  file_path = dataset_dir + dataset_file_name + file_number + ".csv"
+  file_content = {}
+
+  if file_path not in dataset.keys():
+    
+    with open(file_path , 'r') as file:
+      for line in file:
+        splited_line = line.strip().split(',')
+        file_content[splited_line[2]] = splited_line[4:]
+    
+    dataset[file_path] = file_content
+  
+  file_content = dataset[file_path]
+  
+  if trace_id in file_content.keys():
+     return file_content[trace_id]
+  
+  return ['0'] * 1440 #if is not found on the dataset return zero values for each timestamp
+
 
 def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir):
 
@@ -102,8 +148,8 @@ def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
     
     #if trace_path is None;  
        #dir_path = Path("/path/to/file")
-    
     # case the trace has not yet being generated
+
     if not os.path.isfile(trace_path):
         generate_and_plot_trace_id(trace_id, dataset_dir, trace_dir_drive)
     
@@ -111,7 +157,25 @@ def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
     
     return points
 
+def read_csv_trace_fast(trace_id, dataset_dir, trace_dir_drive, local_dataset):
 
+    calls_array = []
+    for i in range(1, 15):
+      calls_array = calls_array + get_function_traces_from_file_fast(i, trace_id, dataset_dir, local_dataset)    
+
+    timestamps = [start_datetime + timedelta(minutes=i) for i in range(len(calls_array))]
+
+    timestamps_str = [dt.strftime('%Y-%m-%d %H:%M:%S') for dt in timestamps]
+
+    df = pd.DataFrame({
+        'item_id': [trace_id] * len(calls_array),
+        'timestamp': timestamps_str,
+        'target': calls_array
+    })
+
+    df['target'] = df['target'].astype(int)
+    
+    return df
 
 
 

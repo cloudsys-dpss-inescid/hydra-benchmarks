@@ -5,6 +5,7 @@ import pickle
 import shutil
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
+import copy
 
 # Add the path to the python modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
@@ -30,22 +31,59 @@ def run_predictor_process(work, idx, return_dict):
     models_dir = f"{work_dir}/autogluon_models"
     os.makedirs(traces_dir, exist_ok=True)
     shutil.copytree('../predictor/autogluon_models', models_dir, dirs_exist_ok=True)
-    
+
     
     start_time = time.time()
+    counter = 0
+    total_time = 0
+    
+    with open("dataset.pkl", 'rb') as f:
+        dataset_replica = pickle.load(f)
+
+    end_time = time.time()
+    print(f"LOG: copy  took {end_time - start_time:.4f} seconds")
+
     for trace_id in work:
-        item_to_predic = shared.get_trace_data([trace_id])[0]
+        counter = counter + 1
+
+        start_time_tmp = time.time()
+
+        item_to_predic = shared.get_trace_data_fast([trace_id], dataset_replica)[0]
         file_name = os.path.join(traces_dir, f"{trace_id}.pkl")
         
         with open(file_name, 'wb') as f:
             pickle.dump(item_to_predic, f)
+        
+        end_time_tmp = time.time()
+
+        total_time = total_time +  (end_time_tmp - start_time_tmp)
+
+        if counter % 10 == 0:
+            print(f"LOG: avg latency: {end_time_tmp - start_time_tmp:.4f} seconds")
+            #with open(work_dir + "/ola.txt", 'wb') as f:
+            #    f.write("avg latency: " + str(total_time/counter))
+                #print( "avg latency: " + str(total_time/counter))
+
+
 
     end_time = time.time()
     print(f"LOG: loading traces took {end_time - start_time:.4f} seconds")
     
 
     start_time = time.time()
-    result = subprocess.run(["python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, str(idx)], capture_output=True, text=True)
+    #result = subprocess.run(["python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, str(idx)], capture_output=True, text=True)
+    
+    docker_command = [
+        "docker", "run", "--rm", "--gpus", "all",
+        "-v", "/home/claudiocorreia/work/hydra/benchmarks/data-forecast:/data-forecast",
+        #"-v", "/home/claudiocorreia/work/hydra/benchmarks/azure-dataset:/azure-dataset",
+        "-w", "/data-forecast/service",
+        "timeseries-predictor-image",
+        "python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, str(idx)
+    ]
+
+    result = subprocess.run(docker_command, capture_output=True, text=True)
+
     end_time = time.time()
     print(f"LOG: predictor_bridge took {end_time - start_time:.4f} seconds")
     
@@ -68,15 +106,18 @@ def run_predictor_process(work, idx, return_dict):
 
     
 # clean directory
-#shutil.rmtree("running_traces/")
 shutil.rmtree('running_traces/', ignore_errors=True)
 
 
 number_threads = 13
+
 print("spliting ", flush=True)
 splited_work = [online_trace_ids[i::number_threads] for i in range(number_threads)]
 
-
+#I only need to do this once, this is faster than deepcopy for some god damn reason
+#local_dataset = shared.trace_generator.load_dataset(shared.get_config("raw_dataset"))
+#with open("dataset.pkl", 'wb') as f:
+#    pickle.dump(local_dataset, f)
 
 manager = multiprocessing.Manager()
 return_dict = manager.dict()
@@ -84,6 +125,7 @@ return_dict = manager.dict()
 print("ThreadPoolExecutor ", flush=True)
 
 with ThreadPoolExecutor(max_workers=number_threads + 1) as executor:
+
     futures = [executor.submit(run_predictor_process, chunk, idx, return_dict) for idx, chunk in enumerate(splited_work)]
 
     leaderboard = {}

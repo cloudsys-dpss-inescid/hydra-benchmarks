@@ -26,7 +26,6 @@ def compute_leaderboard(traces_dir, models_dir, trained_traces, idx):
         #trace = current_obj[1]
 
         print("counter: " + str(len(return_dict)) +  " idx: " + str(idx) + " trace_id: " + trace_id )#+ " first value: " + str(single_trace.loc[trace_id, "target"].iat[1]))    
-                    
             
         if cost_function.is_trace_worthy_to_predict(trace_id, current_obj[1]["target"]):
             
