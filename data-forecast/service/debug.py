@@ -17,7 +17,7 @@ online_trace_ids = shared.load_dataset_ids("../service/debug/online_trace_ids.tx
 traces_to_predic = []
 
 print("loading online ", flush=True)
-online_trace_ids = online_trace_ids[:10000]
+online_trace_ids = online_trace_ids[:20000]
 #traces_to_predic = shared.get_trace_data(online_trace_ids)
 print("loading online done ", flush=True)
 
@@ -32,23 +32,16 @@ def run_predictor_process(work, idx, return_dict):
     os.makedirs(traces_dir, exist_ok=True)
     shutil.copytree('../predictor/autogluon_models', models_dir, dirs_exist_ok=True)
 
-    
-    start_time = time.time()
     counter = 0
     total_time = 0
+    start_time = time.time()
     
-    with open("dataset.pkl", 'rb') as f:
-        dataset_replica = pickle.load(f)
-
-    end_time = time.time()
-    print(f"LOG: copy  took {end_time - start_time:.4f} seconds")
-
     for trace_id in work:
         counter = counter + 1
 
         start_time_tmp = time.time()
 
-        item_to_predic = shared.get_trace_data_fast([trace_id], dataset_replica)[0]
+        item_to_predic = shared.get_trace_data([trace_id])[0]
         file_name = os.path.join(traces_dir, f"{trace_id}.pkl")
         
         with open(file_name, 'wb') as f:
@@ -67,8 +60,8 @@ def run_predictor_process(work, idx, return_dict):
 
 
     end_time = time.time()
-    print(f"LOG: loading traces took {end_time - start_time:.4f} seconds")
-    
+    print(f"LOG: storing traces took {end_time - start_time:.4f} seconds")
+
 
     start_time = time.time()
     #result = subprocess.run(["python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, str(idx)], capture_output=True, text=True)
@@ -109,7 +102,7 @@ def run_predictor_process(work, idx, return_dict):
 shutil.rmtree('running_traces/', ignore_errors=True)
 
 
-number_threads = 13
+number_threads = 13 #13 for chronos
 
 print("spliting ", flush=True)
 splited_work = [online_trace_ids[i::number_threads] for i in range(number_threads)]

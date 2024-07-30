@@ -5,13 +5,18 @@ from dataclasses import dataclass, field
 import numpy as np
 from autogluon.timeseries import TimeSeriesPredictor
 import json
-from dataset_traces import trace_generator
 import os
 from scipy.ndimage import gaussian_filter
 import copy
+import sys
 
 #I use this to fild the relative path for the local files, I need this when a superior pyhton script calls this one
 current_dir = os.path.dirname(os.path.abspath(__file__))
+# Add the path to the python modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../data_manager')))
+from data_manager import trace_generator
+
 
 @dataclass
 class Trace_Object:
@@ -134,3 +139,7 @@ def find_in_nested_list(nested_list, search_string):
         if sublist[0] == search_string:
             return nested_list[index]
     return -1  # Retorna -1 se não encontrar o elemento
+
+def generate_all_traces():
+   
+    trace_generator.generate_all_traces(get_config("raw_dataset"), get_config("trace_dir_drive"), get_config("trace_dir_drive") + "../all_traces_ids.csv" )

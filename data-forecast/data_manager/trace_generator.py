@@ -92,13 +92,16 @@ def get_function_traces_from_file(file_number, trace_id, dataset_dir):
   return ['0'] * 1440 #if is not found on the dataset return zero values for each timestamp
 
 
-def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir):
+def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir, local_dataset = None):
 
     timestamps_array = []
     calls_array = []
     for i in range(1, 15):
-      calls_array = calls_array + get_function_traces_from_file(i, trace_id, dataset_dir)
-
+      
+      if  local_dataset == None:
+        calls_array = calls_array + get_function_traces_from_file(i, trace_id, dataset_dir)
+      else:
+        calls_array = calls_array + get_function_traces_from_file_fast(i, trace_id, dataset_dir, local_dataset)
 
     # Open file to write the trace data
     output_file_name = result_dir + "traces_datapoints/" + trace_id + ".csv"
@@ -125,6 +128,7 @@ def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir):
 ## this will generate the traces and plots for all the trace_ids in the dataset, that have not yet been generated
 def generate_all_traces(dataset_dir, result_dir, all_traces_ids_files_name):
 
+  local_dataset = load_dataset(dataset_dir)
   # List files in the directory
   completed_traces = os.listdir(result_dir + "traces_plots/")
   print("# completed_traces: " + str( len(completed_traces)))
@@ -138,7 +142,7 @@ def generate_all_traces(dataset_dir, result_dir, all_traces_ids_files_name):
         continue
 
       print("working on " + trace_id)
-      generate_and_plot_trace_id(trace_id, dataset_dir, result_dir)
+      generate_and_plot_trace_id(trace_id, dataset_dir, result_dir, local_dataset)
 
 #dir_path = None
 def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
@@ -157,25 +161,7 @@ def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
     
     return points
 
-def read_csv_trace_fast(trace_id, dataset_dir, trace_dir_drive, local_dataset):
 
-    calls_array = []
-    for i in range(1, 15):
-      calls_array = calls_array + get_function_traces_from_file_fast(i, trace_id, dataset_dir, local_dataset)    
-
-    timestamps = [start_datetime + timedelta(minutes=i) for i in range(len(calls_array))]
-
-    timestamps_str = [dt.strftime('%Y-%m-%d %H:%M:%S') for dt in timestamps]
-
-    df = pd.DataFrame({
-        'item_id': [trace_id] * len(calls_array),
-        'timestamp': timestamps_str,
-        'target': calls_array
-    })
-
-    df['target'] = df['target'].astype(int)
-    
-    return df
 
 
 
