@@ -95,6 +95,7 @@ def add_dataframe_trace_entry(trace_id, new_df, invocation_duration, memory_used
     global trace_objects
     
     new_df = pd.read_json( StringIO(new_df), orient='records')
+    #print(new_df, flush=True)
 
     # If trace_id is not in trace_objects, create a new Trace_Object
     if trace_id not in trace_objects:
@@ -113,7 +114,7 @@ def add_dataframe_trace_entry(trace_id, new_df, invocation_duration, memory_used
 
         return
 
-    combined_raw_trace = pd.concat([trace_obj, new_df], ignore_index=True)
+    combined_raw_trace = pd.concat([trace_obj.raw_trace, new_df], ignore_index=True)
 
     min_timestamp = combined_raw_trace['timestamp'].min()
     max_timestamp = combined_raw_trace['timestamp'].max()
@@ -131,18 +132,6 @@ def add_dataframe_trace_entry(trace_id, new_df, invocation_duration, memory_used
 
     trace_obj.raw_trace = result
 
-
-# Define the function outside of compute_leaderboard
-def process_trace(trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock):
-    # Get forecast using model predictor
-    prediction = model_predictor.get_trace_forecast(trace_id, trace_objects[trace_id], trained_traces, trace_dir_drive, debug=False, log=False, output_dir="data-forecast/predictor/log_results/")
-    
-    #cost = model_predictor.get_normal_cost(trace_id, prediction)
-    
-    # Append to leaderboard entries in a thread-safe manner
-    #with leaderboard_lock:
-    #new_leaderboard.append({"trace_id": trace_id, "cost": cost})
-    new_leaderboard.append({"trace_id": trace_id, "cost": 10})
 
 def run_predictor_process(work, idx, return_dict):
 
@@ -205,11 +194,6 @@ def compute_leaderboard():
     online_trace_ids = list(trace_objects.keys())
     splited_work = [online_trace_ids[i::number_threads] for i in range(number_threads)]
 
-    #I only need to do this once, this is faster than deepcopy for some god damn reason
-    #local_dataset = shared.trace_generator.load_dataset(shared.get_config("raw_dataset"))
-    #with open("dataset.pkl", 'wb') as f:
-    #    pickle.dump(local_dataset, f)
-
     manager = multiprocessing.Manager()
     return_dict = manager.dict()
     leaderboard = {}
@@ -229,31 +213,6 @@ def compute_leaderboard():
 
 
     leaderboard_entries = dict(sorted(leaderboard.items(), key=lambda item: item[1], reverse=True))
-
-
-
-
-    # Use Manager to create a list and a lock that can be shared between processes
-    #manager = multiprocessing.Manager()
-    # new_leaderboard = [] #anager.list()
-    #leaderboard_lock = manager.Lock()
-    
-    #for trace_id in trace_objects:
-    #    process_trace(trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, None)
-    # Use ProcessPoolExecutor to process each trace_id in a separate process
-    #with ProcessPoolExecutor(max_workers=None) as executor:
-        #futures = [executor.submit(process_trace, trace_id, trace_objects, trained_traces, trace_dir_drive, new_leaderboard, leaderboard_lock) for trace_id in trace_objects]
-
-        # Ensure all processes complete
-        #for future in futures:
-        #    future.result()
-        
-        #executor.shutdown(wait=False)  # Explicitly shut down the executor
-
-    # Sort leaderboard entries by cost in descending order
-    #new_leaderboard = sorted(new_leaderboard, key=lambda x: x["cost"], reverse=True)
-    
-    #leaderboard_entries = list(new_leaderboard)
     
     print("LOG: flush logs", flush=True)
 

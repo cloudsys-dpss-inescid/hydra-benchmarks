@@ -92,6 +92,8 @@ class S(BaseHTTPRequestHandler):
 
         if self.path == "/add_dataframe":
             try:
+                # print("add_dataframe", flush=True)
+
                 # Parse the JSON data from the POST request
                 data = json.loads(post_data.decode('utf-8'))
 

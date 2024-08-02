@@ -4,6 +4,9 @@
 TRACE_FILE="simulation_trace_ids.txt"
 raw_dataset_dir="../../../azure-dataset/input/"
 N_PARTS=50
+# Number of lines to read from the CSV file
+NUM_LINES=1000
+START_NUM_LINES=5760
 
 echo "Running simulator!"
 
@@ -24,8 +27,7 @@ send_trace_data() {
     local port="$3"
     #echo "sending points for $trace_id"
     
-    # Number of lines to read from the CSV file
-    NUM_LINES=200
+
     local file_path="../data_manager/data/complete_traces/traces_datapoints/${trace_id}.csv"
 
     # Check if the file exists
@@ -62,15 +64,15 @@ send_trace_data() {
         post_data=$post_data'{\"timestamp\":\"'$timestamp_formatted'\", \"item_id\":\"'$item_id'\", \"target\":\"'$target'\"}'
         # Build the JSON data for the POST body
         #data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
-        # echo $post_data
-    done < <(head -n $NUM_LINES "$file_path")
+    done < <(sed -n "$START_NUM_LINES,$(($START_NUM_LINES + $NUM_LINES - 1))p" "$file_path")
 
 
     post_data=$post_data"]"
     data='{"dataframe":"'$post_data'", "trace_id":"'$trace_id'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
     # data='{"dataframe":"[{\"ola\"},{ola}]", "trace_id":"'$trace_id'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
 
-    curl -X POST "http:///$address:$port/add_dataframe" -H "Content-Type: application/json" -d "$data" > /dev/null 2>&1
+    #echo $data
+    curl -X POST "http:///$address:$port/add_dataframe" -H "Content-Type: application/json" -d "$data" #> /dev/null 2>&1
 
 }
 
@@ -95,34 +97,43 @@ process_trace_ids() {
         
         trace_id=$(echo "$trace_id" | tr -d '\r\n') #clean the \r 
         #process_request_on_isolated_service "$my_id" "$trace_id"
-        send_trace_data $trace_id $address $port
+        send_trace_data $trace_id $address $port >> "debug/service-$my_id.log" 2>&1
 
         #{ time curl -s -X GET "http://$address:$port/compute_leaderboard" ; } >> "debug/service-$my_id.log" 2>&1
 
         # remove previux request
         #data='{"trace_id":"'$trace_id'"}'
         #curl -X POST "http:///$address:$port/remove_trace_by_id" -H "Content-Type: application/json" -d "$data"  > /dev/null 2>&1
-        
-        
-        #counter=$((counter + 1))
-        #if (( counter % 20 == 0 )); then #relaunch container
-        #    counter=0
-        #    docker stop $container_name
 
-        #    cd ../service/
-        #    ./run_server_container.sh $port $container_name
-        #    cd ../simulator/
-
-            # Wait until the server is ready
-        #    wait_for_server $address $port
-
-        #fi
 
     done
 
 
 }
 
+
+upload_all_traces() {
+
+    # Calculate the number of trace IDs per part
+    total_trace_ids=${#trace_ids[@]}
+    ids_per_part=$(( (total_trace_ids + N_PARTS - 1) / N_PARTS ))
+
+    # Divide the trace IDs into N parts and process each part in the background
+    for (( i=0; i<N_PARTS; i++ )); do
+        start_index=$(( i * ids_per_part ))
+        end_index=$(( start_index + ids_per_part ))
+        
+        # Extract the subset of trace IDs for this part
+        part_trace_ids=("${trace_ids[@]:start_index:ids_per_part}")
+
+        # Call the processing function in the background
+        process_trace_ids "$i" "${part_trace_ids[@]}" &
+    done
+
+    # Wait for all background processes to complete
+    wait
+
+}
 
 port="8055"
 container_name="timeseries-predictor-container"
@@ -138,34 +149,40 @@ wait_for_server $address $port
 
 # Read the trace IDs into an array
 mapfile -t trace_ids < "$TRACE_FILE"
-
-# Calculate the number of trace IDs per part
-total_trace_ids=${#trace_ids[@]}
-ids_per_part=$(( (total_trace_ids + N_PARTS - 1) / N_PARTS ))
-
-# Divide the trace IDs into N parts and process each part in the background
-for (( i=0; i<N_PARTS; i++ )); do
-    start_index=$(( i * ids_per_part ))
-    end_index=$(( start_index + ids_per_part ))
-    
-    # Extract the subset of trace IDs for this part
-    part_trace_ids=("${trace_ids[@]:start_index:ids_per_part}")
-
-    # Call the processing function in the background
-    process_trace_ids "$i" "${part_trace_ids[@]}" &
-done
-
-# Wait for all background processes to complete
-wait
-
-#read -p "Press Enter to continue: " fullname
+result_dir=$(mktemp -d results/forcast-$(whoami)-XXXXXXXX)
 
 
-{ time curl -s -X GET "http://$address:$port/compute_leaderboard" ; } >> "debug/leaderboard.log" 2>&1
+N_PARTS=50
+NUM_LINES=200
+START_NUM_LINES=5760
+
+upload_all_traces 
+
+echo "compute_leaderboard"
+time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
+
+
+
+START_NUM_LINES=$(($START_NUM_LINES + $NUM_LINES)) #adding more 200 points to the service
+upload_all_traces
+
+echo "compute_leaderboard"
+time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
+
+
+START_NUM_LINES=$(($START_NUM_LINES + $NUM_LINES)) #adding more 200 points to the service
+upload_all_traces
+
+echo "compute_leaderboard"
+time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
+
+
+
+
 
 #read -p "Press Enter to continue: " fullname
 
 docker stop $container_name
 
 #echo "All trace IDs processed."
-
+echo Folder containing the execution log: $result_dir
