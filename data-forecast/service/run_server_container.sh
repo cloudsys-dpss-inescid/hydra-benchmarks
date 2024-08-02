@@ -25,8 +25,11 @@ docker run -d --rm \
     --network host \
     -v "${CURRENT_DIR}/../../data-forecast:/data-forecast" \
     -v "${CURRENT_DIR}/../../azure-dataset:/azure-dataset" \
+    -v /var/run/docker.sock:/var/run/docker.sock \
+    -v $(which docker):/usr/bin/docker \
     --name $CONTAINER_NAME \
+    -w "/data-forecast/service" \
     $IMAGE_NAME \
-    python3 "/data-forecast/service/http_server.py" $1 #I assume the first argument is the server port
+    python3 "http_server.py" $1 #I assume the first argument is the server port
 
 docker logs -f $CONTAINER_NAME &> "debug/server-$CONTAINER_NAME.log" &

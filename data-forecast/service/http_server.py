@@ -23,6 +23,12 @@ class S(BaseHTTPRequestHandler):
         self.end_headers()
 
     def do_GET(self):
+
+        if(self.headers['Content-Length'] != None):
+            content_length = int(self.headers['Content-Length'])  # Gets the size of data
+            get_data = self.rfile.read(content_length)  # Gets the data itself        
+            data = json.loads(get_data.decode('utf-8'))
+
         #logging.info("GET request,\nPath: %s\nHeaders:\n%s\n", str(self.path), str(self.headers))
         if self.path == "/leaderboard":
             self._set_response()
@@ -33,8 +39,23 @@ class S(BaseHTTPRequestHandler):
             predictor_service.compute_leaderboard()
             self.wfile.write(json.dumps(predictor_service.leaderboard_entries).encode('utf-8'))
         
+        elif self.path == "/get_trace":
+            trace_id = data['trace_id']            
+            
+            self._set_response()
+            #predictor_service.compute_leaderboard()
+            #self.wfile.write(json.dumps(predictor_service.trace_objects[trace_id]).encode('utf-8'))        
+            trace = predictor_service.trace_objects[trace_id]
+            tmp_dic = {}
+            tmp_dic["invocation_duration"] = str(trace.invocation_duration)
+            tmp_dic["memory_used_invocation"] = str(trace.memory_used_invocation)
+            tmp_dic["compilation_cost"] = str(trace.compilation_cost)
+            tmp_dic["dataframe"] = trace.raw_trace.to_json(orient='records')
+
+            self.wfile.write(json.dumps(tmp_dic).encode('utf-8'))
+        
         else:
-            self._set_response(404)
+            self._set_response()
             self.wfile.write("404 - Not Found".encode('utf-8'))
 
     def do_POST(self):
@@ -43,6 +64,7 @@ class S(BaseHTTPRequestHandler):
         #logging.info("POST request,\nPath: %s\nHeaders:\n%s\n\nBody:\n%s\n", str(self.path), str(self.headers), post_data.decode('utf-8'))
 
         # Check if the path is "/add_invocation"
+        # example: curl -X POST "http:///$address:$port/add_invocation" -H "Content-Type: application/json" -d '{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
         if self.path == "/add_invocation":
             try:
                 # Parse the JSON data from the POST request
@@ -55,7 +77,32 @@ class S(BaseHTTPRequestHandler):
                 compilation_cost = int(data['compilation_cost'])
 
                 # Call the add_trace_entry function with the extracted data
-                predictor_service.add_trace_entry(timestamp, trace_id, invocation_count, invocation_duration, memory_used_invocation, compilation_cost)
+                predictor_service.add_point_trace_entry(timestamp, trace_id, invocation_count, invocation_duration, memory_used_invocation, compilation_cost)
+
+                # Send a success response
+                self._set_response()
+                self.wfile.write("POST request for {} succeeded".format(self.path).encode('utf-8'))
+            except (KeyError, json.JSONDecodeError) as e:
+                # Send an error response if there is a problem with the JSON data
+                self.send_response(400)
+                self.send_header('Content-type', 'text/html')
+                self.end_headers()
+                error_message = "Error processing POST data: {}".format(str(e))
+                self.wfile.write(error_message.encode('utf-8'))
+
+        if self.path == "/add_dataframe":
+            try:
+                # Parse the JSON data from the POST request
+                data = json.loads(post_data.decode('utf-8'))
+
+                dataframe = data['dataframe']
+                trace_id = data['trace_id']
+                invocation_duration = int(data['invocation_duration'])
+                memory_used_invocation = int(data['memory_used_invocation'])
+                compilation_cost = int(data['compilation_cost'])
+                
+                # Call the add_trace_entry function with the extracted data
+                predictor_service.add_dataframe_trace_entry(trace_id, dataframe, invocation_duration, memory_used_invocation, compilation_cost)
 
                 # Send a success response
                 self._set_response()
@@ -109,7 +156,7 @@ def run(server_class=HTTPServer, handler_class=S, port=8085):
 if __name__ == '__main__':
     from sys import argv
 
-    predictor_service.init()
+    #predictor_service.init()
 
     if len(argv) == 2:
         run(port=int(argv[1]))

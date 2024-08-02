@@ -5,19 +5,18 @@ import pickle
 import shutil
 import multiprocessing
 from concurrent.futures import ThreadPoolExecutor
-import copy
+import time
 
 # Add the path to the python modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../predictor')))
 from predictor import shared
-import time
 
 online_trace_ids = shared.load_dataset_ids("../service/debug/online_trace_ids.txt") 
 traces_to_predic = []
 
 print("loading online ", flush=True)
-online_trace_ids = online_trace_ids[:20000]
+online_trace_ids = online_trace_ids[:100]
 #traces_to_predic = shared.get_trace_data(online_trace_ids)
 print("loading online done ", flush=True)
 
