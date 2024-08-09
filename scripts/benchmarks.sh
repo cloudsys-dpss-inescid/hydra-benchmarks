@@ -248,6 +248,15 @@ function gv_upload_function {
     echo ""
 }
 
+function gv_java_micronaut {
+    APP_LANG=java
+    APP_NAME=gv-micronaut
+    APP_MAIN=com.oracle.graalos.Application
+    APP=/home/claudiocorreia/graalos_work/graalos-benchmarks/graalos-client/apps/micronaut/build/native/nativeCompile/micronaut.so
+    echo '{"name":"gv-micronaut","async":"false","cached":"true","arguments":""}' > $RUN_POST
+    gv_upload_function
+}
+
 function gv_java_hw {
     APP_LANG=java
     APP_NAME=gv-hello-world

@@ -61,6 +61,19 @@ function test {
     done
 }
 
+#example:  ./benchmark-graalvisor.sh svm gv_java_hw launch_and_wait 1
+function launch_and_wait {
+    sleep 4 #this starts to fast, the GraalVM is still not running
+
+    echo ""
+    echo "Graalvisor was launched, press enter to terminate ..."
+    read
+
+    echo "Terminating Graalvisor..."
+
+}
+
+
 function run {
     # Setting up environment.
     echo "Waiting for $backend..." | tee $TDIR/backend.log

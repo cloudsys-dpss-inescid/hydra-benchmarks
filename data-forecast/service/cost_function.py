@@ -1,8 +1,36 @@
-from autogluon.timeseries import TimeSeriesPredictor
+import sys
+import os
+
+# Add the path to the python modules
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../predictor')))
+from predictor import shared
 
 #####
 # Compute the cost of a function on the datacenter base on prediciton
 #####
+def get_normal_trace_cost(trace_id, simulation_start, simulation_end):
+
+  full_trace = shared.get_full_trace_data([trace_id])[0][1]
+  full_trace = full_trace['target'].astype(float)
+
+  not_optimized_trace = full_trace[simulation_start:simulation_end]
+
+  cost = get_normal_cost(trace_id, not_optimized_trace) 
+
+  return cost
+
+def get_optimized_trace_cost(trace_id, simulation_start, optimized_timestamp, simulation_end):
+
+  full_trace = shared.get_full_trace_data([trace_id])[0][1]
+  full_trace = full_trace['target'].astype(float)
+
+  not_optimized_trace = full_trace[simulation_start:optimized_timestamp]
+  optimized_trace = full_trace[optimized_timestamp:simulation_end]
+
+  cost = get_normal_cost(trace_id, not_optimized_trace) + get_aot_cost(trace_id, optimized_trace)
+
+  return cost
 
 def get_aot_cost(trace_id, data_points):
   

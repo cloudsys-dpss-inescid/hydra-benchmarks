@@ -13,7 +13,7 @@ from io import StringIO
 # Add the path to the python modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../predictor')))
-from predictor import model_training, model_predictor, shared
+from predictor import shared
 
 # Global variable to store Trace_Object instances
 trace_objects = {}

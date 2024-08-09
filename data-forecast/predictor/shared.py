@@ -60,6 +60,17 @@ def get_splited_dataset(trace_ids, trace_dir_drive):
 
   return left_half_trace_points, right_half_trace_points
 
+def get_full_trace_data(trace_ids):
+
+  ##### traces to use and comapre in search
+  trace_points = []
+  for trace_id in trace_ids:
+
+    points = trace_generator.read_csv_trace(trace_id, get_config("raw_dataset"), current_dir + "/" + get_config("trace_dir_drive"))
+
+    trace_points.append( [trace_id, points] )
+
+  return trace_points
 
 def get_trace_data(trace_ids):
 

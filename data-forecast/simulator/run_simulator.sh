@@ -3,10 +3,10 @@
 # File containing the trace IDs (one per line)
 TRACE_FILE="simulation_trace_ids.txt"
 raw_dataset_dir="../../../azure-dataset/input/"
-N_PARTS=50
+#N_PARTS=50
 # Number of lines to read from the CSV file
-NUM_LINES=1000
-START_NUM_LINES=5760
+#NUM_LINES=1000
+#START_NUM_LINES=5760
 
 echo "Running simulator!"
 
@@ -135,16 +135,33 @@ upload_all_traces() {
 
 }
 
+simulate() {
+
+    cd ../service/
+    ./run_server_container.sh $port $container_name
+    cd ../simulator/
+
+    # Wait until the server is ready
+    wait_for_server $address $port
+
+    for (( j=0; j<NUMBER_OF_LEADERBOARDS; j++ )); do
+
+        upload_all_traces 
+        echo "compute_leaderboard"
+        time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
+        START_NUM_LINES=$(($START_NUM_LINES + $NUM_LINES)) #adding more 200 points to the service
+
+    done
+    
+    #read -p "Press Enter to continue: " fullname
+
+    docker stop $container_name
+
+}
+
 port="8055"
 container_name="timeseries-predictor-container"
 address="localhost"
-
-cd ../service/
-./run_server_container.sh $port $container_name
-cd ../simulator/
-
-# Wait until the server is ready
-wait_for_server $address $port
 
 
 # Read the trace IDs into an array
@@ -154,35 +171,20 @@ result_dir=$(mktemp -d results/forcast-$(whoami)-XXXXXXXX)
 
 N_PARTS=50
 NUM_LINES=200
-START_NUM_LINES=5760
+START_NUM_LINES=10080
+NUMBER_OF_LEADERBOARDS=4
 
-upload_all_traces 
+simulate
 
-echo "compute_leaderboard"
-time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
+NUM_LINES=300
+START_NUM_LINES=10080
 
+simulate
 
+NUM_LINES=400
+START_NUM_LINES=10080
 
-START_NUM_LINES=$(($START_NUM_LINES + $NUM_LINES)) #adding more 200 points to the service
-upload_all_traces
-
-echo "compute_leaderboard"
-time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
-
-
-START_NUM_LINES=$(($START_NUM_LINES + $NUM_LINES)) #adding more 200 points to the service
-upload_all_traces
-
-echo "compute_leaderboard"
-time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
-
-
-
-
-
-#read -p "Press Enter to continue: " fullname
-
-docker stop $container_name
+simulate
 
 #echo "All trace IDs processed."
 echo Folder containing the execution log: $result_dir
