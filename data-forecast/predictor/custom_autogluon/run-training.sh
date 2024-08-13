@@ -11,7 +11,7 @@ rm -r AutogluonModels/
 
 rm -r autogluon_models/*
 
-python3 model_training.py
+python3 autogluon_model_predictor.py
 
 rm -r AutogluonModels/
 

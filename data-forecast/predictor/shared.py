@@ -43,7 +43,7 @@ def get_splited_dataset(trace_ids, trace_dir_drive):
   right_half_trace_points = []
   for trace_id in trace_ids:
 
-    points = trace_generator.read_csv_trace(trace_id, simulation_configuration["raw_dataset"], current_dir + "/" + trace_dir_drive)
+    points = trace_generator.read_csv_trace(trace_id, simulation_configuration["raw_dataset"], trace_dir_drive)
     #points = pd.read_csv(trace_dir_drive + trace_id + '.csv')
     #points = TimeSeriesDataFrame.from_path(trace_dir_drive + trace_id + '.csv')
 
@@ -66,7 +66,7 @@ def get_full_trace_data(trace_ids):
   trace_points = []
   for trace_id in trace_ids:
 
-    points = trace_generator.read_csv_trace(trace_id, get_config("raw_dataset"), current_dir + "/" + get_config("trace_dir_drive"))
+    points = trace_generator.read_csv_trace(trace_id, get_config_path("raw_dataset"), get_config_path("trace_dir_drive"))
 
     trace_points.append( [trace_id, points] )
 
@@ -78,7 +78,7 @@ def get_trace_data(trace_ids):
   left_half_trace_points = []
   for trace_id in trace_ids:
 
-    points = trace_generator.read_csv_trace(trace_id, get_config("raw_dataset"), current_dir + "/" + get_config("trace_dir_drive"))
+    points = trace_generator.read_csv_trace(trace_id, get_config_path("raw_dataset"), get_config_path("trace_dir_drive"))
 
     left_points = points[:len(points)//2]
     left_half_trace_points.append( [trace_id, left_points] )
@@ -91,7 +91,7 @@ def get_trace_data_fast(trace_ids, local_dataset):
   left_half_trace_points = []
   for trace_id in trace_ids:
 
-    points = trace_generator.read_csv_trace_fast(trace_id, get_config("raw_dataset"), current_dir + "/" + get_config("trace_dir_drive"), local_dataset)
+    points = trace_generator.read_csv_trace_fast(trace_id, get_config_path("raw_dataset"), get_config_path("trace_dir_drive"), local_dataset)
 
     left_points = points[:len(points)//2]
     left_half_trace_points.append( [trace_id, left_points] )
@@ -129,7 +129,7 @@ def get_filtered_dataset(raw_traces_datapoints):
 
 def load_dataset_ids(path):
     
-    trace_ids = np.loadtxt( current_dir + "/" + path, dtype=str).tolist()
+    trace_ids = np.loadtxt( path, dtype=str).tolist()
     if isinstance(trace_ids, str): #in case there is a single trace id in the file
       trace_ids = [trace_ids]
     return trace_ids
@@ -144,6 +144,11 @@ def get_config(config):
 
   return simulation_configuration[config]
 
+def get_config_path(config):
+  
+  config = get_config(config)
+
+  return current_dir + "/" + config
 
 def find_in_nested_list(nested_list, search_string):
     for index, sublist in enumerate(nested_list):
@@ -153,4 +158,4 @@ def find_in_nested_list(nested_list, search_string):
 
 def generate_all_traces():
    
-    trace_generator.generate_all_traces(get_config("raw_dataset"), get_config("trace_dir_drive"), get_config("trace_dir_drive") + "../all_traces_ids.csv" )
+    trace_generator.generate_all_traces(get_config_path("raw_dataset"), get_config_path("trace_dir_drive"), get_config_path("trace_dir_drive") + "../all_traces_ids.csv" )

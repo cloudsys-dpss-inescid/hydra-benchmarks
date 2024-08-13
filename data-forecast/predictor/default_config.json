@@ -1,7 +1,7 @@
 {
     "resample_interval": "1h",
     "aggregate_function": "sum",
-    "autogluon_prediction_length": 24,      
+    "autogluon_prediction_length": 48,
     "cut_index_size": 200, 
     "trace_dir_drive": "../data_manager/data/complete_traces/",
     "aot_output_dir": "",
@@ -11,5 +11,6 @@
     "autogluon_time_limit": 600,
     "raw_dataset": "../../azure-dataset/input/",
     "offline_traces_dir": "offline_trace_ids.txt",
-    "online_traces_dir": "online_traces_dir.txt"
+    "online_traces_dir": "online_traces_dir.txt",
+    "autogluon_models_dir": "custom_autogluon/autogluon_models/"
 }

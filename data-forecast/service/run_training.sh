@@ -21,7 +21,7 @@ docker run -d --rm \
     -v "${CURRENT_DIR}/../../azure-dataset:/azure-dataset" \
     --name $CONTAINER_NAME \
     $IMAGE_NAME \
-    sh -c "cd /data-forecast/predictor && ./run-training.sh"
+    sh -c "cd /data-forecast/predictor/custom_autogluon && ./run-training.sh"
 
 docker logs -f $CONTAINER_NAME &> debug/server.log &
 

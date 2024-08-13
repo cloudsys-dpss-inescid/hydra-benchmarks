@@ -1,8 +1,6 @@
 import os
 import sys
 import pickle
-import time
-import copy
 import traceback
 import cost_function
 import requests
@@ -12,7 +10,7 @@ import pandas as pd
 # Add the path to the python modules
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../predictor')))
-from predictor import shared, model_training, model_predictor
+from predictor import predictor_factory
 
 def get_trace(trace_id):
     url = "http://localhost:8055/get_trace"
@@ -41,7 +39,7 @@ def get_trace(trace_id):
         print(f"HTTP Request failed: {e}")
 
 
-def compute_leaderboard(traces_dir, models_dir, trained_traces, idx):
+def compute_leaderboard(traces_dir, models_dir, trained_traces, predictor_mode, idx):
 
     return_dict = {}
 
@@ -57,39 +55,13 @@ def compute_leaderboard(traces_dir, models_dir, trained_traces, idx):
             
         if cost_function.is_trace_worthy_to_predict(trace_id, current_obj[1]["target"]):
             
-            predictions = model_predictor.get_function_forecast(current_obj, trained_traces, models_dir)
+            predictions = predictor_factory.get_function_forecast(current_obj, trained_traces, models_dir, predictor_mode)
 
             return_dict[trace_id] = cost_function.get_normal_cost(trace_id, predictions)
         else:
             return_dict[trace_id] = 0
 
     return return_dict
-
-    
-def compute_leaderboard_olf(traces_dir, models_dir, trained_traces, idx):
-
-    for filename in os.listdir(traces_dir):
-        file_path = os.path.join(traces_dir, filename)
-        
-        with open(file_path, 'rb') as f:
-            current_obj = pickle.load(f)
-
-        trace_id = current_obj[0]
-        #trace = current_obj[1]
-
-        print("counter: " + str(len(return_dict)) +  " idx: " + str(idx) + " trace_id: " + trace_id )#+ " first value: " + str(single_trace.loc[trace_id, "target"].iat[1]))    
-            
-        if cost_function.is_trace_worthy_to_predict(trace_id, current_obj[1]["target"]):
-            
-            predictions = model_predictor.get_function_forecast(current_obj, trained_traces, models_dir)
-
-            return_dict[trace_id] = cost_function.get_normal_cost(trace_id, predictions)
-        else:
-            return_dict[trace_id] = 0
-
-    
-    return return_dict
-
 
 if __name__ == '__main__':
 
@@ -97,11 +69,12 @@ if __name__ == '__main__':
         work_dir = sys.argv[1]
         traces_dir = sys.argv[2]
         models_dir = sys.argv[3]
-        idx = sys.argv[4]
+        predictor_mode = sys.argv[4]
+        idx = sys.argv[5]
         
-        trained_traces = model_training.get_trained_dataset("../predictor/offline_trace_ids.txt")
+        trained_traces = predictor_factory.get_trained_dataset("../predictor/offline_trace_ids.txt", predictor_mode)
 
-        leaderboard = compute_leaderboard(traces_dir, models_dir, trained_traces, idx)
+        leaderboard = compute_leaderboard(traces_dir, models_dir, trained_traces, predictor_mode, idx)
 
 
         output_filename = f'{work_dir}/leaderboard.pkl'

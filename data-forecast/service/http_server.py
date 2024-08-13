@@ -127,7 +127,18 @@ class S(BaseHTTPRequestHandler):
                 # Send a success response
                 self._set_response()
                 self.wfile.write("POST request for {} succeeded".format(self.path).encode('utf-8'))                
+        
+        elif self.path == "/set_predictor_mode":
 
+                data = json.loads(post_data.decode('utf-8'))
+                predictor_mode = data['predictor_mode']
+
+                print(f'set_predictor_mode {predictor_mode} ...\n', flush=True)
+                predictor_service.set_predictor_mode(predictor_mode)
+
+                # Send a success response
+                self._set_response()
+                self.wfile.write("POST request for {} succeeded".format(self.path).encode('utf-8'))        
         else:
             # Handle other POST paths if necessary
             self._set_response()

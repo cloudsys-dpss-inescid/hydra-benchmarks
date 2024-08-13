@@ -2,12 +2,15 @@
 import pandas as pd
 import numpy as np
 import time
-import shared
 from autogluon.timeseries import TimeSeriesDataFrame, TimeSeriesPredictor
 import stumpy
-import matplotlib.pyplot as plt
+import sys
+import os
 
-
+# Add the path to the python modules
+current_dir = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
+import shared
 
 #######################################################
 ################## Online processing ##################
@@ -109,7 +112,6 @@ def get_function_prediction(query_obj, similar_trace_id, models_location):
 
 def get_function_forecast(query_obj, trained_objs, models_location):
 
-
     start_time = time.time()
     query_obj_filtered = shared.get_filtered_dataset([query_obj])[0]
     trained_objs_filtered = shared.get_filtered_dataset(trained_objs)
@@ -135,3 +137,79 @@ def get_function_forecast(query_obj, trained_objs, models_location):
     print("first predicted value: " + str(np.array(predictions.values)[0]))
 
     return predictions
+
+
+    
+#######################################################
+################## Offline processing #################
+#######################################################
+
+
+##################
+# clustering function, To Be Implemented
+##################
+
+def get_cluster_dataset(traces_datapoints):
+  return traces_datapoints
+
+
+
+##################
+# train AI, use autogluon to train over the multiple traces of the dataset and
+# store the traces
+#################
+
+def train_predictor(trace_id):
+
+    left_half_trace_points, _ = shared.get_splited_dataset([trace_id], shared.get_config_path("trace_dir_drive") )
+
+    ts_df = TimeSeriesDataFrame(left_half_trace_points[0].raw_trace)
+    single_trace = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
+
+    predictor_path = f"autogluon_models/{trace_id}"
+
+    predictor = TimeSeriesPredictor(
+        prediction_length=shared.get_config("autogluon_prediction_length"),
+        path=predictor_path,
+        target="target",
+        cache_predictions=False,
+        log_to_file=False,
+        eval_metric=shared.get_config("autogluon_eval_metric")
+    )
+
+    predictor.fit(
+        single_trace,
+        #presets="chronos_tiny", it can also be "medium_quality"
+        presets=shared.get_config("autogluon_presets"),
+        time_limit=shared.get_config("autogluon_time_limit"),
+        #excluded_model_types=["TemporalFusionTransformer"],
+        #hyperparameters={
+        #    "AutoARIMAModel": {},
+        #},       
+    )
+
+
+def train_models(trace_ids_file_path):
+    
+    trace_ids = shared.load_dataset_ids(trace_ids_file_path) 
+    
+    for trace_id in trace_ids:
+        train_predictor(trace_id)
+
+#####
+# Main offline functions, to train a entire dataset of tarces
+#####
+
+def get_trained_dataset(trace_ids_file_path):
+
+    trace_ids = shared.load_dataset_ids(trace_ids_file_path) 
+    left_half_trace_points = shared.get_trace_data(trace_ids)
+    dataset = get_cluster_dataset(left_half_trace_points)
+
+    return dataset
+
+
+if __name__ == '__main__':
+
+  train_models( shared.get_config_path("offline_traces_dir") )
+

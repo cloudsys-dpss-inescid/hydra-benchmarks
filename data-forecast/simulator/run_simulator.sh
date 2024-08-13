@@ -37,42 +37,64 @@ send_trace_data() {
         cd ../../simulator/
     fi
 
-    post_data="["
-    first_line_in_trace=false
-    # Read the specified number of lines from the CSV file
-    while IFS=',' read -r item_id timestamp target; do
-        # Ignore the header line of the CSV
-        if [[ "$item_id" == "item_id" ]]; then
-            continue
-        fi
-        
-        # Ignore empty lines, I do not know why there are some in the file
-        #if [[ "$target" == "" || "$target" == "0" ]]; then
-        if [[ "$target" == "" ]]; then
-            continue
+    local lines_in_file=$(wc -l < "$file_path")
+    local line_to_begin=$START_NUM_LINES
+    local lines_end_interval=lines_start_interval 
+
+    local batch_lines_to_send=800
+
+    local lines_sended=0
+
+    while [ $lines_sended -lt $NUM_LINES ] && [ $((line_to_begin + lines_sended)) -lt $lines_in_file ]; do
+        lines_to_send=$((batch_lines_to_send))
+        remaining_lines_in_file=$((lines_in_file - (line_to_begin + lines_sended)))
+        remaining_lines_to_read=$((NUM_LINES - lines_sended))
+
+        if [ $lines_to_send -gt $remaining_lines_in_file ]; then
+            lines_to_send=$remaining_lines_in_file
         fi
 
-        # ...do something interesting...
-        if [ "$first_line_in_trace" = true ] ; then
-             post_data=$post_data","
+        if [ $lines_to_send -gt $remaining_lines_to_read ]; then
+            lines_to_send=$remaining_lines_to_read
         fi
+
+        lines_start_index=$((line_to_begin - lines_sended))
+        #echo "send $lines_to_send lines, starting in $lines_start_index"
+
+        post_data="["
         first_line_in_trace=true
+        # Read the specified number of lines from the CSV file
+        while IFS=',' read -r item_id timestamp target; do
+            # Ignore the header line of the CSV
+            if [[ "$item_id" == "item_id" ]]; then
+                continue
+            fi
+            
+            # Ignore empty lines, I do not know why there are some in the file
+            if [[ "$target" == "" ]]; then
+                continue
+            fi
 
-        # Format the timestamp into the desired format ("2019-01-01 00:00:00")
-        timestamp_formatted=$(date -d "$timestamp" +"%Y-%m-%d %H:%M:%S")
+            if [ "$first_line_in_trace" = false ] ; then
+                post_data=$post_data","
+            fi
+            first_line_in_trace=false
 
-        post_data=$post_data'{\"timestamp\":\"'$timestamp_formatted'\", \"item_id\":\"'$item_id'\", \"target\":\"'$target'\"}'
-        # Build the JSON data for the POST body
-        #data='{"timestamp":"'$timestamp_formatted'", "trace_id":"'$item_id'", "invocation_count":"'$target'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
-    done < <(sed -n "$START_NUM_LINES,$(($START_NUM_LINES + $NUM_LINES - 1))p" "$file_path")
+            # Format the timestamp into the desired format ("2019-01-01 00:00:00")
+            timestamp_formatted=$(date -d "$timestamp" +"%Y-%m-%d %H:%M:%S")
+
+            post_data=$post_data'{\"timestamp\":\"'$timestamp_formatted'\", \"item_id\":\"'$item_id'\", \"target\":\"'$target'\"}'
+            # Build the JSON data for the POST body
+
+        done < <(sed -n "$lines_start_index,$(($lines_start_index + $lines_to_send - 1))p" "$file_path")
 
 
-    post_data=$post_data"]"
-    data='{"dataframe":"'$post_data'", "trace_id":"'$trace_id'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
-    # data='{"dataframe":"[{\"ola\"},{ola}]", "trace_id":"'$trace_id'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
-
-    #echo $data
-    curl -X POST "http:///$address:$port/add_dataframe" -H "Content-Type: application/json" -d "$data" #> /dev/null 2>&1
+        post_data=$post_data"]"
+        data='{"dataframe":"'$post_data'", "trace_id":"'$trace_id'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
+        curl -X POST "http:///$address:$port/add_dataframe" -H "Content-Type: application/json" -d "$data" #> /dev/null 2>&1
+        
+        lines_sended=$((lines_sended + lines_to_send))
+    done
 
 }
 
@@ -144,13 +166,23 @@ simulate() {
     # Wait until the server is ready
     wait_for_server $address $port
 
+    # Set predictor mode
+    data='{"predictor_mode":"'$PREDICTOR_MODE'"}'
+    curl -X POST "http:///$address:$port/set_predictor_mode" -H "Content-Type: application/json" -d "$data"  > /dev/null 2>&1    
+
+    tmp_start_index=$START_NUM_LINES
     for (( j=0; j<NUMBER_OF_LEADERBOARDS; j++ )); do
+
+        # check if I am going to send points and then compute leaderboard at the end of simulate dataset, 14 days = 20160 minutes
+        if [ $((tmp_start_index + NUM_LINES)) -ge 20160 ]; then
+            break
+        fi
 
         upload_all_traces 
         echo "compute_leaderboard"
-        time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${START_NUM_LINES}-${NUM_LINES}.log" 2>&1
-        START_NUM_LINES=$(($START_NUM_LINES + $NUM_LINES)) #adding more 200 points to the service
-
+        time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${PREDICTOR_MODE}-${NUM_LINES}-${tmp_start_index}.log" 2>&1
+        tmp_start_index=$(($tmp_start_index + $NUM_LINES)) #adding more 200 points to the service
+        
     done
     
     #read -p "Press Enter to continue: " fullname
@@ -169,21 +201,52 @@ mapfile -t trace_ids < "$TRACE_FILE"
 result_dir=$(mktemp -d results/forcast-$(whoami)-XXXXXXXX)
 
 
+
+
 N_PARTS=50
-NUM_LINES=200
 START_NUM_LINES=10080
 NUMBER_OF_LEADERBOARDS=4
 
+## run for autogluon models
+PREDICTOR_MODE="custom_autogluon" #average, oracle and custom_autogluon 
+NUM_LINES=1600
 simulate
 
-NUM_LINES=300
-START_NUM_LINES=10080
-
+NUM_LINES=1440
 simulate
 
-NUM_LINES=400
-START_NUM_LINES=10080
+NUM_LINES=2880
+simulate
 
+NUM_LINES=4320
+simulate
+
+## run for oracle
+PREDICTOR_MODE="oracle"
+NUM_LINES=1600
+simulate
+
+NUM_LINES=1440
+simulate
+
+NUM_LINES=2880
+simulate
+
+NUM_LINES=4320
+simulate
+
+## run for average
+PREDICTOR_MODE="average"
+NUM_LINES=1600
+simulate
+
+NUM_LINES=1440
+simulate
+
+NUM_LINES=2880
+simulate
+
+NUM_LINES=4320
 simulate
 
 #echo "All trace IDs processed."

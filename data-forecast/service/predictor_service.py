@@ -21,6 +21,7 @@ leaderboard_entries = {}
 last_execution_time = None
 trace_dir_drive = "dataset_traces/"
 trained_traces = [] 
+predictor_mode = "custom_autogluon" #this is the default
 
 # Helper function to fill missing minutes with zeros
 def fill_missing_minutes(trace_obj, last_timestamp, new_timestamp):
@@ -46,6 +47,11 @@ def remove_trace(trace_id):
         #print(f"Trace ID {trace_id} removed from trace_objects.", flush=True) 
     else:
         print(f"Trace ID {trace_id} does not exist in trace_objects.", flush=True)
+
+def set_predictor_mode(new_predictor_mode):
+    global predictor_mode
+
+    predictor_mode = new_predictor_mode
 
 
 # Function to add entries to a Trace_Object, this assumes that each entry is one minute interval
@@ -95,8 +101,7 @@ def add_dataframe_trace_entry(trace_id, new_df, invocation_duration, memory_used
     global trace_objects
     
     new_df = pd.read_json( StringIO(new_df), orient='records')
-    #print(new_df, flush=True)
-
+    
     # If trace_id is not in trace_objects, create a new Trace_Object
     if trace_id not in trace_objects:
         trace_objects[trace_id] = shared.Trace_Object(trace_id=trace_id)
@@ -134,6 +139,7 @@ def add_dataframe_trace_entry(trace_id, new_df, invocation_duration, memory_used
 
 
 def run_predictor_process(work, idx, return_dict):
+    global predictor_mode
 
     print(f"Hi from process idx {idx}", flush=True)
 
@@ -141,7 +147,8 @@ def run_predictor_process(work, idx, return_dict):
     traces_dir = f"{work_dir}/traces"
     models_dir = f"{work_dir}/autogluon_models"
     os.makedirs(traces_dir, exist_ok=True)
-    shutil.copytree('../predictor/autogluon_models', models_dir, dirs_exist_ok=True)
+    #shutil.copytree('../predictor/autogluon_models', models_dir, dirs_exist_ok=True)
+    shutil.copytree(shared.get_config_path("autogluon_models_dir"), models_dir, dirs_exist_ok=True)
 
     start_time = time.time()
 
@@ -161,7 +168,7 @@ def run_predictor_process(work, idx, return_dict):
         #"-v", "/home/claudiocorreia/work/hydra/benchmarks/azure-dataset:/azure-dataset",
         "-w", "/data-forecast/service",
         "timeseries-predictor-image",
-        "python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, str(idx)
+        "python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, predictor_mode, str(idx)
     ]
 
     result = subprocess.run(docker_command, capture_output=True, text=True)

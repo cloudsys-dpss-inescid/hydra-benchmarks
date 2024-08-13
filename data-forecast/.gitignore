@@ -10,9 +10,10 @@
 /service/debug/*.log
 /service/running_traces/*
 #simulator
+/simulator/results/*
 /simulator/debug/*.log
 /simulator/*.log
 #data manager
 /data_manager/data/complete_traces/traces_datapoints/*
-
-
+#plots
+/plots/results/*
