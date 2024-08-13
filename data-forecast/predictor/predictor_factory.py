@@ -9,9 +9,11 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../custom_autogluon')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../oracle')))
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../average')))
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../randomly')))
 from custom_autogluon import autogluon_model_predictor
 from oracle import oracle_model_predictor
 from average import average_model_predictor
+from randomly import randomly_model_predictor
 
 current_predictor=None
 
@@ -26,7 +28,9 @@ def get_predictor(model_name):
     elif model_name == "oracle":
         current_predictor = oracle_model_predictor 
     elif model_name == "average":
-        current_predictor = average_model_predictor         
+        current_predictor = average_model_predictor
+    elif model_name == "randomly":
+        current_predictor = randomly_model_predictor                 
     else:
         current_predictor = autogluon_model_predictor
 
