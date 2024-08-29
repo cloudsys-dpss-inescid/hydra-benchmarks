@@ -209,38 +209,29 @@ NUMBER_OF_LEADERBOARDS=4
 
 ## run for autogluon models
 PREDICTOR_MODE="custom_autogluon" #average, oracle and custom_autogluon 
-NUM_LINES=100
-#simulate
+
+NUM_LINES=20
+simulate
+
+NUM_LINES=50
+simulate
+
 
 ## run for average
 PREDICTOR_MODE="randomly"
 
-NUM_LINES=100
+NUM_LINES=1440
 simulate
 
-NUM_LINES=200
-simulate
-
-NUM_LINES=400
-simulate
-
-NUM_LINES=800
+NUM_LINES=1600
 simulate
 
 ## run for average
 PREDICTOR_MODE="average"
 
-NUM_LINES=100
-simulate
+NUM_LINES=5
+#simulate
 
-NUM_LINES=1440
-simulate
-
-NUM_LINES=2880
-simulate
-
-NUM_LINES=4320
-simulate
 
 
 ## run for oracle
@@ -248,8 +239,6 @@ PREDICTOR_MODE="oracle"
 NUM_LINES=100
 simulate
 
-NUM_LINES=4320
-simulate
 
 
 #echo "All trace IDs processed."

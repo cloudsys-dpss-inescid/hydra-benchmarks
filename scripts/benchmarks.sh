@@ -253,6 +253,7 @@ function gv_java_micronaut {
     APP_NAME=gv-micronaut
     APP_MAIN=com.oracle.graalos.Application
     APP=/home/claudiocorreia/graalos_work/graalos-benchmarks/graalos-client/apps/micronaut/build/native/nativeCompile/micronaut.so
+    #APP=/home/claudiocorreia/work/hydra/benchmarks/src/java/gv-micronaut/build/libmicronaut.so
     echo '{"name":"gv-micronaut","async":"false","cached":"true","arguments":""}' > $RUN_POST
     gv_upload_function
 }
