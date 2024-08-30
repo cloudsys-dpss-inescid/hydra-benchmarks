@@ -115,7 +115,7 @@ def plot_normal_cost(model_types, prediction_window):
     model_cost = [simulation_cost]*len(prediction_window)
 
     print(f"simulation_cost of normal cost for all windows: {model_cost}" )
-    plt.plot(prediction_window, model_cost, label="normal cost", marker=".")
+    plt.plot(prediction_window, model_cost, label="no optimization cost", marker=".")
 
 #simulation_dir = "../simulator/results/forcast-claudiocorreia-SvpXvpdT/"
 simulation_dir = "results/comparation/"

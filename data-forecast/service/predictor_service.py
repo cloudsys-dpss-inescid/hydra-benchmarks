@@ -143,7 +143,7 @@ def run_predictor_process(work, idx, return_dict):
 
     print(f"Hi from process idx {idx}", flush=True)
 
-    work_dir = f"running_traces/process_{idx}"
+    work_dir = f"debug/process_{idx}"
     traces_dir = f"{work_dir}/traces"
     models_dir = f"{work_dir}/autogluon_models"
     os.makedirs(traces_dir, exist_ok=True)
@@ -165,7 +165,7 @@ def run_predictor_process(work, idx, return_dict):
     docker_command = [
         "docker", "run", "--rm", "--gpus", "all", "--network", "host", 
         "-v", "/home/claudiocorreia/work/hydra/benchmarks/data-forecast:/data-forecast",
-        #"-v", "/home/claudiocorreia/work/hydra/benchmarks/azure-dataset:/azure-dataset",
+        "-v", "/home/claudiocorreia/work/hydra/benchmarks/azure-dataset:/azure-dataset",
         "-w", "/data-forecast/service",
         "timeseries-predictor-image",
         "python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, predictor_mode, str(idx)
@@ -193,7 +193,7 @@ def compute_leaderboard():
     print("** computing leaderboard **")
 
     # clean directory
-    shutil.rmtree('running_traces/', ignore_errors=True)
+    shutil.rmtree('debug/', ignore_errors=True)
 
     number_threads = 13 #13 for chronos
 

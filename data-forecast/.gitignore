@@ -8,7 +8,6 @@
 /predictor/dataset_traces_old/traces_plots/*
 #service
 /service/debug/*.log
-/service/running_traces/*
 #simulator
 /simulator/results/*
 /simulator/debug/*.log

@@ -26,9 +26,6 @@ class Trace_Object:
     memory_used_invocation: int = 1
     compilation_cost: int = 1
     raw_trace: pd.DataFrame = field(default_factory=pd.DataFrame)
-    filtered_trace: pd.DataFrame = field(default_factory=pd.DataFrame)
-    recycled_sample: pd.DataFrame = field(default_factory=pd.DataFrame) # this is suposed to be a TimeSeriesDataFrame, but I could not make ir work
-    predictor: TimeSeriesPredictor = field(default_factory=TimeSeriesPredictor)
 
 simulation_configuration = {} #global variable holder
 
@@ -44,8 +41,6 @@ def get_splited_dataset(trace_ids, trace_dir_drive):
   for trace_id in trace_ids:
 
     points = trace_generator.read_csv_trace(trace_id, simulation_configuration["raw_dataset"], trace_dir_drive)
-    #points = pd.read_csv(trace_dir_drive + trace_id + '.csv')
-    #points = TimeSeriesDataFrame.from_path(trace_dir_drive + trace_id + '.csv')
 
     left_points = points[:len(points)//2]
     right_points = points[len(points)//2:]
@@ -154,7 +149,7 @@ def find_in_nested_list(nested_list, search_string):
     for index, sublist in enumerate(nested_list):
         if sublist[0] == search_string:
             return nested_list[index]
-    return -1  # Retorna -1 se não encontrar o elemento
+    return -1 
 
 def generate_all_traces():
    

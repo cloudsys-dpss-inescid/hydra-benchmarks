@@ -92,7 +92,7 @@ def get_function_traces_from_file(file_number, trace_id, dataset_dir):
   return ['0'] * 1440 #if is not found on the dataset return zero values for each timestamp
 
 
-def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir, local_dataset = None):
+def generate_and_plot_trace_id(trace_id, dataset_dir, result_dir = "", local_dataset = None):
 
     timestamps_array = []
     calls_array = []

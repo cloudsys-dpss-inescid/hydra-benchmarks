@@ -2,11 +2,11 @@
 
 # File containing the trace IDs (one per line)
 TRACE_FILE="simulation_trace_ids.txt"
-raw_dataset_dir="../../../azure-dataset/input/"
+raw_dataset_dir="../../azure-dataset/input/"
 #N_PARTS=50
 # Number of lines to read from the CSV file
-#NUM_LINES=1000
-#START_NUM_LINES=5760
+#WINDOW_SIZE=1000
+#START_WINDOW_SIZE=5760
 
 echo "Running simulator!"
 
@@ -32,23 +32,23 @@ send_trace_data() {
 
     # Check if the file exists
     if [[ ! -f "$file_path" ]]; then
-        cd ../predictor/dataset_traces/
-        python -c "import trace_generator; trace_generator.generate_and_plot_trace_id('${trace_id}', '${raw_dataset_dir}', '')"        
-        cd ../../simulator/
+        cd ../data_manager/
+        python -c "import trace_generator; trace_generator.generate_and_plot_trace_id('${trace_id}', '${raw_dataset_dir}', 'data/complete_traces/')"        
+        cd ../simulator/
     fi
 
     local lines_in_file=$(wc -l < "$file_path")
-    local line_to_begin=$START_NUM_LINES
+    local line_to_begin=$START_WINDOW_SIZE
     local lines_end_interval=lines_start_interval 
 
     local batch_lines_to_send=800
 
     local lines_sended=0
 
-    while [ $lines_sended -lt $NUM_LINES ] && [ $((line_to_begin + lines_sended)) -lt $lines_in_file ]; do
+    while [ $lines_sended -lt $WINDOW_SIZE ] && [ $((line_to_begin + lines_sended)) -lt $lines_in_file ]; do
         lines_to_send=$((batch_lines_to_send))
         remaining_lines_in_file=$((lines_in_file - (line_to_begin + lines_sended)))
-        remaining_lines_to_read=$((NUM_LINES - lines_sended))
+        remaining_lines_to_read=$((WINDOW_SIZE - lines_sended))
 
         if [ $lines_to_send -gt $remaining_lines_in_file ]; then
             lines_to_send=$remaining_lines_in_file
@@ -112,7 +112,7 @@ process_trace_ids() {
     > "debug/service-$my_id.log"
 
     
-    echo "Processing trace IDs for part $my_id:"
+    #echo "Processing trace IDs for part $my_id:"
     for trace_id in "${trace_ids[@]}"; do
         #echo "Thread ID: $my_id - Trace ID: $trace_id"
         
@@ -166,22 +166,25 @@ simulate() {
     # Wait until the server is ready
     wait_for_server $address $port
 
+
     # Set predictor mode
     data='{"predictor_mode":"'$PREDICTOR_MODE'"}'
     curl -X POST "http:///$address:$port/set_predictor_mode" -H "Content-Type: application/json" -d "$data"  > /dev/null 2>&1    
 
-    tmp_start_index=$START_NUM_LINES
+    echo "Processing simulation $PREDICTOR_MODE for window size $WINDOW_SIZE"
+
+    tmp_start_index=$START_WINDOW_SIZE
     for (( j=0; j<NUMBER_OF_LEADERBOARDS; j++ )); do
 
         # check if I am going to send points and then compute leaderboard at the end of simulate dataset, 14 days = 20160 minutes
-        #if [ $((tmp_start_index + NUM_LINES)) -ge 20160 ]; then
+        #if [ $((tmp_start_index + WINDOW_SIZE)) -ge 20160 ]; then
         #    break
         #fi
 
         upload_all_traces 
-        echo "compute_leaderboard"
-        time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${PREDICTOR_MODE}-${NUM_LINES}-${tmp_start_index}.log" 2>&1
-        tmp_start_index=$(($tmp_start_index + $NUM_LINES)) #adding more 200 points to the service
+        echo "Computing leaderboard"
+        time curl -s -X GET "http://$address:$port/compute_leaderboard" >> "${result_dir}/leaderboard-${PREDICTOR_MODE}-${WINDOW_SIZE}-${tmp_start_index}.log" 2>&1
+        tmp_start_index=$(($tmp_start_index + $WINDOW_SIZE)) #adding more 200 points to the service
         
     done
     
@@ -203,41 +206,49 @@ result_dir=$(mktemp -d results/forcast-$(whoami)-XXXXXXXX)
 
 
 
-N_PARTS=50
-START_NUM_LINES=10080
-NUMBER_OF_LEADERBOARDS=4
+N_PARTS=50     # Divide the trace IDs into N parts and process each part in the background
+START_WINDOW_SIZE=10080
+NUMBER_OF_LEADERBOARDS=2
 
 ## run for autogluon models
 PREDICTOR_MODE="custom_autogluon" #average, oracle and custom_autogluon 
 
-NUM_LINES=20
+WINDOW_SIZE=50
 simulate
 
-NUM_LINES=50
+WINDOW_SIZE=100
 simulate
 
 
 ## run for average
 PREDICTOR_MODE="randomly"
 
-NUM_LINES=1440
+WINDOW_SIZE=50
 simulate
 
-NUM_LINES=1600
+WINDOW_SIZE=100
 simulate
 
 ## run for average
 PREDICTOR_MODE="average"
 
-NUM_LINES=5
-#simulate
+WINDOW_SIZE=50
+simulate
+
+WINDOW_SIZE=100
+simulate
 
 
 
 ## run for oracle
 PREDICTOR_MODE="oracle"
-NUM_LINES=100
+
+WINDOW_SIZE=50
 simulate
+
+WINDOW_SIZE=100
+simulate
+
 
 
 

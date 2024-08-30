@@ -60,7 +60,6 @@ def get_manufactured_function_past(query_obj, similar_trace_id, trained_objs, de
     recycle_trace_id = similar_trace_obj[0]
     time_series = TimeSeriesDataFrame(similar_trace_obj[1])
     recycled_sample = time_series.slice_by_timestep(0, recycle_time_window * 2) # this is probably 2880 min, corresponding to 48h
-    #obj_trace.recycled_sample = recycled_sample
 
     data = usable_points #default value in case the query is larger than 24h
     data["item_id"] = recycle_trace_id
