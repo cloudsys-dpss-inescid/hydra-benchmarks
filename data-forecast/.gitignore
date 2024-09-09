@@ -6,8 +6,10 @@
 /predictor/log_results/*
 /predictor/dataset_traces_old/traces_datapoints/*
 /predictor/dataset_traces_old/traces_plots/*
+/predictor/custom_autogluon/autogluon_models/*
+/predictor/debug/*
 #service
-/service/debug/*.log
+/service/debug/*
 #simulator
 /simulator/results/*
 /simulator/debug/*.log
