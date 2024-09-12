@@ -160,7 +160,6 @@ def run_predictor_process(work, idx, return_dict):
     end_time = time.time()
     print(f"LOG: storing traces took {end_time - start_time:.4f} seconds")
 
-
     start_time = time.time()
     #result = subprocess.run(["python3", "predictor_bridge.py", work_dir, traces_dir, models_dir, str(idx)], capture_output=True, text=True)
     
@@ -181,6 +180,7 @@ def run_predictor_process(work, idx, return_dict):
     output_filename = f'{work_dir}/output_{idx}.log'
     with open(output_filename, 'w') as output_file:
         output_file.write(result.stdout)
+        output_file.write(result.stderr)
 
     leaderboard_filename = f'{work_dir}/leaderboard.pkl'
     with open(leaderboard_filename, "rb") as f:
@@ -196,7 +196,7 @@ def compute_leaderboard():
 
 
 
-    number_threads = 1 #13 for chronos
+    number_threads = 13 #13 for chronos
 
     print("spliting ", flush=True)
     online_trace_ids = list(trace_objects.keys())

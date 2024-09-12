@@ -64,7 +64,7 @@ def compute_leaderboard(traces_dir, models_dir, trained_traces, predictor_mode, 
     return return_dict
 
 if __name__ == '__main__':
-
+    
     try:
         work_dir = sys.argv[1]
         traces_dir = sys.argv[2]
@@ -76,7 +76,6 @@ if __name__ == '__main__':
 
         leaderboard = compute_leaderboard(traces_dir, models_dir, trained_traces, predictor_mode, idx)
 
-
         output_filename = f'{work_dir}/leaderboard.pkl'
         with open(output_filename, 'wb') as f:
             pickle.dump(leaderboard, f)
@@ -84,6 +83,5 @@ if __name__ == '__main__':
         print(leaderboard)
 
     except Exception as e:
-       # By this way we can know about the type of error occurring
         print("The error is: ",e)
         print(traceback.format_exc())

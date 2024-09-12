@@ -99,7 +99,8 @@ def get_function_forecast(query_obj, trained_objs, models_location):
     plt.legend()
 
     fig.tight_layout()
-    plt.savefig(f"../predictor/debug/{len(query_trace_resample["target"])}w-predictions-{trace_id}.png")
+
+    plt.savefig(f"../predictor/debug/{query_trace_raw.shape[0]}w-predictions-{trace_id}.png")
 
     return oracle_prediction
 
