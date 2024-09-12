@@ -50,66 +50,78 @@ def get_similar_function(trace_obj, trained_traces):
 # Recycle similar function past with new function trace, start_point_location is in minutes, the trace is also in minutes.
 ##########
 
-recycle_time_window = 1440
-def get_manufactured_function_past(query_obj, similar_trace_id, trained_objs, debug = False):
+recycle_time_window = 1440*2
+def get_manufactured_function_past(past_query_obj, similar_trace_id, trained_objs, debug = False):
 
-    query_trace_id = query_obj[0]
-    usable_points = query_obj[1]
+    past_trace_id = past_query_obj[0]
+    past_trace_points = past_query_obj[1]
 
     similar_trace_obj = shared.find_in_nested_list(trained_objs, similar_trace_id)
-    recycle_trace_id = similar_trace_obj[0]
-    time_series = TimeSeriesDataFrame(similar_trace_obj[1])
-    recycled_sample = time_series.slice_by_timestep(0, recycle_time_window * 2) # this is probably 2880 min, corresponding to 48h
+    similar_trace_id = similar_trace_obj[0]
+    recycle_points_original = similar_trace_obj[1]
 
-    data = usable_points #default value in case the query is larger than 24h
-    data["item_id"] = recycle_trace_id
+    past_trace_points['timestamp'] = np.array(pd.to_datetime(past_trace_points['timestamp']))
+    recycle_points_original['timestamp'] = np.array(pd.to_datetime(recycle_points_original['timestamp']))
 
-    if len(usable_points["timestamp"]) < recycle_time_window:
-        end_timestamp = pd.to_datetime( usable_points["timestamp"][ len(usable_points["timestamp"]) - 1 ] )
-        timestamps = pd.date_range(end=end_timestamp, periods=recycle_time_window, freq='min')
+    manufactured_sample = past_trace_points #default value in case the query is larger than 24h
 
-        recycled_target_values = recycled_sample.loc[recycle_trace_id]["target"]
-        recycled_array = np.array(recycled_target_values[:recycle_time_window])
+    #merge the data points only if the past points are shorter thant recycle_time_window
+    if len(past_trace_points["timestamp"]) < recycle_time_window: 
+       
+        ## find spot in trace that fits to grow the trace, I AM DOING GAUSSIAN ON THE SERVICE and not here
+        distance_profile = stumpy.mass(past_trace_points["target"].astype(float), recycle_points_original["target"].astype(float))
 
-        query_array = np.array(usable_points['target'])
+        min_timestamp_index = np.argmin(distance_profile[recycle_time_window:]) + recycle_time_window #I igonre the first points, to always have a same time winodw lengh, other wise it would fail if the match is in the beginning of the trace
+        end_index = min_timestamp_index + len(past_trace_points)
+        start_index = end_index - recycle_time_window
+        recycle_points =  recycle_points_original[start_index:end_index].copy()
 
-        for i in range(1, len(usable_points)):
-            recycled_array[-i] = query_array[-i]
+        for idx in range(1, len(past_trace_points) + 1):
+            recycle_points.at[recycle_points.index[-idx], "target"] = past_trace_points["target"].iloc[-idx] #this as some extra complexity because of a warning: SettingWithCopyWarning
 
-        data = {
-            'item_id': recycle_trace_id,
-            'timestamp': timestamps,
-            'target': recycled_array
-        }
+        get_time_offset = past_trace_points.iloc[-1]['timestamp'] - recycle_points.iloc[-1]['timestamp']
 
-    df = pd.DataFrame(data)
-    ts_df = TimeSeriesDataFrame(df)
+        recycle_points['timestamp'] = recycle_points['timestamp'] + get_time_offset
+
+        manufactured_sample = recycle_points
+
+
+    manufactured_sample["item_id"] = similar_trace_id
+    manufactured_sample.reset_index(inplace=True)
+
+    #manufactured_sample = data.resample('1h', origin='start').sum()
+
+    #ts_df = TimeSeriesDataFrame(data)
     #I am using num_cpus=1 because it was causing problems when running in multiple processes
-    manufactured_sample = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
-     
-    manufactured_obj = [query_trace_id, manufactured_sample]
-
-    return manufactured_obj    
+    #manufactured_sample = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
+    #manufactured_sample = manufactured_sample[1:] # I am removing the first point becasue the agregation will leave the first and last point with a wierd value
+    
+    if debug:
+        print_recycle_window_for_match = recycle_points_original[recycle_time_window:10080].copy() # 10080 is haf of the dataset
+        print_cut_window =  recycle_points_original[start_index:end_index].copy()
+        print_matched_subsequence = recycle_points_original[min_timestamp_index:min_timestamp_index+len(past_trace_points)].copy()
+        return similar_trace_id, manufactured_sample, recycle_points_original, print_recycle_window_for_match, print_cut_window, print_matched_subsequence
+    
+    return [similar_trace_id, manufactured_sample]    
   
 
 def get_function_prediction(query_obj, similar_trace_id, models_location):
 
     query_trace = query_obj[1]
 
-    #predictor_path = f"../predictor/autogluon_models/{similar_trace_id}"
     predictor_path = f"{models_location}/{similar_trace_id}"
     predictor = TimeSeriesPredictor.load(predictor_path)
-    
-    query_trace["item_id"] = similar_trace_id
-    ts_df = TimeSeriesDataFrame(query_trace)
-    resample_trace = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
+        
+    resample_trace = shared.get_resample_trace(query_trace)
+    resample_trace["item_id"] = similar_trace_id
+    resample_trace = TimeSeriesDataFrame(resample_trace)
 
     predictions = predictor.predict(resample_trace, use_cache=False)
 
     return predictions.loc[similar_trace_id]["mean"]
 
 
-def get_function_forecast(query_obj, trained_objs, models_location):
+def get_function_forecast(query_obj, trained_objs, models_location, debug = False):
 
     start_time = time.time()
     query_obj_filtered = shared.get_filtered_dataset([query_obj])[0]
@@ -134,6 +146,9 @@ def get_function_forecast(query_obj, trained_objs, models_location):
     print(f"LOG: get_function_forecast took {end_time - start_time:.4f} seconds")
 
     print("first predicted value: " + str(np.array(predictions.values)[0]))
+
+    if debug:
+        return predictions, similar_trace_id
 
     return predictions
 

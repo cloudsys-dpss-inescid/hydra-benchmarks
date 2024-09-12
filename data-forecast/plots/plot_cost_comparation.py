@@ -117,37 +117,35 @@ def plot_normal_cost(model_types, prediction_window):
     print(f"simulation_cost of normal cost for all windows: {model_cost}" )
     plt.plot(prediction_window, model_cost, label="no optimization cost", marker=".")
 
-#simulation_dir = "../simulator/results/forcast-claudiocorreia-SvpXvpdT/"
+#simulation_dir = "../simulator/results/forcast-claudiocorreia-nLYRNQFN/"
 simulation_dir = "results/comparation/"
 simulation_start = 10080
 simulation_end = 20159
 #simulation_delta = 200
-optimized_traces_in_each_leaderboard = 30
+optimized_traces_in_each_leaderboard = 1
 fig = plt.figure(figsize=(20, 10))
 
-#model_types = ["custom_autogluon", "average", "oracle"]
-model_types = ["average"]
-prediction_window = [5, 10, 20, 50, 100, 200, 400, 800]
-plot_simulation_cost(model_types, prediction_window)
+#model_types = ["custom_autogluon", "average", "oracle", "randomly"]
+#model_types = ["average"]
+#prediction_window = [5, 10, 20, 50, 100, 200, 400, 800]
+#plot_simulation_cost(model_types, prediction_window)
+#model_types = ["oracle"]
+#prediction_window = [5, 10, 20, 50, 100, 200, 400, 800, 1440, 1600, 2880]
+#plot_simulation_cost(model_types, prediction_window)
 
-
-model_types = ["oracle"]
-prediction_window = [5, 10, 20, 50, 100, 200, 400, 800, 1440, 1600, 2880]
-plot_simulation_cost(model_types, prediction_window)
-
-model_types = ["randomly"]
-prediction_window = [5, 10, 20, 50, 100, 200, 400, 800, 1440, 1600]
-plot_simulation_cost(model_types, prediction_window)
-
-model_types = ["custom_autogluon"]
-prediction_window = [5, 10, 20, 50, 100, 200, 400, 800, 1440, 1600, 2880, 4320]
+model_types = ["custom_autogluon", "average", "oracle", "randomly"]
+prediction_window = [30, 60, 120, 180, 240, 300]
 plot_simulation_cost(model_types, prediction_window)
 plot_normal_cost(model_types, prediction_window)
 
 
+
+
+
+
 plt.xticks(prediction_window)
 plt.legend()
-plt.xscale('log',base=2) 
+#plt.xscale('log',base=2) 
 plt.title("Cost simulation for 10k function with 4 leaderboard steps")
 plt.xlabel("Window size used for prediction (minutes)")
 plt.ylabel("Simuilation cost")

@@ -38,11 +38,8 @@ send_trace_data() {
     fi
 
     local lines_in_file=$(wc -l < "$file_path")
-    local line_to_begin=$START_WINDOW_SIZE
-    local lines_end_interval=lines_start_interval 
-
+    local line_to_begin=$tmp_start_index
     local batch_lines_to_send=800
-
     local lines_sended=0
 
     while [ $lines_sended -lt $WINDOW_SIZE ] && [ $((line_to_begin + lines_sended)) -lt $lines_in_file ]; do
@@ -58,9 +55,9 @@ send_trace_data() {
             lines_to_send=$remaining_lines_to_read
         fi
 
-        lines_start_index=$((line_to_begin - lines_sended))
+        lines_start_index=$((line_to_begin + lines_sended))
         #echo "send $lines_to_send lines, starting in $lines_start_index"
-
+        
         post_data="["
         first_line_in_trace=true
         # Read the specified number of lines from the CSV file
@@ -90,6 +87,7 @@ send_trace_data() {
 
 
         post_data=$post_data"]"
+
         data='{"dataframe":"'$post_data'", "trace_id":"'$trace_id'", "invocation_duration":"2", "memory_used_invocation":"100", "compilation_cost":"100"}'
         curl -X POST "http:///$address:$port/add_dataframe" -H "Content-Type: application/json" -d "$data" #> /dev/null 2>&1
         
@@ -208,46 +206,23 @@ result_dir=$(mktemp -d results/forcast-$(whoami)-XXXXXXXX)
 
 N_PARTS=50     # Divide the trace IDs into N parts and process each part in the background
 START_WINDOW_SIZE=10080
-NUMBER_OF_LEADERBOARDS=2
+NUMBER_OF_LEADERBOARDS=1
 
 ## run for autogluon models
-PREDICTOR_MODE="custom_autogluon" #average, oracle and custom_autogluon 
+#PREDICTOR_MODE="custom_autogluon" #average, oracle, randomly, custom_autogluon and all_simultaneously
 
-WINDOW_SIZE=50
+PREDICTOR_MODE="custom_autogluon"
+
+WINDOW_SIZE=180
 simulate
 
-WINDOW_SIZE=100
-simulate
-
-
-## run for average
-PREDICTOR_MODE="randomly"
-
-WINDOW_SIZE=50
-simulate
-
-WINDOW_SIZE=100
-simulate
-
-## run for average
-PREDICTOR_MODE="average"
-
-WINDOW_SIZE=50
-simulate
-
-WINDOW_SIZE=100
-simulate
-
-
-
-## run for oracle
 PREDICTOR_MODE="oracle"
 
-WINDOW_SIZE=50
+WINDOW_SIZE=180
 simulate
 
-WINDOW_SIZE=100
-simulate
+
+
 
 
 

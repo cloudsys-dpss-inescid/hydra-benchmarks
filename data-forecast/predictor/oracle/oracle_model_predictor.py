@@ -20,24 +20,23 @@ import matplotlib.pyplot as plt
 def get_function_forecast(query_obj, trained_objs, models_location):
 
     trace_id = query_obj[0]
-    query_tace = query_obj[1]
+    query_trace = query_obj[1]
 
     # find the last timestamp
-    ts_df = TimeSeriesDataFrame(query_tace)
-    converted_ts_df = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
-    last_timestamp = converted_ts_df.index.get_level_values('timestamp').max()
+    query_trace_resample = shared.get_resample_trace(query_trace)
+    last_timestamp = query_trace_resample["timestamp"].max()
 
     # get real trace
-    df = shared.get_full_trace_data([trace_id])[0][1]
-    ts_df = TimeSeriesDataFrame(df)
-    converted_ts_df = ts_df.convert_frequency( shared.get_config("resample_interval") , agg_numeric= shared.get_config("aggregate_function"), num_cpus=1  )
-    
-    #cut real trace
-    real_prediction = converted_ts_df.query("timestamp > @last_timestamp")
-    real_prediction = real_prediction.head( shared.get_config("autogluon_prediction_length"))
-    real_prediction = real_prediction['target'].astype(float)
+    real_trace = shared.get_full_trace_data([trace_id])[0][1]
+    real_trace_resample = shared.get_resample_trace(real_trace)
 
-    return real_prediction
+    print("get_function_forecast")
+    #cut real trace
+    real_prediction = real_trace_resample.query("timestamp > @last_timestamp")
+    real_prediction = real_prediction.head( shared.get_config("autogluon_prediction_length"))
+    real_prediction['target'] = real_prediction['target'].astype(float)
+
+    return real_prediction.set_index('timestamp')['target']
 
     
 #######################################################

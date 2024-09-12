@@ -146,6 +146,8 @@ def run_predictor_process(work, idx, return_dict):
     work_dir = f"debug/process_{idx}"
     traces_dir = f"{work_dir}/traces"
     models_dir = f"{work_dir}/autogluon_models"
+    # clean directory
+    shutil.rmtree(work_dir, ignore_errors=True)
     os.makedirs(traces_dir, exist_ok=True)
     #shutil.copytree('../predictor/autogluon_models', models_dir, dirs_exist_ok=True)
     shutil.copytree(shared.get_config_path("autogluon_models_dir"), models_dir, dirs_exist_ok=True)
@@ -192,10 +194,9 @@ def compute_leaderboard():
     global leaderboard_entries, trained_traces, trace_objects, trace_dir_drive
     print("** computing leaderboard **")
 
-    # clean directory
-    shutil.rmtree('debug/', ignore_errors=True)
 
-    number_threads = 13 #13 for chronos
+
+    number_threads = 1 #13 for chronos
 
     print("spliting ", flush=True)
     online_trace_ids = list(trace_objects.keys())

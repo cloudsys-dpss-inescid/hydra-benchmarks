@@ -3,7 +3,6 @@
 import pandas as pd
 from dataclasses import dataclass, field
 import numpy as np
-from autogluon.timeseries import TimeSeriesPredictor
 import json
 import os
 from scipy.ndimage import gaussian_filter
@@ -62,7 +61,8 @@ def get_full_trace_data(trace_ids):
   for trace_id in trace_ids:
 
     points = trace_generator.read_csv_trace(trace_id, get_config_path("raw_dataset"), get_config_path("trace_dir_drive"))
-
+    points['timestamp'] = np.array(pd.to_datetime(points['timestamp']))
+    
     trace_points.append( [trace_id, points] )
 
   return trace_points
@@ -92,6 +92,26 @@ def get_trace_data_fast(trace_ids, local_dataset):
     left_half_trace_points.append( [trace_id, left_points] )
 
   return left_half_trace_points
+
+##################
+# resample trace, it receives a pandas datafrasme. The sum() should not be like this...
+##################
+
+def get_resample_trace(query_trace):
+
+
+    trace_id = query_trace["item_id"][0]
+    query_trace_resample = query_trace
+
+    query_trace_resample['timestamp'] = pd.to_datetime(query_trace_resample['timestamp'])
+    query_trace_resample.set_index('timestamp', inplace=True)
+    query_trace_resample = query_trace_resample.resample(get_config("resample_interval"), origin='start').sum()
+    query_trace_resample.reset_index(inplace=True)
+    query_trace.reset_index(inplace=True) # the function was changing the input, meaning the query_trace was being mutated outside the function
+    query_trace_resample["item_id"] = trace_id
+    
+    return query_trace_resample
+
 
 ##################
 # filtering function, it filters the trace

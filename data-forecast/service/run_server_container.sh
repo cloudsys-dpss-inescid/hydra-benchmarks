@@ -4,7 +4,7 @@ IMAGE_NAME="timeseries-predictor-image"
 #CONTAINER_NAME="timeseries-predictor-container"
 CONTAINER_NAME=$2
 CURRENT_DIR=$(pwd)
-MODELS_DIR="../predictor/autogluon_models"
+MODELS_DIR="../predictor/custom_autogluon/autogluon_models"
 
 if [ -z "$CONTAINER_NAME" ]
 then
@@ -12,7 +12,12 @@ then
 fi
 
 # check if there are trained models
-if [ -d "$MODELS_DIR" ] && [ -z "$(ls -A "$MODELS_DIR")" ]; then
+if [ ! -d "$MODELS_DIR" ]; then
+  echo "$MODELS_DIR does not exist."
+  mkdir $MODELS_DIR
+fi
+
+if [ -z "$(ls -A "$MODELS_DIR")" ]; then
     echo "No trained models found, it will train now."
     ./run_training.sh
 fi
