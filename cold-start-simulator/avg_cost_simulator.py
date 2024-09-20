@@ -21,7 +21,7 @@ files_names = ["function_durations_percentiles.anon.d01.csv",
 def plot_cost(cold_start_duration):
 
     dic_counter = {} # key is the percentage cost of the cold start for the functions, and the value the number of function that suffered this cost
-    number_of_ignored_function = 0
+    number_of_functions_0_durarion = 0
     global_function_e2e = 0 # E2E, end two end execution duration
 
     for file_name in files_names:
@@ -35,9 +35,8 @@ def plot_cost(cold_start_duration):
                 curr_count = float(line[4])
                 
                 if curr_avg <= 0:
-                    number_of_ignored_function += curr_count
+                    number_of_functions_0_durarion += curr_count
                     curr_avg = 0.9
-                    #continue
 
                 percentage_cost = round((100*cold_start_duration)/(curr_avg + cold_start_duration), plot_precision) #I am adding the cold_start_duration so that E2E = cold_start_duration + execution_duration
 
@@ -62,7 +61,7 @@ def plot_cost(cold_start_duration):
         dic_counter[k] = percentual_sum
 
     avg_function_duration = round(global_function_e2e / global_function_number, 2)
-    print(f"Avg function duration {avg_function_duration} ms. There where a total of {number_of_ignored_function} function calls that had 0ms duration, and I have relpaced with 0.9ms, this happened in a total of {number_of_ignored_function + global_function_number} function calls, corresponding to { round((number_of_ignored_function*100)/(number_of_ignored_function + global_function_number),3)}%,")
+    print(f"Avg function duration {avg_function_duration} ms. There where a total of {number_of_functions_0_durarion} function calls that had 0ms duration, and I have relpaced with 0.9ms, this happened in a total of {number_of_functions_0_durarion + global_function_number} function calls, corresponding to { round((number_of_functions_0_durarion*100)/(number_of_functions_0_durarion + global_function_number),3)}%,")
 
     x = dic_counter.keys()
     y = dic_counter.values()
