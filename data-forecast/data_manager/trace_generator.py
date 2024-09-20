@@ -1,10 +1,8 @@
-#load all the required packages
 import matplotlib.pyplot as plt
 import os
 import pandas as pd
 from datetime import datetime, timedelta
-from pathlib import Path
-import time
+
 
 #for each funciton ID generate a trace for all days and a plot
 start_datetime = datetime(2019, 1, 1, 0, 0, 0)
@@ -144,15 +142,10 @@ def generate_all_traces(dataset_dir, result_dir, all_traces_ids_files_name):
       print("working on " + trace_id)
       generate_and_plot_trace_id(trace_id, dataset_dir, result_dir, local_dataset)
 
-#dir_path = None
 def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
     #global trace_path
     
     trace_path = os.path.join(trace_dir_drive, "traces_datapoints/", trace_id + '.csv')
-    
-    #if trace_path is None;  
-       #dir_path = Path("/path/to/file")
-    # case the trace has not yet being generated
 
     if not os.path.isfile(trace_path):
         generate_and_plot_trace_id(trace_id, dataset_dir, trace_dir_drive)
@@ -161,10 +154,53 @@ def read_csv_trace(trace_id, dataset_dir, trace_dir_drive):
     
     return points
 
+def get_trace_by_id(trace_id, dataset_dir, trace_dir_drive, local_dataset = None):
 
+    trace_path = os.path.join(trace_dir_drive, "traces_datapoints/", trace_id + '.csv')
+    if os.path.isfile(trace_path):
+      return pd.read_csv(trace_path)
 
+    timestamps_array = []
+    calls_array = []
 
+    for i in range(1, 15):
+        if local_dataset is None:
+            calls_array = calls_array + get_function_traces_from_file(i, trace_id, dataset_dir)
+        else:
+            calls_array = calls_array + get_function_traces_from_file_fast(i, trace_id, dataset_dir, local_dataset)
 
+    data = {
+        'item_id': [],
+        'timestamp': [],
+        'target': []
+    }
 
+    for index, value in enumerate(calls_array):
+        current_datetime = start_datetime + timedelta(minutes=index)
+        timestamps_array.append(current_datetime)
 
+        data['item_id'].append(trace_id)
+        data['timestamp'].append(current_datetime.strftime('%Y-%m-%d %H:%M:%S'))
+        data['target'].append(value)
+
+    df = pd.DataFrame(data)
+    return df
+
+# this function was used to create the all_traces_cost.csv file
+# generate_cost_of_each_trace( "../../azure-dataset/input/" , "data/all_traces_ids.csv", "data/complete_traces")
+def generate_cost_of_each_trace(dataset_dir, all_traces_ids_files_name, complete_traces_dir):
+
+  with open("data/all_traces_cost_completed.csv", 'w') as cost_file:
+
+    with open(all_traces_ids_files_name , 'r') as id_file:
+      for trace_id in id_file:
+        trace_id = trace_id.strip()  # Remove any trailing newline characters
+
+        trace = get_trace_by_id(trace_id, dataset_dir, complete_traces_dir)
+
+        trace.set_index('timestamp')['target']
+        trace['target'] = trace['target'].astype(float)
+        cost = sum(trace['target'])
+
+        cost_file.write(f"{trace_id} {cost}\n")
 
