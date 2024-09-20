@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-import numpy as np
+import matplotlib as mpl
 
 plot_precision = 1
 
@@ -36,7 +36,8 @@ def plot_cost(cold_start_duration):
                 
                 if curr_avg <= 0:
                     number_of_ignored_function += curr_count
-                    continue
+                    curr_avg = 0.9
+                    #continue
 
                 percentage_cost = round((100*cold_start_duration)/(curr_avg + cold_start_duration), plot_precision) #I am adding the cold_start_duration so that E2E = cold_start_duration + execution_duration
 
@@ -61,13 +62,15 @@ def plot_cost(cold_start_duration):
         dic_counter[k] = percentual_sum
 
     avg_function_duration = round(global_function_e2e / global_function_number, 2)
-    print(f"{number_of_ignored_function} ignored functions call of a total {number_of_ignored_function + global_function_number} calls, corresponds to { round((number_of_ignored_function*100)/(number_of_ignored_function + global_function_number),3)}%, avg function duration {avg_function_duration} ms")
+    print(f"Avg function duration {avg_function_duration} ms. There where a total of {number_of_ignored_function} function calls that had 0ms duration, and I have relpaced with 0.9ms, this happened in a total of {number_of_ignored_function + global_function_number} function calls, corresponding to { round((number_of_ignored_function*100)/(number_of_ignored_function + global_function_number),3)}%,")
 
     x = dic_counter.keys()
     y = dic_counter.values()
     plt.scatter(x, y)
-    plt.step(x, y, where='post', label=f"{cold_start_duration}ms cold start, {percentage_of_cold_time}% of the total execution time") 
+    plt.step(x, y, where='post', label=f"{cold_start_duration}ms cold start, represents {percentage_of_cold_time}% of the total execution time") 
 
+
+mpl.rcParams["font.size"] = 20
 
 plt.figure(figsize=(15, 8))
 
@@ -76,16 +79,16 @@ plot_cost(5)
 plot_cost(10)
 plot_cost(20)
 
-plt.axvline(x = 100, color = 'r', label = '100% cost')
-#plt.xscale('log')
-#plt.xlim(0,100)
+plt.axvline(x = 100, color = 'r', label = '100% cost (impossible, only if execution_duration=0)')
+
 plt.legend()
 plt.legend(loc="lower right")
 plt.grid()
 plt.title("Latency impact of cold starts based on Azure dataset *Averages*")
-plt.xlabel("Percentage of the cold start relatvie to the function run time duration (%)\n 100% means the cold start latenct equals the function duration.")
-plt.ylabel("CDF of the functions cost (%)")
-plt.savefig("avg_cost.png")
+plt.xlabel("Percentage of the cold start relative to the function End two End (E2E) time (%)\n E2E time = cold_start_duration + execution_duration.")
+plt.ylabel("CDF of the number of invocations (%)")
+plt.tight_layout()
+plt.savefig("cold_start_cost.png")
 
 
 
