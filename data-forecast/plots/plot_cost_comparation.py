@@ -96,9 +96,9 @@ def get_normal_cost(simulation_dir, simulation_start, simulation_end, simulation
 
     return simulation_cost
 
-def plot_simulation_cost(model_types, prediction_window):
+def plot_simulation_cost(model_types, prediction_window, line_style):
 
-    for type in model_types:
+    for idx, type in enumerate(model_types):
 
         model_cost = []
         for window_size in prediction_window:
@@ -107,7 +107,7 @@ def plot_simulation_cost(model_types, prediction_window):
             model_cost.append( simulation_cost )
 
         print(f"simulation_cost of {type} for windows {prediction_window} and picking top {optimized_traces_in_each_leaderboard} in the leaderboard: {model_cost}" )
-        plt.plot(prediction_window, model_cost, label=type, marker=".")
+        plt.plot(prediction_window, model_cost, label=type, linestyle=line_style[idx], marker=".")
 
 def plot_normal_cost(model_types, prediction_window):
 
@@ -133,9 +133,10 @@ fig = plt.figure(figsize=(20, 10))
 #prediction_window = [5, 10, 20, 50, 100, 200, 400, 800, 1440, 1600, 2880]
 #plot_simulation_cost(model_types, prediction_window)
 
-model_types = ["custom_autogluon", "average", "oracle", "randomly"]
-prediction_window = [30, 60, 120, 180, 240, 300]
-plot_simulation_cost(model_types, prediction_window)
+model_types = ["average", "oracle", "randomly", "custom_autogluon"]
+line_style = [":", "-", "--", "--"]
+prediction_window = [30, 60, 120, 180, 240, 300, 360, 420, 480]
+plot_simulation_cost(model_types, prediction_window, line_style)
 plot_normal_cost(model_types, prediction_window)
 
 
@@ -146,7 +147,7 @@ plot_normal_cost(model_types, prediction_window)
 plt.xticks(prediction_window)
 plt.legend()
 #plt.xscale('log',base=2) 
-plt.title("Cost simulation for 10k function with 4 leaderboard steps")
+plt.title(f"Cost simulation for 10k function with {optimized_traces_in_each_leaderboard} leaderboard steps")
 plt.xlabel("Window size used for prediction (minutes)")
 plt.ylabel("Simuilation cost")
 plt.savefig('models_comparation.png')

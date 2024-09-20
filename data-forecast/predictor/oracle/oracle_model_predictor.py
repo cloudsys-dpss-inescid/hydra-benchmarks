@@ -1,13 +1,5 @@
 #load all the required packages
-import pandas as pd
-import numpy as np
-import time
 import shared
-from autogluon.timeseries import TimeSeriesDataFrame, TimeSeriesPredictor
-import stumpy
-import matplotlib.pyplot as plt
-
-
 
 #######################################################
 ################## Online processing ##################
