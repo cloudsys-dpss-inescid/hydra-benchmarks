@@ -3,10 +3,6 @@
 # File containing the trace IDs (one per line)
 TRACE_FILE="simulation_trace_ids.txt"
 raw_dataset_dir="../../azure-dataset/input/"
-#N_PARTS=50
-# Number of lines to read from the CSV file
-#WINDOW_SIZE=1000
-#START_WINDOW_SIZE=5760
 
 echo "Running simulator!"
 
@@ -213,6 +209,7 @@ NUMBER_OF_LEADERBOARDS=1
 
 PREDICTOR_MODE="custom_autogluon"
 
+# Number of lines to read from the CSV file
 WINDOW_SIZE=180
 simulate
 

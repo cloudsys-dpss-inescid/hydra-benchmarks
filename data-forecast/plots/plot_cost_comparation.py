@@ -4,6 +4,7 @@ import sys
 import concurrent.futures
 import math
 import matplotlib.pyplot as plt
+import matplotlib as mpl
 import numpy as np
 
 # Add the path to the python modules
@@ -124,6 +125,7 @@ simulation_end = 20159
 #simulation_delta = 200
 optimized_traces_in_each_leaderboard = 1
 fig = plt.figure(figsize=(20, 10))
+mpl.rcParams["font.size"] = 20
 
 #model_types = ["custom_autogluon", "average", "oracle", "randomly"]
 #model_types = ["average"]
@@ -135,10 +137,9 @@ fig = plt.figure(figsize=(20, 10))
 
 model_types = ["average", "oracle", "randomly", "custom_autogluon"]
 line_style = [":", "-", "--", "--"]
-prediction_window = [30, 60, 120, 180, 240, 300, 360, 420, 480]
+prediction_window = [180, 240, 300]
 plot_simulation_cost(model_types, prediction_window, line_style)
 plot_normal_cost(model_types, prediction_window)
-
 
 
 
@@ -147,7 +148,7 @@ plot_normal_cost(model_types, prediction_window)
 plt.xticks(prediction_window)
 plt.legend()
 #plt.xscale('log',base=2) 
-plt.title(f"Cost simulation for 10k function with {optimized_traces_in_each_leaderboard} leaderboard steps")
+plt.title(f"Cost simulation for functions with {optimized_traces_in_each_leaderboard} leaderboard steps")
 plt.xlabel("Window size used for prediction (minutes)")
 plt.ylabel("Simuilation cost")
 plt.savefig('models_comparation.png')
