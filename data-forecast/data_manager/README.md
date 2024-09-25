@@ -1,33 +1,10 @@
-I need to improve this!
+# Data Manager
 
-falar do sinusoidal_detector.py, e que ja tem alguns plots na folder, que que é preciso mudar a ordem do sort para ver coisas.
+This directory contains two Python scripts, `trace_generator.py` and `sinusoidal_detector.py`. The first script is used to read individual traces from the Azure dataset, creating and storing the traces in a special format to be used in the pipeline. These traces are stored in Pandas DataFrame format. Each time a component in the pipeline requires a trace, it calls the function `get_trace_by_id()`, which will try to fetch the trace from the directory `data_manager/data/complete_traces/traces_datapoints/`. If the trace is not yet in this directory, the script accesses the Azure dataset and generates the corresponding `.csv` file for the trace, storing it in `traces_datapoints/` and returning the Pandas DataFrame.
 
-# Pipeline Trace Data
+The script `sinusoidal_detector.py` is used to test if it is possible to detect whether a given trace is sinusoidal. This script contains an explanation within. We have tried different approaches, including Fourier transformation, standard deviation, and Gaussian filters, but without achieving complete success. This script generates a plot that sorts the traces by their likelihood of being sinusoidal. A perfect cosine trace has been injected to aid in this work, and this trace should always appear first in the figure. Unfortunately, upon observing the figures, it is clear that it does not consistently appear first. This part of the project requires more work and is important for clustering functions when searching for similar functions to predict. The generated figures are located in `data_manager/data/complete_traces/traces_plots/`.
 
-This directory contains data traces in a special format to be used in the pipeline. Each time the pipeline needs a trace, it will try to fetch the trace from the directory `/traces_datapoints/`. If the trace is not yet in the directory, it can use the function `generate_and_plot_trace_id()` inside `trace_generator.py`. This function will generate the required trace and a plot of the trace stored in `/traces_plots/`. The plots are only for debugging purposes and are not required otherwise.
+The directory `data_manager/data/` contains two other files, `all_traces_ids.csv` and `all_traces_cost.csv`. The file `all_traces_ids.csv` is used to assist in some functions within `trace_generator.py`. The file `all_traces_cost.csv` is used to select the most costly functions from the dataset for sorting within `sinusoidal_detector.py`. Both of these files can be generated with the corresponding functions inside the `trace_generator.py` script.
 
-## Directory Structure
+Finally, it is important that the Azure dataset is available locally and contains a file for each day of the Azure dataset with the following naming convention: "invocations_per_function_md.anon.d01.csv", "invocations_per_function_md.anon.d02.csv", up to 14 days. This is the default structure of the dataset.
 
-I assume there is a directory with the original traces that contains a file for each day of the Azure dataset with the following names: "invocations_per_function_md.anon.d01.csv", "invocations_per_function_md.anon.d02.csv", up to 14 days.
-
-## Available Functions
-
-### `generate_and_plot_trace_id(trace_id, dataset_dir, result_dir)`
-
-This function takes 3 arguments and generates the traces in `/traces_datapoints/`. The arguments are as follows:
-
-1. `trace_id`: a string of the trace ID.
-2. `dataset_dir`: a string of the path to the directory containing all the original traces for each day.
-3. `result_dir`: the directory where there should be 2 folders, `traces_datapoints` and `traces_plots`. This folder can be the current folder where this README is located.
-
-### `generate_trace_ids_file(dataset_dir, all_traces_ids_file)`
-
-This function reads all the existing traces in the original dataset and creates a file containing only these IDs, one ID per line. This is useful for picking some function IDs when needed.
-
-### `generate_all_traces(dataset_dir, result_dir, all_traces_ids_file)`
-
-This function reads the previous file, containing all the trace IDs, and runs the `generate_and_plot_trace_id()` function for each trace. This function takes a long time to run because there are thousands of traces. It carefully generates the traces only if they are not already in the `/traces_datapoints/` directory to avoid repeated work. This function is useful for seeing many function traces, their plots, and IDs, and picking some for testing.
-
-## Additional Tools
-
-This directory also provides a `trace_generator.ipynb` file that can be used in Google Colab to run the previous functions in a more interactive and easily debuggable environment.
