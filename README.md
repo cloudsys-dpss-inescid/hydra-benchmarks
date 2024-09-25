@@ -3,6 +3,7 @@
 This repository includes a number of benchmarks used to test and evaluate Graalvisor and Argo in general. The repository is split into several directories:
 
 - [azure-dataset](azure-dataset) contains a serverless trace generator and simulator. It uses as a base raw trace the [Azure Function trace](https://github.com/Azure/AzurePublicDataset/blob/master/AzureFunctionsDataset2019.md);
+- [data-forecast](data-forecast) contains a service capable of forecasting trace invocations into the future, based on Machine Learning;
 - [data](data) contains a set of files used by the benchmarks and a script to launch an NGINX container to serve those files through HTTP;
 - [demos](demos) contains a set of experiments/demos/proof-of-concepts that we use to experiment and benchmark new ideas. Each sub-directory explores one specific idea and evaluates it;
 - [plots](plots) contains plotting scripts that we use to visualize the results of the experimental evaluation;

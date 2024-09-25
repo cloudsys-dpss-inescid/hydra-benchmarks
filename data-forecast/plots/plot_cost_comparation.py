@@ -119,30 +119,19 @@ def plot_normal_cost(model_types, prediction_window):
     plt.plot(prediction_window, model_cost, label="no optimization cost", marker=".")
 
 #simulation_dir = "../simulator/results/forcast-claudiocorreia-nLYRNQFN/"
+# If you change the simulation parameters, please adjust the parameters below accordingly.
 simulation_dir = "results/comparation/"
 simulation_start = 10080
 simulation_end = 20159
-#simulation_delta = 200
 optimized_traces_in_each_leaderboard = 1
 fig = plt.figure(figsize=(20, 10))
 mpl.rcParams["font.size"] = 20
-
-#model_types = ["custom_autogluon", "average", "oracle", "randomly"]
-#model_types = ["average"]
-#prediction_window = [5, 10, 20, 50, 100, 200, 400, 800]
-#plot_simulation_cost(model_types, prediction_window)
-#model_types = ["oracle"]
-#prediction_window = [5, 10, 20, 50, 100, 200, 400, 800, 1440, 1600, 2880]
-#plot_simulation_cost(model_types, prediction_window)
 
 model_types = ["average", "oracle", "randomly", "custom_autogluon"]
 line_style = [":", "-", "--", "--"]
 prediction_window = [180, 240, 300]
 plot_simulation_cost(model_types, prediction_window, line_style)
 plot_normal_cost(model_types, prediction_window)
-
-
-
 
 
 plt.xticks(prediction_window)

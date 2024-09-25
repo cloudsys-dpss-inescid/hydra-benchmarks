@@ -1,5 +1,7 @@
 I need to improve this!
 
+falar do sinusoidal_detector.py, e que ja tem alguns plots na folder, que que é preciso mudar a ordem do sort para ver coisas.
+
 # Pipeline Trace Data
 
 This directory contains data traces in a special format to be used in the pipeline. Each time the pipeline needs a trace, it will try to fetch the trace from the directory `/traces_datapoints/`. If the trace is not yet in the directory, it can use the function `generate_and_plot_trace_id()` inside `trace_generator.py`. This function will generate the required trace and a plot of the trace stored in `/traces_plots/`. The plots are only for debugging purposes and are not required otherwise.

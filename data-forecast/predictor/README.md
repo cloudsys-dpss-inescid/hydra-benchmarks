@@ -1,5 +1,14 @@
 # Pipeline Forecasting
 
+Dizer os predictors que existem.
+
+falar que uso o stumpy para econtrar a funcao semlhante. que os modelos treinados estao da pasta X
+
+falar que aqui vou buscar os trainos offline_trace_ids
+
+falar do defualt-config json
+
+
 In this directory, there is a `default_config.json` file that contains many parameters that can be changed. The `raw_dataset` needs to point to a folder that stores the Azure 2019 Dataset, where the directory should have the following structure: "invocations_per_function_md.anon.d01.csv", "invocations_per_function_md.anon.d02.csv", up to 14 days. Currently, the root directory named `azure-dataset` contains a script called `download_dataset.sh` which can be used to download the required dataset locally. The data will be stored in the subfolder `azure-dataset/input`. The JSON currently points to this folder with an absolute path that depends on the host and should be changed
 
 ## model_training.py
