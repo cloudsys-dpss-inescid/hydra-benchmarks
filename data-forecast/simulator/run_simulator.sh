@@ -219,6 +219,13 @@ simulate
 WINDOW_SIZE=300
 simulate
 
+WINDOW_SIZE=600
+simulate
+
+WINDOW_SIZE=900
+simulate
+
+
 PREDICTOR_MODE="average"
 
 WINDOW_SIZE=180
@@ -229,6 +236,13 @@ simulate
 
 WINDOW_SIZE=300
 simulate
+
+WINDOW_SIZE=600
+simulate
+
+WINDOW_SIZE=900
+simulate
+
 
 PREDICTOR_MODE="oracle"
 
@@ -241,6 +255,12 @@ simulate
 WINDOW_SIZE=300
 simulate
 
+WINDOW_SIZE=600
+simulate
+
+WINDOW_SIZE=900
+simulate
+
 PREDICTOR_MODE="randomly"
 
 WINDOW_SIZE=180
@@ -251,6 +271,13 @@ simulate
 
 WINDOW_SIZE=300
 simulate
+
+WINDOW_SIZE=600
+simulate
+
+WINDOW_SIZE=900
+simulate
+
 
 #echo "All trace IDs processed."
 echo Folder containing the execution log: $result_dir

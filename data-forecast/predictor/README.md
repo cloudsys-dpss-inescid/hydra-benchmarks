@@ -6,7 +6,7 @@ The interaction between the service and each predictor is handled through the `p
 
 The directory contains various files and a separate folder for each predictor. Below, we provide a description of each predictor, followed by more details about the other files.
 
-# Predictors Description
+## Predictors Description
 
 All predictors implement the same interface, with two functions: `get_trained_dataset()` and `get_function_forecast()`. To add a new predictor, simply create a new directory for the predictor and modify the `predictor_factory.py` script. Each predictor receives a function trace, which may be short, as input in the `get_function_forecast()` function, and returns a DataFrame that forecasts the future invocations of the function. This returned object has two columns: a timestamp column with minute-level granularity and a target column with the number of invocations for each given minute. Currently, the forecast is for 48 minutes into the future, but this can be adjusted in the `default_config.json` file. The prediction approach for each predictor is as follows:
 
@@ -20,7 +20,7 @@ All predictors implement the same interface, with two functions: `get_trained_da
 
 - [all_simultaneously](all_simultaneously): This predictor is used solely for debugging purposes. It runs all the other predictors and plots their outputs against the actual data. The resulting figures, one for each trace prediction, are saved in the `predictor/debug/` directory. This predictor is slow due to the figure generation, so use it with caution when running the service on many traces.
 
-# Other Files
+## Other Files
 
 There are other important files in this directory, described below:
 
