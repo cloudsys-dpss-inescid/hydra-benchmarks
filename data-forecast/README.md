@@ -1,6 +1,8 @@
 # Forecasting Service
 
-This repository contains a service provided by an HTTP server that predicts which FaaS functions will be more costly in the near future.
+This repository contains a service provided by an HTTP server that predicts which FaaS functions will be more costly in the near future. You can find much more detials in this [report](FastDraw.pdf), also available in the [Overleaf](https://www.overleaf.com/5945181958fcdzmdqtsqtp#451ef7).
+
+
 
 ## Introduction
 This repository contains a service designed for a FaaS platform that can decide which functions will be more invoked in the future. This work aims to complement previous work in [CloudJIT](https://dl.acm.org/doi/10.1145/3617651.3622990), which tries to perform AoT compilation in some functions to improve efficiency. However, currently, CloudJIT chooses these functions based on a fixed threshold, and we wanted to predict these functions' behavior in the future to make a more informed decision on which function should be AoT. Previous work has used ARIMA models to forecast future function invocations in the context of FaaS, such as [IceBreaker](https://dl.acm.org/doi/10.1145/3503222.3507750) and [Serverless in the Wild](https://www.usenix.org/conference/atc20/presentation/shahrad). We have followed the same path. In this repository, we implement different forecast predictors, where the most complex is based on the [AutoGluon](https://auto.gluon.ai/stable/index.html) framework, which offers many machine learning time series predictors in a black-box view, including the ARIMA model. Additionally, we have implemented an HTTP server that runs as a live service, receiving notifications of function invocations and generating leaderboards based on which function will be more costly for the FaaS platform in the future. This leaderboard could then be used by any FaaS platform to choose which functions should be AoT first.
