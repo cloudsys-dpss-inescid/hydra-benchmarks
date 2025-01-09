@@ -282,6 +282,17 @@ function start_ow_container {
     docker run --rm --name=bcontainer --network host $IMG &> $TDIR/lambda.log
 }
 
+function start_musl_jail {
+    MUSL=$ARGO_HOME/resources/x86_64-linux-musl-native/x86_64-linux-musl
+    JAIL=$TDIR/musl-jail
+
+    rm -rf $JAIL &> /dev/null
+    cp -r $MUSL $JAIL
+    cp $ARGO_HOME/graalvisor/build/native-image/polyglot-proxy $JAIL/polyglot-proxy
+    chroot $JAIL /polyglot-proxy &> $TDIR/lambda.log &
+    echo -n "$!" > "$TDIR/lambda.pid"
+}
+
 function start_svm {
     cp $GRAALVISOR_HOME/build/native-image/polyglot-proxy $TDIR/graalvisor
     cd $TDIR
@@ -396,3 +407,9 @@ function stop_svm {
     rm -f $TDIR/lambda.pid
 }
 
+function stop_musl_jail {
+    JAIL=$TDIR/musl-jail
+    kill $(cat $TDIR/lambda.pid)
+    rm -f $TDIR/lambda.pid
+    rm -f $JAIL
+}
