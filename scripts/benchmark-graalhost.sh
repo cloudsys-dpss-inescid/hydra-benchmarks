@@ -9,7 +9,7 @@ source $(DIR)/benchmarks.sh
 
 if [ "$#" -ne 4 ]; then
     echo "Syntax: <backend> <app> <mode> <# of tests or concurrency level>"
-    echo "Available backends: graalhost (native)."
+    echo "Available backends: graalhost (native), container (Docker container)."
     echo "Available apps: gh_java_http"
     echo "Available modes: test benchmark. Test will perform a number of requests. Benchmark will use apache bench with the desired concurrency level."
     echo "Example: benchmark-graalhost.sh graalhost gh_java_http test 1"
@@ -21,6 +21,7 @@ if [ "$#" -ne 4 ]; then
     echo "- PIN_CORE=<boolean> - if true, will pin the process to core 0. Defaults to false;"
     echo "- DISABLE_TURBO=<boolean> - if true, will disable turbo boost. Defaults to false;"
     echo "- EXPERIMENT=<tag> - if set, will copy result logs into a dedicated experiment directory. Defaults to unset;"
+    echo "- LOGS_VERBOSE=<tag> - if set, will probe various graalhost logs into the logs directory. Requires sudo. Defaults to unset;"
     exit 1
 else
     backend=$1
@@ -29,13 +30,33 @@ else
     workload=$4
 fi
 
+LDIR=$WORK_DIR/logs
+
+function probe_logs {
+    if [ -n "$LOGS_VERBOSE" ]; then
+        tag=$1
+        log_dir=$LDIR/$tag
+        pid=$(cat $TDIR/graalhost.pid)
+
+        mkdir -p $log_dir
+        netcat -U $TDIR/maps.sock > $log_dir/maps.log
+        netcat -U $TDIR/heap.sock > $log_dir/heap.log
+        netcat -U $TDIR/files.sock > $log_dir/files.log
+        netcat -U $TDIR/threads.sock > $log_dir/threads.log
+        netcat -U $TDIR/isolates.sock > $log_dir/isolates.log
+
+        sudo cat /proc/$pid/maps > $log_dir/procmaps.log
+        sudo cat /proc/$pid/smaps > $log_dir/procsmaps.log
+    fi
+}
+
 function benchmark {
     if [ -z "$WMULTIPLIER" ]; then
         WMULTIPLIER=256
     fi
 
     printf "Running ab (check $TDIR/ab.log).\n"
-    ab -c $workload -n $((workload * WMULTIPLIER)) http://$IP:$APP_PORT/ &> $TDIR/ab.log
+    ab -c $workload -n $((workload * WMULTIPLIER)) http://$IP:$APP_PORT/$APP_PATH &> $TDIR/ab.log
 }
 
 function test {
@@ -51,7 +72,11 @@ function run {
     echo "Waiting for $backend..." | tee $TDIR/backend.log
     sbs=$(date +%s%N)
     IP=127.0.0.1
-    start_graalhost &>> $TDIR/backend.log &
+    if [ "$backend" == "graalhost" ]; then
+        start_graalhost &>> $TDIR/backend.log &
+    elif [ "$backend" == "container" ]; then
+        start_graalhost_container &>> $TDIR/backend.log &
+    fi
 
     # Let the graalhost start.
     wait_port $IP $GRAALHOST_PORT
@@ -72,16 +97,27 @@ function run {
     prepare_resources
 
     # Load function into runtime and prepare payload.
+    probe_logs "before-loading"
+    if [ "$backend" == "container" ]; then
+        # The container will have the "/benchmarks" directory mounted.
+        BENCHMARKS_HOME=/benchmarks
+    fi
     $app
 
     # Run test/benchmark.
+    probe_logs "before-$mode"
     $mode 2>&1 | tee -a $TDIR/app.log
+    probe_logs "after-$mode"
 
     # Allow time for final collection of resource utilization.
     sleep 1
 
     # Teardown the graalhost.
-    stop_graalhost &>> $TDIR/backend.log
+    if [ "$backend" == "graalhost" ]; then
+        stop_graalhost &>> $TDIR/backend.log
+    elif [ "$backend" == "container" ]; then
+        stop_container &>> $TDIR/backend.log
+    fi
     wait
 
     # Teardown local resource changes (delete cgroups, enable turbo boost).
@@ -96,11 +132,13 @@ check_permissions
 echo "$(tput bold)Running graalhost environment=$backend; app=$app; mode=$mode; workload=$workload:$(tput sgr0)"
 
 # Preparing working directory
-echo "Removing $TDIR and $ADIR"
+echo "Removing $TDIR, $ADIR, and $LDIR"
 rm -rf $TDIR
 rm -rf $ADIR
+rm -rf $LDIR
 mkdir -p $TDIR
 mkdir -p $ADIR
+mkdir -p $LDIR
 
 for iter in $(seq 1 $ITERATIONS)
 do
