@@ -1,0 +1,26 @@
+plugins {
+    id("java")
+    id("com.github.johnrengelman.shadow") version "8.1.1"
+}
+
+version = "1.0"
+group = "com.oracle.graalos"
+
+repositories {
+    mavenCentral()
+}
+
+shadowJar() {
+    minimize()
+    shadowJar.archiveFileName = rootProject.name + "-" + version + "-all.jar"
+}
+
+dependencies {
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.13.0'
+    implementation 'com.fasterxml.jackson.jr:jackson-jr-objects:2.13.0-rc2'
+}
+
+java {
+    sourceCompatibility = JavaVersion.toVersion("17")
+    targetCompatibility = JavaVersion.toVersion("17")
+}
