@@ -12,9 +12,6 @@ function run_hotspot {
 }
 
 function build_ni {
-        # Build.
-        ./gradlew clean shadowJar assemble
-
 	cd build
 	$JAVA_HOME/bin/native-image \
 		--no-fallback \
