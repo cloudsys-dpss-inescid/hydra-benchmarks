@@ -54,6 +54,7 @@ normal_memory = [
     327548,
     310972
 ]
+# Converting KBs to MBs.
 normal_memory = [float(x) / 1024.0 for x in normal_memory]
 
 restore = [
@@ -107,6 +108,7 @@ restored_memory = [
     118908,
     47308
 ]
+# Converting KBs to MBs.
 restored_memory = [float(x) / 1024.0 for x in restored_memory]
 
 print(normal_entrypoint)
