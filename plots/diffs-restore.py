@@ -22,15 +22,15 @@ width = 0.3
 
 all_1 = [1] * len(restore_times)
 
-ax.bar(x + 0*width, all_1,   width=width, hatch='...', label='Normal',  alpha=0.75)
-ax.bar(x + 1*width, li,      width=width, hatch='|||', label='Restore',  alpha=0.75)
+ax.bar(x + 0*width, all_1,   width=width, hatch='...', label='Normal Restore',  alpha=0.75)
+ax.bar(x + 1*width, li,      width=width, hatch='|||', label='Optimized Restore',  alpha=0.75)
 
 ax.set_xticks(x)
 ax.set_xticklabels(benchmark_labels)
 ax.legend()
 plt.xticks(rotation = 45)
 ax.grid(axis = 'y', linestyle = '--', linewidth = 0.25)
-ax.set_ylabel('Latency (us)')
+ax.set_ylabel('Normalized Latency')
 ax.set_yscale('linear')
 fig.set_figwidth(7)
 fig.set_figheight(3)
