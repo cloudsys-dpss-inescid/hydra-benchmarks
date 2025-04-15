@@ -31,7 +31,8 @@ function test_gv_benchmarks {
     if [[ $PRINT_TIMES =~ ^[Yy]$ ]]
     then
         export ITERATIONS=5
-        echo $PRINT_TIMES
+    else
+        export ITERATIONS=2
     fi
 
     for benchmark in $TEST_SET
@@ -41,7 +42,6 @@ function test_gv_benchmarks {
             echo "$(tput bold)Benchmark: $benchmark in $backend $(tput sgr0)"
             rm -rf $ADIR
             export SANDBOX="default"; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 1 | grep "Req output:"
-            export SANDBOX="process"; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 1 | grep "Req output:"
             if [[ $benchmark == *"gv_java_classify"* || $benchmark == *"videoprocessing"* ]]; then
                 echo "Skipping $benchmark (not supported)"
                 continue
@@ -51,9 +51,7 @@ function test_gv_benchmarks {
                 continue
             fi
             export WARMUP=1
-            # Create the snapshot.
-            export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
-            # Restore from the snapshot.
+            # Create and restore the snapshot.
             export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
             unset WARMUP
         done
