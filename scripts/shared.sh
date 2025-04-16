@@ -299,16 +299,8 @@ function start_svm {
         export lambda_timestamp="$(date +%s%N | cut -b1-13)"
         export lambda_port="$GRAALVISOR_PORT"
         export app_dir="$ADIR"
-        #perf stat -e cache-misses,context-switches,branch-misses,page-faults ./app
-        #strace -o $TDIR/strace.log -f ./app
-        # Note 1 : setarch is necessary to disable ASRL, which is relevant for
-        # svm snapshotting (accessible through context-sandbox).
-        # Note 2 : for large heaps, add `-Xmx128g`.
-        unshare --map-root-user --keep-caps --mount-proc -f -p setarch -R env LD_PRELOAD=$GRAALVISOR_HOME/src/main/c/svm-snapshot/deps/dlmalloc/newdl.so ./graalvisor &> $TDIR/lambda.log &
-        #strace --trace=memory -o $TDIR/graalvisor.strace -f ./graalvisor -Xmx128g &> $TDIR/lambda.log &
-        echo -n "$!" > "$TDIR/lambda.pid"
-    fi
-    wait
+	bash $GRAALVISOR_HOME/graalvisor $TDIR/graalvisor $TDIR/lambda.pid &> $TDIR/lambda.log
+   fi
 }
 
 function start_graalhost {
