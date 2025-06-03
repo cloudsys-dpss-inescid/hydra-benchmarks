@@ -42,11 +42,8 @@ function test_gv_benchmarks {
             echo "$(tput bold)Benchmark: $benchmark in $backend $(tput sgr0)"
             rm -rf $ADIR
             export SANDBOX="default"; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 1 | grep "Req output:"
-            if [[ $benchmark == *"gv_java_classify"* || $benchmark == *"videoprocessing"* ]]; then
-                echo "Skipping $benchmark (not supported)"
-                continue
-            fi
-            if [[ $benchmark == *"_thumbnail"* || $benchmark == *"gv_python_dynamichtml"* || $benchmark == *"gv_python_compression"* ]]; then
+            export SANDBOX="process"; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 1 | grep "Req output:"
+            if [[ $benchmark == *"gv_java_classify"* || $benchmark == *"videoprocessing"* || $benchmark == *"javascript_thumbnail"* ]]; then
                 echo "Skipping $benchmark (not supported)"
                 continue
             fi
