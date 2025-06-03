@@ -60,7 +60,7 @@ function test_gv_benchmarks {
     # after running benchmarks, print restore times
     if [[ $PRINT_TIMES =~ ^[Yy]$ ]]
     then
-	    get_times
+        get_times
     fi
 }
 
@@ -94,7 +94,7 @@ function get_times {
                 extracted_numbers=($(grep -e "process time" "$app_log" | grep -o '"process time (us)":[0-9]\+' | grep -o '[0-9]\+'))
                 echo "${extracted_numbers[@]}"
 
-                for num in "${extracted_numbers[@]}"; do
+                for num in "${extracted_numbers[@]:1}"; do
                     total_time=$((total_time + num))
                     count=$((count + 1))
                 done
