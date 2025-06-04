@@ -40,6 +40,13 @@ function test_gv_benchmarks {
     do
         for backend in "svm" #"container" "vm"
         do
+            if [[ $benchmark == *"gv_java_classify"* || $benchmark == *"videoprocessing"* || $benchmark == *"javascript_thumbnail"* ]]; then
+                echo "Skipping $benchmark (not supported)"
+                continue
+            fi
+
+
+
             echo "$(tput bold)Benchmark: $benchmark in $backend $(tput sgr0)"
             rm -rf $ADIR
 	    if [[ $CHECKPOINT_OVERHEAD =~ ^[Yy]$ ]]
@@ -59,14 +66,14 @@ function test_gv_benchmarks {
 		echo "doing 5 checkpoints"
                 rm -rf $ADIR
                 export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
-                rm -rf $ADIR
-                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
-                rm -rf $ADIR
-                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
-                rm -rf $ADIR
-                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
-                rm -rf $ADIR
-                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
+#                rm -rf $ADIR
+#                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
+#                rm -rf $ADIR
+#                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
+#                rm -rf $ADIR
+#                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
+#                rm -rf $ADIR
+#                export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
 	    else
 	        export SANDBOX=snapshot; $(DIR)/benchmark-graalvisor.sh $backend $benchmark test 0 | grep "Req output:"
                 # Create and restore the snapshot.
@@ -147,11 +154,14 @@ function get_times {
 
 function overhead_checkpoint {
     test_names=()
+    normal_names=()
     normal_times=()
     process_times=()
 
     for dir in ../results/benchmark/java/*/; do
         [ -d "$dir" ] || continue
+
+	echo
 
         # Extract just the directory name without path or trailing slash
         dir_name=${dir%/}      # Remove trailing slash
@@ -164,44 +174,60 @@ function overhead_checkpoint {
 
 	if [[ "$dir_name" == *-snapshot-* ]]
 	then
-		echo "is snap!!!"
+	#	echo "is snap!!!"
 	    is_snap=1
         else
-		echo "not snap!!"
+		#echo "not snap!!"
 	    is_snap=0
 	fi
 
         # Remove the first 3 characters of dir_name and strip everything after "-svm"
         dir_name=$(echo "$dir_name" | sed -E 's/^...//; s/-svm.*//')
 
-        test_names+=("\"$dir_name\"")
+	if [[ $is_snap -eq 1 ]]
+        then
+		#echo "got is_snap!!!"
+		#echo "adding to test_names"
+	    test_names+=("\"$dir_name\"")
+	else
+		#echo "adding to normal_names"
+	    normal_names+=("\"$dir_name\"")
+	fi
+
 
         total_time=0
         count=0
 
-	echo "checking 5th iteration"
-        subdir="${dir}/5/"
+	#echo "checking 5th iteration"
+	if [[ $is_snap -eq 1 ]]
+	then
+	    subdir="${dir}/1/"
+	else
+            subdir="${dir}/5/"
+	fi
         echo $subdir
             # Extract from normal.log
             app_log="$subdir/app.log"
             if [ -f "$app_log" ]; then
                 extracted_numbers=($(grep -e "process time" "$app_log" | grep -o '"process time (us)":[0-9]\+' | grep -o '[0-9]\+'))
-                echo "${extracted_numbers[@]}"
+                echo "extracted: ${extracted_numbers[@]}"
 
-                for num in "${extracted_numbers[@]:1}"; do
+                for num in "${extracted_numbers[@]}"; do
+#			echo "inside extracted loop!"
                     total_time=$((total_time + num))
                     count=$((count + 1))
                 done
 
+#		echo "count = $count"
                 average=$((total_time / count))
                 echo $average
                 if [[ $is_snap -eq 1 ]]
                 then
-			echo "inside process!!"
+	#		echo "inside process!!"
 		    process_times+=($average)
 		    # TODO: This never works because checkpoint only produces 1 dir the way we do it, and if we modify to ITERATIONS=5 the last 4 will be restores...
 		else
-			echo "inside normal!!"
+	#		echo "inside normal!!"
 		    normal_times+=($average)
 		fi
             else
@@ -224,8 +250,9 @@ function overhead_checkpoint {
 
     # Output Python arrays
     echo "benchmark_labels = [$(join_with_commas "${test_names[@]}")]"
-    echo "normal_times = [$(join_with_commas "${normal_times[@]}")]"
     echo "process_times = [$(join_with_commas "${process_times[@]}")]"
+    echo "normal_labels = [$(join_with_commas "${normal_names[@]}")]"
+    echo "normal_times = [$(join_with_commas "${normal_times[@]}")]"
 }
 
 function test_ow_benchmarks {
