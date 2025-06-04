@@ -95,6 +95,10 @@ function test_gv_benchmarks {
         overhead_checkpoint
     fi
 
+    echo
+    echo "getting syscall reduction metrics"
+    syscall_reduce
+
 }
 
 function get_times {
@@ -253,6 +257,56 @@ function overhead_checkpoint {
     echo "process_times = [$(join_with_commas "${process_times[@]}")]"
     echo "normal_labels = [$(join_with_commas "${normal_names[@]}")]"
     echo "normal_times = [$(join_with_commas "${normal_times[@]}")]"
+}
+
+function syscall_reduce {
+    test_names=()
+    before=()
+    after=()
+
+    for dir in ../results/benchmark/java/*/; do
+        [ -d "$dir" ] || continue
+
+        # Extract just the directory name without path or trailing slash
+        dir_name=${dir%/}      # Remove trailing slash
+        dir_name=${dir_name##*/}  # Remove everything before the last /
+
+        # Only proceed if dir_name contains '-snapshot'
+        [[ "$dir_name" == *-snapshot-* ]] || continue
+
+        # Remove the first 3 characters of dir_name and strip everything after "-svm"
+        dir_name=$(echo "$dir_name" | sed -E 's/^...//; s/-svm.*//')
+
+        test_names+=("\"$dir_name\"")
+
+        subdir="${dir}/1/"
+        echo $subdir
+            # Extract from lambda.log
+            log="$subdir/lambda.log"
+            if [ -f "$log" ]; then
+		    read removed original < <(tail -n 1 $log | grep -oP 'Removed \K\d+|\d+(?= original syscalls)' | xargs)
+		    echo $removed
+		    echo $original
+		    echo
+		    after+=($((original-removed)))
+		    before+=($original)
+
+                echo "${before[@]}"
+                echo "${after[@]}"
+
+           fi
+        done
+
+    # Function to join arrays with commas
+    join_with_commas() {
+        local IFS=,
+        echo "$*"
+    }
+
+    # Output Python arrays
+    echo "benchmark_labels = [$(join_with_commas "${test_names[@]}")]"
+    echo "before = [$(join_with_commas "${before[@]}")]"
+    echo "after = [$(join_with_commas "${after[@]}")]"
 }
 
 function test_ow_benchmarks {
