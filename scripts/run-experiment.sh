@@ -284,6 +284,8 @@ function syscall_reduce {
             # Extract from lambda.log
             log="$subdir/lambda.log"
             if [ -f "$log" ]; then
+		    # example line:
+		    # Removed 21 out of 76 original syscalls in 746 us
 		    read removed original < <(tail -n 1 $log | grep -oP 'Removed \K\d+|\d+(?= original syscalls)' | xargs)
 		    echo $removed
 		    echo $original
