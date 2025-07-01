@@ -377,7 +377,7 @@ function efficiency {
 
     efficiency_gv
     efficiency_gv_single
-    efficiency_gv_snapshot
+    # efficiency_gv_snapshot
     efficiency_cr
     efficiency_kn
 
