@@ -18,12 +18,12 @@ def current_milli_time():
 
 
 # Workload.
-def thumbnail(img_url):
+def thumbnail(img_url, tmp_dir):
     with urllib.request.urlopen(img_url) as response:
-        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+        with tempfile.NamedTemporaryFile(dir=tmp_dir, delete=False) as tmp_file:
             shutil.copyfileobj(response, tmp_file)
 
-        img_filename = "img-{}.png".format(current_milli_time())
+        img_filename = "{dir}/img-{timestamp}.png".format(dir=tmp_dir, timestamp=current_milli_time())
         with open(tmp_file.name, 'rb') as encoded_img:
             data = encoded_img.read()
             img = Image.open(io.BytesIO(data))
@@ -39,6 +39,7 @@ def thumbnail(img_url):
 
 def main(args):
     try:
-        return {"result": thumbnail(args)}
+        url, tmp_dir = args.split(";")
+        return {"result": thumbnail(url, tmp_dir)}
     except Exception as e:
         return {"result": str(e)}
