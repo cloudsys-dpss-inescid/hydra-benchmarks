@@ -213,4 +213,4 @@ def main(args):
     except Exception as e:
         return {"result": str(e)}
 
-#print(main("/tmp;http://127.0.0.1:8000/bacillus_subtilis.fasta"))
+#print(main("http://127.0.0.1:8000/bacillus_subtilis.fasta;/tmp"))
