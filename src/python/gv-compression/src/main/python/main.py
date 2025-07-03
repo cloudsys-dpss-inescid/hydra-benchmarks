@@ -1,7 +1,6 @@
 import os
 import shutil
 import requests
-import time
 
 def compression(url, tmp_dir):
     dir_path = tmp_dir + "/pyco-" + os.path.basename(url)
