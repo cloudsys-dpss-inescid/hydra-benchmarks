@@ -97,6 +97,8 @@ public class CloudFunctionApplication {
   @Bean
   public Function<Message<Map<String, Object>>, String> echo() {
     return (inputMessage) -> {
+      String output = "";
+      long start = System.nanoTime();
       try {
         Map<String, Object> payload = inputMessage.getPayload();
 
@@ -106,10 +108,14 @@ public class CloudFunctionApplication {
 
         String result = process(modelUrl, labelsUrl, imageUrl);
 
-        return result;
+        output = result;
       } catch (Exception e) {
         e.printStackTrace();
-        return e.getMessage();
+        output = e.getMessage();
+      } finally {
+        long finish = System.nanoTime();
+        double processTime = (finish - start) / 1000;
+        return "{result:" + output + ",process_time(us):" + processTime + "}";
       }
     };
   }
