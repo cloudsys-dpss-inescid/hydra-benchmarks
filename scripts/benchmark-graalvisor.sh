@@ -10,15 +10,15 @@ source $(DIR)/benchmarks.sh
 if [ "$#" -ne 4 ]; then
     echo "Syntax: <svm|container|vm> <app> <mode> <# of tests or concurrency level>"
     echo "Available backends: svm (Native Image), container (Docker container), vm (Firecracker VM)."
-    echo "Available apps: $GV_BENCHMARKS"
+    echo "Available apps: $HY_BENCHMARKS"
     echo "Available modes: test benchmark. Test will perform a number of requests. Benchmark will use apache bench with the desired concurrency level."
-    echo "Example: benchmark-graalvisor.sh svm gv_java_hw test 1"
+    echo "Example: benchmark-hydra.sh svm hy_java_hw test 1"
     echo "Available environment variables: "
-    echo "- SANDBOX=<isolate|runtime|process|context|snapshot> - isolation level of concurrent requests in graalvisor. Defaults to isolate or context depending on the function language;"
+    echo "- SANDBOX=<isolate|runtime|process|context|snapshot> - isolation level of concurrent requests in hydra. Defaults to isolate or context depending on the function language;"
     echo "- SNAPSHOT=<path> - path on disk where the snapshot should be stored/loaded from; Defaults to empty which leads to no snapshot being stored/loaded;"
     echo "- ITERATIONS=<number> - number of iterations the workload is ran. Defaults to 1;"
     echo "- WMULTIPLIER=<number> - workload multiplier to scale up or down the length of the benchmark (only used in benchmark mode). Defaults to 256;"
-    echo "- WARMUP=<number> - number of warmup requests sent to graalvisor. Defaults to zero;"
+    echo "- WARMUP=<number> - number of warmup requests sent to hydra. Defaults to zero;"
     echo "- CGROUP=<name> - name of the cgroup to use. A directory with that name will be created under /sys/fs/cgroup. Defaults to empty which leads to no CGROUP being used;"
     echo "- CGROUP_CPU_QUOTA=<number> - CPU quota for a 100ms period. A quota 100000 means using a full core. Only used if CGROUP is set. Defaults to 100000 (full core)."
     echo "- VM_CPU=<number> - number of cores that the VM will create internally (only used in vm mode). Defaults to 1;"
@@ -42,7 +42,7 @@ function benchmark {
 
     if [ ! -z "$WARMUP" ]; then
         printf "Sending $WARMUP warmup requests:\n"
-        request $IP:$GRAALVISOR_PORT/warmup?concurrency=$WARMUP\&requests=$WARMUP
+        request $IP:$HYDRA_PORT/warmup?concurrency=$WARMUP\&requests=$WARMUP
     fi
 
     REQUEST_ENDPOINT=""
@@ -51,24 +51,24 @@ function benchmark {
     fi
 
     printf "Running ab (check $TDIR/ab.log).\n"
-    ab -s 60 -l -p $RUN_POST -T application/json -c $workload -n $((workload * WMULTIPLIER)) http://$IP:$GRAALVISOR_PORT/$REQUEST_ENDPOINT &> $TDIR/ab.log
+    ab -s 60 -l -p $RUN_POST -T application/json -c $workload -n $((workload * WMULTIPLIER)) http://$IP:$HYDRA_PORT/$REQUEST_ENDPOINT &> $TDIR/ab.log
 }
 
 function test {
     if [ ! -z "$WARMUP" ]; then
         printf "Sending $WARMUP warmup requests:\n"
-        request $IP:$GRAALVISOR_PORT/warmup?concurrency=$WARMUP\&requests=$WARMUP
+        request $IP:$HYDRA_PORT/warmup?concurrency=$WARMUP\&requests=$WARMUP
     fi
 
     printf "Sending $workload requests:\n"
     for i in $(seq 1 $workload)
     do
-        request $IP:$GRAALVISOR_PORT
+        request $IP:$HYDRA_PORT
     done
 }
 
 function stress {
-    request $IP:$GRAALVISOR_PORT/stress?concurrency=100000\&requests=$workload
+    request $IP:$HYDRA_PORT/stress?concurrency=100000\&requests=$workload
 }
 
 function run {
@@ -80,14 +80,14 @@ function run {
         start_svm &>> $TDIR/backend.log &
     elif [ "$backend" == "container" ]; then
         IP=127.0.0.1
-        start_gv_container &>> $TDIR/backend.log &
+        start_hy_container &>> $TDIR/backend.log &
     elif [ "$backend" == "vm" ]; then
         # Note: ip is already set when loading shared.sh
-        start_gv_vm &>> $TDIR/backend.log &
+        start_hy_vm &>> $TDIR/backend.log &
     fi
 
     # Let the lambda start.
-    wait_port $IP $GRAALVISOR_PORT
+    wait_port $IP $HYDRA_PORT
 
     # Measure how long it took to accept connections.
     sbt=$((($(date +%s%N) - $sbs)/1000))
@@ -152,7 +152,7 @@ then
     fi
 fi
 
-echo "$(tput bold)Running graalvisor environment=$backend; sandbox=$SANDBOX; app=$app; mode=$mode; workload=$workload; cpu=$VM_CPU; mem=$VM_MEM:$(tput sgr0)"
+echo "$(tput bold)Running hydra environment=$backend; sandbox=$SANDBOX; app=$app; mode=$mode; workload=$workload; cpu=$VM_CPU; mem=$VM_MEM:$(tput sgr0)"
 
 # Print if this run will perform some snapshotting.
 if [ ! -z "$SNAPSHOT" ]; then echo "SNAPSHOT = $SNAPSHOT"; fi
