@@ -2,4 +2,4 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-cp $DIR/build/libcompression.so $1/gv-py-compression.so
+cp $DIR/build/libcompression.so $1/hy-py-compression.so

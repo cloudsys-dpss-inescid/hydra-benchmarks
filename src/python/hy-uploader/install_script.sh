@@ -2,4 +2,4 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-cp $DIR/build/libuploader.so $1/gv-py-uploader.so
+cp $DIR/build/libuploader.so $1/hy-py-uploader.so

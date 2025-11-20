@@ -2,4 +2,4 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-cp $DIR/build/libmst.so $1/gv-py-mst.so
+cp $DIR/build/libmst.so $1/hy-py-mst.so

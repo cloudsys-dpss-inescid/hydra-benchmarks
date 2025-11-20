@@ -22,7 +22,7 @@ function build_ni {
 		-H:ConfigurationFileDirectories=../config-dir \
 		-H:+ReportExceptionStackTraces \
 		$NI_BIN_OPTS \
-		-H:Name=gv-jv-classify
+		-H:Name=hy-jv-classify
 }
 
 function build_ni_standalone {

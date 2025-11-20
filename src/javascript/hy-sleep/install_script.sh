@@ -2,4 +2,4 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-cp $DIR/build/libsleep.so $1/gv-js-sleep.so
+cp $DIR/build/libsleep.so $1/hy-js-sleep.so

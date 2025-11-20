@@ -16,7 +16,7 @@ function build_ni {
 		--initialize-at-run-time=com.oracle.svm.hydra.utils.JsonUtils \
 		-H:+ReportExceptionStackTraces \
 		$NI_BIN_OPTS \
-		-H:Name=gv-sleep
+		-H:Name=hy-sleep
 }
 
 function build_ni_standalone {

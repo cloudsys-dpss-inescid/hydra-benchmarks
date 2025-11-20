@@ -2,4 +2,4 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-cp $DIR/build/libdna.so $1/gv-py-dna.so
+cp $DIR/build/libdna.so $1/hy-py-dna.so

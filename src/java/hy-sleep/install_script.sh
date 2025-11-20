@@ -2,4 +2,4 @@
 
 DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
 
-cp $DIR/build/gv-sleep.so $1/gv-jv-sleep.so
+cp $DIR/build/hy-sleep.so $1/hy-jv-sleep.so
