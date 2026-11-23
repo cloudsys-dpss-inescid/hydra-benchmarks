@@ -80,11 +80,16 @@ public class CloudFunctionApplication {
     String labelsPath = tmpDir + "/imagenet_comp_graph_label_strings.txt";
 
     if (classifier == null) {
-      classifier = new InceptionImageClassifier();
-      downloadIfNecessary(modelPath, modelUrl);
-      downloadIfNecessary(labelsPath, labelsUrl);
-      classifier.load_model(new FileInputStream(modelPath));
-      classifier.load_labels(new FileInputStream((labelsPath)));
+      try {
+        classifier = new InceptionImageClassifier();
+        downloadIfNecessary(modelPath, modelUrl);
+        downloadIfNecessary(labelsPath, labelsUrl);
+        classifier.load_model(new FileInputStream(modelPath));
+        classifier.load_labels(new FileInputStream((labelsPath)));
+      } catch (Exception  e) {
+        classifier = null;
+        throw e;
+      }
     }
 
     try (FileOutputStream stream = new FileOutputStream(tmpImgPath)) {
